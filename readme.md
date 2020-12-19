@@ -5,8 +5,10 @@
 Create a new Laravel application:
 
 ```
-laravel new katra // can be any name you want
+laravel new katra 
 ```
+
+> You can name your Laravel application anything you want
 
 Update the `.env` file so that the application can connect to the database, 
 you will know this was successful if you can run migrations
