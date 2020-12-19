@@ -41,7 +41,7 @@ Now you can visit the following pages to get started
 
 The default light theme:
 
-[[https://raw.githubusercontent.com/wiki/devoption/katra/images/katra-light-profile-default.png]]
+![Katra Screenshot](https://raw.githubusercontent.com/wiki/devoption/katra/images/katra-light-profile-default.png)
 
 [Check out the wiki for more screenshots](https://github.com/devoption/katra/wiki/Screenshots) (including the dark version)
 
