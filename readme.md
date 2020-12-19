@@ -37,6 +37,14 @@ Now you can visit the following pages to get started
 | Login        | /login    |
 | Dashboard    | /admin    |
 
+## Screenshots
+
+The default light theme:
+
+[[https://raw.githubusercontent.com/wiki/devoption/katra/images/katra-light-profile-default.png]]
+
+[Check out the wiki for more screenshots](https://github.com/devoption/katra/wiki/Screenshots) (including the dark version)
+
 ## Dependencies
 
 - [Laravel](https://laravel.com/docs/8.x/)
