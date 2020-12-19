@@ -1,0 +1,54 @@
+{
+    "name": "katra/katra",
+    "description": "Laravel Admin Interface",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DevOption Engineering",
+            "email": "engineering@devoption.io"
+        }
+    ],
+    "keywords": [
+        "admin", 
+        "katra",
+        "laravel", 
+        "livewire", 
+        "tailwind"
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Katra\\Katra\\": "src",
+            "Katra\\Katra\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Katra\\Katra\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "illuminate/support": "^8.0",
+        "livewire/livewire": "^2.3",
+        "blade-ui-kit/blade-icons": "^0.5.1",
+        "owenvoke/blade-fontawesome": "^1.6",
+        "laravel/fortify": "^1.7",
+        "doctrine/dbal": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^6.7"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Katra\\Katra\\Providers\\KatraServiceProvider",
+                "Katra\\Katra\\Providers\\FortifyServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    }
+}
