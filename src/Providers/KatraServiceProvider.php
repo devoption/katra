@@ -30,10 +30,10 @@ class KatraServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../../public' => public_path('katra'),
-                // __DIR__.'/../../config/katra.php' => config_path('katra.php'),
-                // __DIR__.'/../../config/fortify.php' => config_path('fortify.php'),
-                // __DIR__.'/../../config/blade-icons.php' => config_path('blade-icons.php'),
-                // __DIR__.'/../../resources/views' => resource_path('views/vendor/katra'),
+                __DIR__.'/../../config/katra.php' => config_path('katra.php'),
+                __DIR__.'/../../config/fortify.php' => config_path('fortify.php'),
+                __DIR__.'/../../config/blade-icons.php' => config_path('blade-icons.php'),
+                __DIR__.'/../../resources/views' => resource_path('views/vendor/katra'),
             ], 'assets');
         }
 

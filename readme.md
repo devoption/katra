@@ -1,5 +1,7 @@
 # Katra
 
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
+
 ## Installation
 
 Create a new Laravel application:
