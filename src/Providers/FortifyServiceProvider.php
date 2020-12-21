@@ -2,15 +2,12 @@
 
 namespace Katra\Katra\Providers;
 
-use Illuminate\Http\Request;
-use Katra\Katra\Models\User;
-use Laravel\Fortify\Fortify;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
 use Katra\Katra\Actions\Fortify\CreateNewUser;
 use Katra\Katra\Actions\Fortify\ResetUserPassword;
 use Katra\Katra\Actions\Fortify\UpdateUserPassword;
 use Katra\Katra\Actions\Fortify\UpdateUserProfileInformation;
+use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -21,7 +18,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // 
+        //
     }
 
     /**
@@ -35,12 +32,12 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        
-        Fortify::loginView(function() {
+
+        Fortify::loginView(function () {
             return view('katra::pages.auth.login');
         });
 
-        Fortify::registerView(function() {
+        Fortify::registerView(function () {
             return view('katra::pages.auth.register');
         });
 

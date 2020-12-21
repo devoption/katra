@@ -2,10 +2,10 @@
 
 namespace Katra\Katra\Actions\Fortify;
 
-use Katra\Katra\Models\User;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Katra\Katra\Models\User;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -15,7 +15,8 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * Validate and create a newly registered user.
      *
-     * @param  array  $input
+     * @param array $input
+     *
      * @return \Katra\Katra\Models\User
      */
     public function create(array $input)
@@ -23,7 +24,7 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
-            'email' => [
+            'email'      => [
                 'required',
                 'string',
                 'email',
@@ -35,9 +36,9 @@ class CreateNewUser implements CreatesNewUsers
 
         return User::create([
             'first_name' => $input['first_name'],
-            'last_name' => $input['last_name'],
-            'email' => $input['email'],
-            'password' => Hash::make($input['password']),
+            'last_name'  => $input['last_name'],
+            'email'      => $input['email'],
+            'password'   => Hash::make($input['password']),
         ]);
     }
 }

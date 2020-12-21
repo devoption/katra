@@ -39,8 +39,8 @@ class InstallCommand extends Command
     {
         $this->callSilent('vendor:publish', [
             '--provider' => 'Katra\Katra\Providers\KatraServiceProvider',
-            '--tag' => 'assets', 
-            '--force' => true,
+            '--tag'      => 'assets',
+            '--force'    => true,
         ]);
 
         copy(__DIR__.'/../../../stubs/app/Models/User.php', app_path('Models/User.php'));

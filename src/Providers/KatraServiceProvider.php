@@ -11,29 +11,32 @@ class KatraServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/katra.php', 'katra'
+            __DIR__.'/../../config/katra.php',
+            'katra'
         );
 
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/fortify.php', 'fortify'
+            __DIR__.'/../../config/fortify.php',
+            'fortify'
         );
 
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/blade-icons.php', 'blade-icons'
+            __DIR__.'/../../config/blade-icons.php',
+            'blade-icons'
         );
     }
 
     public function boot()
     {
         $this->configureCommands();
-        
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../../public' => public_path('katra'),
-                __DIR__.'/../../config/katra.php' => config_path('katra.php'),
-                __DIR__.'/../../config/fortify.php' => config_path('fortify.php'),
+                __DIR__.'/../../public'                 => public_path('katra'),
+                __DIR__.'/../../config/katra.php'       => config_path('katra.php'),
+                __DIR__.'/../../config/fortify.php'     => config_path('fortify.php'),
                 __DIR__.'/../../config/blade-icons.php' => config_path('blade-icons.php'),
-                __DIR__.'/../../resources/views' => resource_path('views/vendor/katra'),
+                __DIR__.'/../../resources/views'        => resource_path('views/vendor/katra'),
             ], 'assets');
         }
 
@@ -41,7 +44,7 @@ class KatraServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'katra');
 
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
     }
 
     protected function registerRoutes()
@@ -54,7 +57,7 @@ class KatraServiceProvider extends ServiceProvider
     protected function routeConfiguration()
     {
         return [
-            'prefix' => config('katra.route.prefix'),
+            'prefix'     => config('katra.route.prefix'),
             'middleware' => config('katra.route.middleware'),
         ];
     }
@@ -66,7 +69,7 @@ class KatraServiceProvider extends ServiceProvider
      */
     protected function configureCommands()
     {
-        if (! $this->app->runningInConsole()) {
+        if (!$this->app->runningInConsole()) {
             return;
         }
 
