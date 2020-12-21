@@ -7,6 +7,7 @@
                 @yield('aside')
             </div>
             <div class="w-2/3 p-4 rounded-r-lg shadow-md text-slate-700 dark:text-slate-100 bg-slate-50 dark:bg-slate-800">
+                
                 @if (session('status'))
                     <div class="mb-4 text-sm font-medium text-green-600">
                         {{ session('status') }}
