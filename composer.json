@@ -12,9 +12,11 @@
     "keywords": [
         "admin", 
         "katra",
+        "devoption",
         "laravel", 
         "livewire", 
-        "tailwind"
+        "tailwind",
+        "fortify"
     ],
     "minimum-stability": "stable",
     "autoload": {

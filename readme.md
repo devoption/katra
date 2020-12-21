@@ -1,6 +1,20 @@
-# Katra
-
-![License](https://img.shields.io/badge/license-MIT-brightgreen)
+<h1 style="float:clear">
+Katra
+<p style="float:right">
+    <a href="https://github.styleci.io/repos/322917021?branch=main">
+        <img src="https://github.styleci.io/repos/322917021/shield?branch=main" alt="StyleCI Build">
+    </a>
+    <a href="https://packagist.org/packages/katra/katra">
+        <img src="https://img.shields.io/packagist/dt/katra/katra?style=flat-square" alt="Total Downloads">
+    </a>
+    <a href="https://packagist.org/packages/katra/katra">
+        <img src="https://img.shields.io/packagist/v/katra/katra?style=flat-square" alt="Latest Stable Version">
+    </a>
+    <a href="https://github.com/devoption/katra/blob/main/license.md">
+        <img src="https://img.shields.io/github/license/devoption/katra?color=brightgreen&style=flat-square" alt="GitHub License">
+    </a>
+</p>
+</h1> 
 
 ## Installation
 
