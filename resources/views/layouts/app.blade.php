@@ -78,7 +78,7 @@
                         Tools
                     </x-nav-link>
 
-                    @can('admin')
+                    @if(auth()->user()->isAdmin())
                         <div class="pt-4 mt-4 border-t border-nord4 dark:border-nord2">
                             <p class="px-3 text-xs font-semibold text-nord3 dark:text-nord4 uppercase tracking-wider mb-2">
                                 Administration
@@ -111,7 +111,7 @@
                                 Logs
                             </x-nav-link>
                         </div>
-                    @endcan
+                    @endif
                 </nav>
 
                 <!-- User menu -->
