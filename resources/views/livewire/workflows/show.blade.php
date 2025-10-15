@@ -1,4 +1,32 @@
-<div>
+<div x-data="{
+        subscriptions: [],
+        subscribeToExecution(executionId) {
+            if (!this.subscriptions.includes(executionId)) {
+                Echo.private('workflow-executions.' + executionId)
+                    .listen('WorkflowExecutionUpdated', (e) => {
+                        $wire.dispatch('workflow-execution-updated');
+                    });
+                
+                this.subscriptions.push(executionId);
+            }
+        }
+     }"
+     x-init="
+        @if($executions->isNotEmpty())
+            @foreach($executions as $execution)
+                @if($execution->status === 'running' || $execution->status === 'pending')
+                    subscribeToExecution('{{ $execution->id }}');
+                @endif
+            @endforeach
+        @endif
+        
+        Livewire.on('workflowTriggered', (data) => {
+            if (data.executionId) {
+                subscribeToExecution(data.executionId);
+            }
+        });
+     "
+>
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">

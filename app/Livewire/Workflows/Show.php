@@ -16,14 +16,19 @@ class Show extends Component
 {
     use WithPagination;
 
-    public Workflow $workflow;
+    public $workflowId;
 
     public function mount(Workflow $workflow): void
     {
-        $this->workflow = $workflow;
+        $this->workflowId = $workflow->id;
     }
 
-    #[On('echo:workflow.{workflow.id},WorkflowExecutionUpdated')]
+    public function getWorkflowProperty(): Workflow
+    {
+        return Workflow::findOrFail($this->workflowId);
+    }
+
+    #[On('workflow-execution-updated')]
     public function refreshExecution(): void
     {
         // Livewire will automatically re-render when this event is received
@@ -31,7 +36,9 @@ class Show extends Component
 
     public function triggerWorkflow(): void
     {
-        if (! $this->workflow->is_active) {
+        $workflow = Workflow::findOrFail($this->workflowId);
+
+        if (! $workflow->is_active) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Cannot trigger inactive workflow.',
@@ -40,8 +47,8 @@ class Show extends Component
             return;
         }
 
-        $execution = $this->workflow->executions()->create([
-            'workflow_version' => $this->workflow->version,
+        $execution = $workflow->executions()->create([
+            'workflow_version' => $workflow->version,
             'status' => 'pending',
             'triggered_by' => 'user',
             'triggered_by_id' => auth()->id(),
@@ -55,18 +62,23 @@ class Show extends Component
             'message' => 'Workflow triggered successfully!',
         ]);
 
-        // Refresh the page to show new execution
-        $this->redirect(route('workflows.show', $this->workflow), navigate: true);
+        // Notify frontend to subscribe to this execution's updates
+        $this->dispatch('workflowTriggered', ['executionId' => (string) $execution->id]);
+
+        // Component will auto-refresh and show the new execution
     }
 
     public function render()
     {
-        $executions = $this->workflow->executions()
+        $workflow = $this->workflow;
+
+        $executions = $workflow->executions()
             ->with('steps')
             ->latest()
             ->paginate(10);
 
         return view('livewire.workflows.show', [
+            'workflow' => $workflow,
             'executions' => $executions,
         ]);
     }
