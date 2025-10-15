@@ -56,7 +56,7 @@ class Show extends Component
         ]);
 
         // Notify frontend to subscribe to this execution's updates
-        $this->dispatch('workflowTriggered', executionId: (string) $execution->id);
+        $this->dispatch('workflowTriggered', ['executionId' => (string) $execution->id]);
 
         // Component will auto-refresh and show the new execution
     }
