@@ -111,6 +111,24 @@
                                         <p class="mt-1 text-xs text-nord3 dark:text-nord4">{{ count($availableModels) }} model(s) available from your Ollama instance</p>
                                     @endif
                                 </div>
+                            @elseif($model_provider !== 'custom')
+                                {{-- Legacy provider fallback (for old agents with unsupported providers) --}}
+                                <div>
+                                    <div class="mb-3 p-3 bg-nord13 bg-opacity-10 border border-nord13 rounded-lg">
+                                        <p class="text-sm text-nord13">
+                                            ℹ️ This agent uses a legacy provider ({{ $model_provider }}). Please switch to "Ollama (Local)" or "Custom" to continue editing.
+                                        </p>
+                                    </div>
+                                    <x-ui.input
+                                        wire:model="model_name"
+                                        type="text"
+                                        name="legacy_model_name"
+                                        label="Current Model (Read-only)"
+                                        :error="$errors->first('model_name')"
+                                        readonly
+                                        help="Switch provider to edit this field"
+                                    />
+                                </div>
                             @endif
                         </div>
 
