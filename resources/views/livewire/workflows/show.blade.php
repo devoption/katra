@@ -1,15 +1,33 @@
-<div x-data="{}"
+<div x-data="{ subscriptions: [] }"
      x-init="
+        // Function to subscribe to a specific execution
+        const subscribeToExecution = (executionId) => {
+            if (!subscriptions.includes(executionId)) {
+                console.log('Subscribing to execution:', executionId);
+                Echo.private(`workflow-executions.${executionId}`)
+                    .listen('WorkflowExecutionUpdated', (e) => {
+                        console.log('Received update for execution:', e);
+                        $wire.dispatch('workflow-execution-updated');
+                    });
+                subscriptions.push(executionId);
+            }
+        };
+        
+        // Subscribe to all existing pending/running executions
         @if($executions->isNotEmpty())
             @foreach($executions as $execution)
                 @if($execution->status === 'running' || $execution->status === 'pending')
-                    Echo.private('workflow-executions.{{ $execution->id }}')
-                        .listen('WorkflowExecutionUpdated', (e) => {
-                            $wire.$refresh();
-                        });
+                    subscribeToExecution('{{ $execution->id }}');
                 @endif
             @endforeach
         @endif
+        
+        // Listen for new workflow triggers and subscribe to the new execution
+        Livewire.on('workflowTriggered', (data) => {
+            if (data.executionId) {
+                subscribeToExecution(data.executionId);
+            }
+        });
      "
 >
     <!-- Header -->

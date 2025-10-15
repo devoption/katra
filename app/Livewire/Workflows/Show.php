@@ -23,7 +23,7 @@ class Show extends Component
         $this->workflow = $workflow;
     }
 
-    #[On('echo:workflow.{workflow.id},WorkflowExecutionUpdated')]
+    #[On('workflow-execution-updated')]
     public function refreshExecution(): void
     {
         // Livewire will automatically re-render when this event is received
@@ -55,8 +55,11 @@ class Show extends Component
             'message' => 'Workflow triggered successfully!',
         ]);
 
-        // Refresh the page to show new execution
-        $this->redirect(route('workflows.show', $this->workflow), navigate: true);
+        // Notify frontend to subscribe to this execution's updates
+        $this->dispatch('workflowTriggered', executionId: $execution->id);
+
+        // Refresh the component to show new execution
+        $this->js('$wire.$refresh()');
     }
 
     public function render()
