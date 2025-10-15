@@ -11,6 +11,9 @@ use App\Livewire\Credentials\Create as CredentialCreate;
 use App\Livewire\Credentials\Edit as CredentialEdit;
 use App\Livewire\Credentials\Index as CredentialIndex;
 use App\Livewire\Dashboard;
+use App\Livewire\Tools\Create as ToolCreate;
+use App\Livewire\Tools\Edit as ToolEdit;
+use App\Livewire\Tools\Index as ToolIndex;
 use Illuminate\Support\Facades\Route;
 
 // Guest routes
@@ -33,6 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/agents', AgentIndex::class)->name('agents.index');
     Route::get('/agents/create', AgentCreate::class)->name('agents.create');
     Route::get('/agents/{agent}/edit', AgentEdit::class)->name('agents.edit');
+
+    // Tools
+    Route::get('/tools', ToolIndex::class)->name('tools.index');
+    Route::get('/tools/create', ToolCreate::class)->name('tools.create');
+    Route::get('/tools/{tool}/edit', ToolEdit::class)->name('tools.edit');
 
     // Admin only routes
     Route::middleware('admin')->group(function () {
