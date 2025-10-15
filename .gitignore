@@ -3,8 +3,15 @@
 .env
 .env.backup
 .env.production
+.mcp.json
 .phpactor.json
 .phpunit.result.cache
+AGENTS.md
+boost.json
+CLAUDE.md
+/.cursor
+/.github/copilot-instructions.md
+/.junie
 /.fleet
 /.idea
 /.nova
