@@ -9,6 +9,7 @@
 AGENTS.md
 boost.json
 CLAUDE.md
+/docs/internal
 /.cursor
 /.github/copilot-instructions.md
 /.junie
