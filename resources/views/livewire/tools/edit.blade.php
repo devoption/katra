@@ -88,11 +88,42 @@
                         />
 
                         <x-ui.checkbox
-                            wire:model="requires_credential"
+                            wire:model.live="requires_credential"
                             name="requires_credential"
                             label="This tool requires authentication credentials"
                             :disabled="$tool->type === 'builtin'"
                         />
+
+                        @if($requires_credential && $tool->type !== 'builtin')
+                            <div class="pl-6 pt-3 border-l-2 border-nord8">
+                                <label class="block text-sm font-medium text-nord0 dark:text-nord4 mb-2">
+                                    Default Credentials
+                                </label>
+                                <div class="space-y-2 max-h-48 overflow-y-auto">
+                                    @forelse($credentials as $credential)
+                                        <label class="flex items-start p-2 rounded-lg hover:bg-nord4 dark:hover:bg-nord2 transition-colors cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                wire:model="selected_credentials"
+                                                value="{{ $credential->id }}"
+                                                class="mt-0.5 w-4 h-4 rounded border-nord4 dark:border-nord2 text-nord8 focus:ring-2 focus:ring-nord8 focus:ring-offset-0"
+                                            >
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-nord0 dark:text-nord6">{{ $credential->name }}</div>
+                                                @if($credential->provider)
+                                                    <div class="text-xs text-nord3 dark:text-nord4">{{ ucfirst($credential->provider) }}</div>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @empty
+                                        <p class="text-xs text-nord12">No credentials available. Admins can create them.</p>
+                                    @endforelse
+                                </div>
+                                <p class="text-xs text-nord3 dark:text-nord4 mt-2">
+                                    Select credentials that can be used with this tool. Agents can choose from these when using the tool.
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </x-ui.card>
 

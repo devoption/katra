@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tools;
 
+use App\Models\Credential;
 use App\Models\Tool;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -29,6 +30,8 @@ class Edit extends Component
 
     public bool $requires_credential = false;
 
+    public array $selected_credentials = [];
+
     public function mount(Tool $tool): void
     {
         $this->tool = $tool;
@@ -40,6 +43,7 @@ class Edit extends Component
         $this->output_schema = $tool->output_schema ? json_encode($tool->output_schema, JSON_PRETTY_PRINT) : '';
         $this->execution_method = $tool->execution_method ?? '';
         $this->requires_credential = $tool->requires_credential;
+        $this->selected_credentials = $tool->credentials->pluck('id')->toArray();
     }
 
     public function save(): void
@@ -62,6 +66,8 @@ class Edit extends Component
             'output_schema' => ['nullable', 'json'],
             'execution_method' => ['nullable', 'string', 'max:255'],
             'requires_credential' => ['boolean'],
+            'selected_credentials' => ['array'],
+            'selected_credentials.*' => ['exists:credentials,id'],
         ]);
 
         $this->tool->update([
@@ -75,6 +81,8 @@ class Edit extends Component
             'requires_credential' => $validated['requires_credential'],
         ]);
 
+        $this->tool->credentials()->sync($this->selected_credentials);
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Tool updated successfully!',
@@ -85,6 +93,8 @@ class Edit extends Component
 
     public function render()
     {
-        return view('livewire.tools.edit');
+        return view('livewire.tools.edit', [
+            'credentials' => Credential::all(),
+        ]);
     }
 }

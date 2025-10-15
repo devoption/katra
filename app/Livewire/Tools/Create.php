@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tools;
 
+use App\Models\Credential;
 use App\Models\Tool;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -26,6 +27,8 @@ class Create extends Component
     public string $execution_method = '';
 
     public bool $requires_credential = false;
+
+    public array $selected_credentials = [];
 
     public function mount(): void
     {
@@ -62,9 +65,11 @@ class Create extends Component
             'output_schema' => ['nullable', 'json'],
             'execution_method' => ['nullable', 'string', 'max:255'],
             'requires_credential' => ['boolean'],
+            'selected_credentials' => ['array'],
+            'selected_credentials.*' => ['exists:credentials,id'],
         ]);
 
-        Tool::create([
+        $tool = Tool::create([
             'name' => $validated['name'],
             'description' => $validated['description'],
             'type' => $validated['type'],
@@ -76,6 +81,10 @@ class Create extends Component
             'created_by' => auth()->id(),
         ]);
 
+        if (! empty($this->selected_credentials)) {
+            $tool->credentials()->attach($this->selected_credentials);
+        }
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Tool created successfully!',
@@ -86,6 +95,8 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.tools.create');
+        return view('livewire.tools.create', [
+            'credentials' => Credential::all(),
+        ]);
     }
 }
