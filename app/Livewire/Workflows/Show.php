@@ -16,11 +16,16 @@ class Show extends Component
 {
     use WithPagination;
 
-    public Workflow $workflow;
+    public $workflowId;
 
     public function mount(Workflow $workflow): void
     {
-        $this->workflow = $workflow;
+        $this->workflowId = $workflow->id;
+    }
+
+    public function getWorkflowProperty(): Workflow
+    {
+        return Workflow::findOrFail($this->workflowId);
     }
 
     #[On('workflow-execution-updated')]
