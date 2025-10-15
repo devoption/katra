@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Agent;
 use App\Models\Context;
-use App\Models\Credential;
 use App\Models\Tool;
 use App\Models\User;
 use App\Models\Workflow;
@@ -148,13 +147,8 @@ class KatraSeeder extends Seeder
 
         $this->command->info('✓ Created '.count($workflows).' sample workflows');
 
-        // Create some credentials
-        $credentials = [
-            Credential::factory()->openai()->create(['created_by' => $admin->id]),
-            Credential::factory()->anthropic()->create(['created_by' => $admin->id]),
-        ];
-
-        $this->command->info('✓ Created '.count($credentials).' sample credentials');
+        // Skip creating credentials for now (Ollama doesn't require them)
+        $this->command->info('✓ Skipped credential creation (using local Ollama)');
 
         $this->command->info('✨ Katra seeding completed successfully!');
     }
