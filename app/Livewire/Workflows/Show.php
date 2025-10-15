@@ -36,7 +36,9 @@ class Show extends Component
 
     public function triggerWorkflow(): void
     {
-        if (! $this->workflow->is_active) {
+        $workflow = Workflow::findOrFail($this->workflowId);
+
+        if (! $workflow->is_active) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Cannot trigger inactive workflow.',
@@ -45,8 +47,8 @@ class Show extends Component
             return;
         }
 
-        $execution = $this->workflow->executions()->create([
-            'workflow_version' => $this->workflow->version,
+        $execution = $workflow->executions()->create([
+            'workflow_version' => $workflow->version,
             'status' => 'pending',
             'triggered_by' => 'user',
             'triggered_by_id' => auth()->id(),
