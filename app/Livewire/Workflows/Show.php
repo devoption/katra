@@ -5,6 +5,7 @@ namespace App\Livewire\Workflows;
 use App\Jobs\ProcessWorkflowExecution;
 use App\Models\Workflow;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,6 +21,12 @@ class Show extends Component
     public function mount(Workflow $workflow): void
     {
         $this->workflow = $workflow;
+    }
+
+    #[On('echo:workflow.{workflow.id},WorkflowExecutionUpdated')]
+    public function refreshExecution(): void
+    {
+        // Livewire will automatically re-render when this event is received
     }
 
     public function triggerWorkflow(): void
