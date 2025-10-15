@@ -5,10 +5,10 @@ namespace App\Events;
 use App\Models\WorkflowExecution;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class WorkflowExecutionUpdated implements ShouldBroadcastNow
+class WorkflowExecutionUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
