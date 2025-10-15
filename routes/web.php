@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\Users\Edit as AdminUserEdit;
+use App\Livewire\Admin\Users\Index as AdminUserIndex;
 use App\Livewire\Agents\Create as AgentCreate;
 use App\Livewire\Agents\Edit as AgentEdit;
 use App\Livewire\Agents\Index as AgentIndex;
@@ -62,6 +64,11 @@ Route::middleware('auth')->group(function () {
 
     // Admin only routes
     Route::middleware('admin')->group(function () {
+        // User Management
+        Route::get('/admin/users', AdminUserIndex::class)->name('admin.users.index');
+        Route::get('/admin/users/{user}/edit', AdminUserEdit::class)->name('admin.users.edit');
+
+        // Credentials
         Route::get('/credentials', CredentialIndex::class)->name('credentials.index');
         Route::get('/credentials/create', CredentialCreate::class)->name('credentials.create');
         Route::get('/credentials/{credential}/edit', CredentialEdit::class)->name('credentials.edit');
