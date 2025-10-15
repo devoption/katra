@@ -4,6 +4,7 @@ namespace App\Livewire\Agents;
 
 use App\Models\Agent;
 use App\Models\Context;
+use App\Models\Credential;
 use App\Models\Tool;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
