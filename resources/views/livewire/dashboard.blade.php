@@ -105,7 +105,7 @@
                     </svg>
                 </a>
 
-                <a href="#" class="flex items-center justify-between p-4 rounded-lg border border-nord4 dark:border-nord2 hover:bg-nord4 dark:hover:bg-nord2 transition-all duration-200 group">
+                <a href="{{ route('workflows.create') }}" wire:navigate class="flex items-center justify-between p-4 rounded-lg border border-nord4 dark:border-nord2 hover:bg-nord4 dark:hover:bg-nord2 transition-all duration-200 group">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-nord9 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-nord9" fill="none" stroke="currentColor" viewBox="0 0 24 24">

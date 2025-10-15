@@ -17,6 +17,10 @@ use App\Livewire\Dashboard;
 use App\Livewire\Tools\Create as ToolCreate;
 use App\Livewire\Tools\Edit as ToolEdit;
 use App\Livewire\Tools\Index as ToolIndex;
+use App\Livewire\Workflows\Create as WorkflowCreate;
+use App\Livewire\Workflows\Edit as WorkflowEdit;
+use App\Livewire\Workflows\Index as WorkflowIndex;
+use App\Livewire\Workflows\Show as WorkflowShow;
 use Illuminate\Support\Facades\Route;
 
 // Guest routes
@@ -49,6 +53,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/contexts', ContextIndex::class)->name('contexts.index');
     Route::get('/contexts/create', ContextCreate::class)->name('contexts.create');
     Route::get('/contexts/{context}/edit', ContextEdit::class)->name('contexts.edit');
+
+    // Workflows
+    Route::get('/workflows', WorkflowIndex::class)->name('workflows.index');
+    Route::get('/workflows/create', WorkflowCreate::class)->name('workflows.create');
+    Route::get('/workflows/{workflow}', WorkflowShow::class)->name('workflows.show');
+    Route::get('/workflows/{workflow}/edit', WorkflowEdit::class)->name('workflows.edit');
 
     // Admin only routes
     Route::middleware('admin')->group(function () {
