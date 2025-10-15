@@ -95,4 +95,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(WorkflowExecution::class, 'triggered_by_id');
     }
+
+    public function aiInteractions(): HasMany
+    {
+        return $this->hasMany(AiInteraction::class);
+    }
+
+    public function aiInteractionFeedback(): HasMany
+    {
+        return $this->hasMany(AiInteractionFeedback::class);
+    }
 }

@@ -1,5 +1,8 @@
 <?php
 
+use App\Livewire\Admin\Logs\Analytics as AdminLogsAnalytics;
+use App\Livewire\Admin\Logs\Index as AdminLogsIndex;
+use App\Livewire\Admin\Logs\Show as AdminLogsShow;
 use App\Livewire\Admin\Users\Edit as AdminUserEdit;
 use App\Livewire\Admin\Users\Index as AdminUserIndex;
 use App\Livewire\Agents\Create as AgentCreate;
@@ -67,6 +70,11 @@ Route::middleware('auth')->group(function () {
         // User Management
         Route::get('/admin/users', AdminUserIndex::class)->name('admin.users.index');
         Route::get('/admin/users/{user}/edit', AdminUserEdit::class)->name('admin.users.edit');
+
+        // AI Interaction Logs
+        Route::get('/admin/logs', AdminLogsIndex::class)->name('admin.logs.index');
+        Route::get('/admin/logs/analytics', AdminLogsAnalytics::class)->name('admin.logs.analytics');
+        Route::get('/admin/logs/{interaction}', AdminLogsShow::class)->name('admin.logs.show');
 
         // Credentials
         Route::get('/credentials', CredentialIndex::class)->name('credentials.index');
