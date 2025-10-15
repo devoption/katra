@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Workflows;
 
+use App\Jobs\ProcessWorkflowExecution;
 use App\Models\Workflow;
 use App\Models\WorkflowExecution;
 use Livewire\Attributes\Layout;
@@ -75,6 +76,9 @@ class Index extends Component
             'triggered_by' => 'user',
             'triggered_by_id' => auth()->id(),
         ]);
+
+        // Dispatch the job to process the execution
+        ProcessWorkflowExecution::dispatch($execution);
 
         $this->dispatch('notify', [
             'type' => 'success',

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Workflows;
 
+use App\Jobs\ProcessWorkflowExecution;
 use App\Models\Workflow;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -32,12 +33,15 @@ class Show extends Component
             return;
         }
 
-        $this->workflow->executions()->create([
+        $execution = $this->workflow->executions()->create([
             'workflow_version' => $this->workflow->version,
             'status' => 'pending',
             'triggered_by' => 'user',
             'triggered_by_id' => auth()->id(),
         ]);
+
+        // Dispatch the job to process the execution
+        ProcessWorkflowExecution::dispatch($execution);
 
         $this->dispatch('notify', [
             'type' => 'success',
