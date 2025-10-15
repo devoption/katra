@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.5s>
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">

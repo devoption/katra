@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\WorkflowExecutionUpdated;
 use App\Models\WorkflowExecution;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -22,6 +23,8 @@ class ProcessWorkflowExecution implements ShouldQueue
             'started_at' => now(),
         ]);
 
+        broadcast(new WorkflowExecutionUpdated($this->execution))->toOthers();
+
         try {
             // TODO: Parse YAML definition
             // TODO: Create workflow steps
@@ -39,6 +42,8 @@ class ProcessWorkflowExecution implements ShouldQueue
                     'note' => 'Full execution engine will be implemented in next phase',
                 ],
             ]);
+
+            broadcast(new WorkflowExecutionUpdated($this->execution))->toOthers();
         } catch (\Exception $e) {
             $this->execution->update([
                 'status' => 'failed',
@@ -48,6 +53,8 @@ class ProcessWorkflowExecution implements ShouldQueue
                     'trace' => $e->getTraceAsString(),
                 ],
             ]);
+
+            broadcast(new WorkflowExecutionUpdated($this->execution))->toOthers();
 
             throw $e;
         }
