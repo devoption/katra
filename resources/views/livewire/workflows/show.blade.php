@@ -2,17 +2,29 @@
         subscriptions: [],
         subscribeToExecution(executionId) {
             if (!this.subscriptions.includes(executionId)) {
-                console.log('Subscribing to execution:', executionId);
-                Echo.private('workflow-executions.' + executionId)
-                    .listen('WorkflowExecutionUpdated', (e) => {
-                        console.log('Received update for execution:', e);
+                console.log('✅ Subscribing to execution:', executionId);
+                let channel = Echo.private('workflow-executions.' + executionId);
+                console.log('📡 Channel object:', channel);
+                
+                channel.listen('WorkflowExecutionUpdated', (e) => {
+                        console.log('🎉 Received update for execution:', e);
                         $wire.dispatch('workflow-execution-updated');
+                    })
+                    .error((error) => {
+                        console.error('❌ Channel subscription error:', error);
                     });
+                
                 this.subscriptions.push(executionId);
+                console.log('📋 Current subscriptions:', this.subscriptions);
+            } else {
+                console.log('⏭️  Already subscribed to execution:', executionId);
             }
         }
      }"
      x-init="
+        console.log('🚀 Initializing WebSocket subscriptions...');
+        console.log('🔌 Echo status:', typeof Echo !== 'undefined' ? 'Ready' : 'Not loaded');
+        
         @if($executions->isNotEmpty())
             @foreach($executions as $execution)
                 @if($execution->status === 'running' || $execution->status === 'pending')
