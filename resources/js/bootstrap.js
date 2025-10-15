@@ -11,21 +11,23 @@ window.Pusher = Pusher;
 // Enable Pusher logging for debugging
 Pusher.logToConsole = true;
 
-console.log('🔧 Echo config:', {
-    broadcaster: 'reverb',
+// Check WebSocket support
+console.log('🌐 WebSocket support:', typeof WebSocket !== 'undefined' ? 'YES' : 'NO');
+console.log('🌐 WebSocket:', WebSocket);
+
+const reverbScheme = import.meta.env.VITE_REVERB_SCHEME ?? 'wss';
+const reverbPort = parseInt(import.meta.env.VITE_REVERB_PORT) || 8080;
+const useTLS = reverbScheme === 'wss';
+
+console.log('🔧 Parsed config:', {
+    scheme: reverbScheme,
+    port: reverbPort,
+    useTLS: useTLS,
+    host: import.meta.env.VITE_REVERB_HOST,
     key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'wss' || (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: [(import.meta.env.VITE_REVERB_SCHEME === 'ws' ? 'ws' : 'wss')],
 });
 
 try {
-    const reverbScheme = import.meta.env.VITE_REVERB_SCHEME ?? 'wss';
-    const reverbPort = parseInt(import.meta.env.VITE_REVERB_PORT) || 8080;
-    const useTLS = reverbScheme === 'wss';
-    
     window.Echo = new Echo({
         broadcaster: 'reverb',
         key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -33,7 +35,7 @@ try {
         wsPort: reverbPort,
         wssPort: reverbPort,
         forceTLS: useTLS,
-        enabledTransports: useTLS ? ['wss'] : ['ws'],
+        enabledTransports: ['wss', 'ws'], // Allow both and let Pusher choose
     });
     console.log('✅ Echo initialized successfully');
     console.log('🔌 Echo connection state after init:', window.Echo.connector.pusher.connection.state);
