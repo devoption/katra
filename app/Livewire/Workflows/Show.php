@@ -56,7 +56,7 @@ class Show extends Component
         ]);
 
         // Notify frontend to subscribe to this execution's updates
-        $this->dispatch('workflowTriggered', executionId: $execution->id);
+        $this->dispatch('workflowTriggered', executionId: (string) $execution->id);
 
         // Refresh the component to show new execution
         $this->js('$wire.$refresh()');
