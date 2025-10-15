@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -23,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_active',
     ];
 
     /**
@@ -45,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -56,5 +59,40 @@ class User extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function agents(): HasMany
+    {
+        return $this->hasMany(Agent::class, 'created_by');
+    }
+
+    public function workflows(): HasMany
+    {
+        return $this->hasMany(Workflow::class, 'created_by');
+    }
+
+    public function contexts(): HasMany
+    {
+        return $this->hasMany(Context::class, 'created_by');
+    }
+
+    public function tools(): HasMany
+    {
+        return $this->hasMany(Tool::class, 'created_by');
+    }
+
+    public function credentials(): HasMany
+    {
+        return $this->hasMany(Credential::class, 'created_by');
+    }
+
+    public function triggers(): HasMany
+    {
+        return $this->hasMany(Trigger::class, 'created_by');
+    }
+
+    public function triggeredExecutions(): HasMany
+    {
+        return $this->hasMany(WorkflowExecution::class, 'triggered_by_id');
     }
 }
