@@ -35,6 +35,32 @@
      x-init="
         console.log('🚀 Initializing WebSocket subscriptions...');
         console.log('🔌 Echo status:', typeof Echo !== 'undefined' ? 'Ready' : 'Not loaded');
+        console.log('🔌 Initial connection state:', Echo.connector.pusher.connection.state);
+        
+        // Listen for connection errors
+        Echo.connector.pusher.connection.bind('error', (error) => {
+            console.error('🔥 WebSocket connection error:', error);
+        });
+        
+        Echo.connector.pusher.connection.bind('connecting', () => {
+            console.log('🔄 Attempting to connect to Reverb...');
+        });
+        
+        Echo.connector.pusher.connection.bind('connected', () => {
+            console.log('✅ Connected to Reverb!');
+        });
+        
+        Echo.connector.pusher.connection.bind('disconnected', () => {
+            console.warn('⚠️ Disconnected from Reverb');
+        });
+        
+        Echo.connector.pusher.connection.bind('failed', () => {
+            console.error('💥 Connection to Reverb FAILED');
+        });
+        
+        Echo.connector.pusher.connection.bind('unavailable', () => {
+            console.error('❌ Reverb unavailable');
+        });
         
         @if($executions->isNotEmpty())
             @foreach($executions as $execution)
