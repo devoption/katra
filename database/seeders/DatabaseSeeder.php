@@ -29,6 +29,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'user@katra.test',
         ]);
 
+        // Seed Katra data
+        $this->call(KatraSeeder::class);
+
         // Optionally create more test users
         // User::factory(10)->create();
     }
