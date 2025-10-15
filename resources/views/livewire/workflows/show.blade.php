@@ -1,4 +1,17 @@
-<div>
+<div x-data="{}"
+     x-init="
+        @if($executions->isNotEmpty())
+            @foreach($executions as $execution)
+                @if($execution->status === 'running' || $execution->status === 'pending')
+                    Echo.private('workflow-executions.{{ $execution->id }}')
+                        .listen('WorkflowExecutionUpdated', (e) => {
+                            $wire.$refresh();
+                        });
+                @endif
+            @endforeach
+        @endif
+     "
+>
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
