@@ -27,7 +27,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-nord3 dark:text-nord4">Total Agents</p>
-                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">0</p>
+                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">{{ $stats['total_agents'] }}</p>
                 </div>
                 <div class="w-12 h-12 bg-nord9 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-nord9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-nord3 dark:text-nord4">Executions Today</p>
-                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">0</p>
+                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">{{ $stats['executions_today'] }}</p>
                 </div>
                 <div class="w-12 h-12 bg-nord14 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-nord14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-nord3 dark:text-nord4">Success Rate</p>
-                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">—</p>
+                    <p class="mt-2 text-3xl font-bold text-nord0 dark:text-nord6">{{ $stats['success_rate'] ?? '—' }}</p>
                 </div>
                 <div class="w-12 h-12 bg-nord15 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-nord15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
                 <h2 class="text-lg font-semibold text-nord0 dark:text-nord6">Quick Start</h2>
             </div>
             <div class="p-6 space-y-3">
-                <a href="#" class="flex items-center justify-between p-4 rounded-lg border border-nord4 dark:border-nord2 hover:bg-nord4 dark:hover:bg-nord2 transition-all duration-200 group">
+                <a href="{{ route('agents.create') }}" wire:navigate class="flex items-center justify-between p-4 rounded-lg border border-nord4 dark:border-nord2 hover:bg-nord4 dark:hover:bg-nord2 transition-all duration-200 group">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-nord8 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-nord8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

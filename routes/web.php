@@ -1,5 +1,8 @@
 <?php
 
+use App\Livewire\Agents\Create as AgentCreate;
+use App\Livewire\Agents\Edit as AgentEdit;
+use App\Livewire\Agents\Index as AgentIndex;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -22,6 +25,11 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+    // Agents
+    Route::get('/agents', AgentIndex::class)->name('agents.index');
+    Route::get('/agents/create', AgentCreate::class)->name('agents.create');
+    Route::get('/agents/{agent}/edit', AgentEdit::class)->name('agents.edit');
 
     Route::post('/logout', function () {
         auth()->logout();

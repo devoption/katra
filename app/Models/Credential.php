@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -63,5 +64,10 @@ class Credential extends Model
     {
         return $this->belongsToMany(Tool::class)
             ->withTimestamps();
+    }
+
+    public function agents(): HasMany
+    {
+        return $this->hasMany(Agent::class);
     }
 }

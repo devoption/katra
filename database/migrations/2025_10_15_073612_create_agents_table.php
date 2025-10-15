@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
             $table->foreignId('context_id')->nullable()->constrained('contexts');
+            $table->foreignId('credential_id')->nullable()->constrained('credentials');
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
