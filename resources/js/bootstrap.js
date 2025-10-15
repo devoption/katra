@@ -8,6 +8,9 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
+// Enable Pusher logging for debugging
+Pusher.logToConsole = true;
+
 console.log('🔧 Echo config:', {
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY,
