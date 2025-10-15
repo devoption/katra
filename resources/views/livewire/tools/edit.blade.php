@@ -53,55 +53,69 @@
                             :error="$errors->first('description')"
                         />
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <x-ui.select
-                                wire:model="type"
-                                name="type"
-                                label="Type"
-                                required
-                                :disabled="$tool->type === 'builtin'"
-                                :error="$errors->first('type')"
-                            >
-                                <option value="custom">Custom</option>
-                                <option value="mcp_server">MCP Server</option>
-                                <option value="package">Package</option>
-                            </x-ui.select>
+                        <x-ui.select
+                            wire:model.live="type"
+                            name="type"
+                            label="Tool Type"
+                            required
+                            :disabled="$tool->type === 'builtin'"
+                            :error="$errors->first('type')"
+                        >
+                            <option value="custom">Custom - A tool you define with input/output schemas</option>
+                            <option value="mcp_server">MCP Server - Connect to an external MCP server</option>
+                            <option value="package">Package - Install from Composer marketplace</option>
+                        </x-ui.select>
 
-                            <x-ui.input
-                                wire:model="category"
-                                type="text"
+                        <!-- Category -->
+                        <div>
+                            <x-ui.select
+                                wire:model.live="category"
                                 name="category"
-                                label="Category"
-                                required
+                                label="Category (Optional)"
                                 :disabled="$tool->type === 'builtin'"
                                 :error="$errors->first('category')"
+                            >
+                                <option value="">None</option>
+                                <option value="file">File Operations</option>
+                                <option value="git">Git & Version Control</option>
+                                <option value="http">HTTP & API Requests</option>
+                                <option value="database">Database Operations</option>
+                                <option value="communication">Communication (Email, Slack, etc.)</option>
+                                <option value="deployment">Deployment & DevOps</option>
+                                <option value="testing">Testing & Quality Assurance</option>
+                                <option value="other">Other (specify below)</option>
+                            </x-ui.select>
+
+                            @if($category === 'other' && $tool->type !== 'builtin')
+                                <x-ui.input
+                                    wire:model="custom_category"
+                                    type="text"
+                                    name="custom_category"
+                                    placeholder="Enter custom category name"
+                                    required
+                                    class="mt-3"
+                                    :error="$errors->first('custom_category')"
+                                />
+                            @endif
+                        </div>
+
+                        <div class="pt-2">
+                            <x-ui.checkbox
+                                wire:model.live="requires_credential"
+                                name="requires_credential"
+                                label="This tool requires authentication (API keys, tokens, etc.)"
+                                :disabled="$tool->type === 'builtin'"
                             />
                         </div>
 
-                        <x-ui.input
-                            wire:model="execution_method"
-                            type="text"
-                            name="execution_method"
-                            label="Execution Method"
-                            :disabled="$tool->type === 'builtin'"
-                            :error="$errors->first('execution_method')"
-                        />
-
-                        <x-ui.checkbox
-                            wire:model.live="requires_credential"
-                            name="requires_credential"
-                            label="This tool requires authentication credentials"
-                            :disabled="$tool->type === 'builtin'"
-                        />
-
                         @if($requires_credential && $tool->type !== 'builtin')
-                            <div class="pl-6 pt-3 border-l-2 border-nord8">
+                            <div class="pl-6 pt-2 border-l-2 border-nord8">
                                 <label class="block text-sm font-medium text-nord0 dark:text-nord4 mb-2">
-                                    Default Credentials
+                                    Select Credentials
                                 </label>
-                                <div class="space-y-2 max-h-48 overflow-y-auto">
+                                <div class="space-y-2 max-h-48 overflow-y-auto p-3 bg-nord4 dark:bg-nord2 rounded-lg">
                                     @forelse($credentials as $credential)
-                                        <label class="flex items-start p-2 rounded-lg hover:bg-nord4 dark:hover:bg-nord2 transition-colors cursor-pointer">
+                                        <label class="flex items-start p-2 rounded hover:bg-nord5 dark:hover:bg-nord1 transition-colors cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 wire:model="selected_credentials"
@@ -116,41 +130,50 @@
                                             </div>
                                         </label>
                                     @empty
-                                        <p class="text-xs text-nord12">No credentials available. Admins can create them.</p>
+                                        <p class="text-xs text-nord12 text-center py-2">No credentials available. Admins can create them.</p>
                                     @endforelse
                                 </div>
                                 <p class="text-xs text-nord3 dark:text-nord4 mt-2">
-                                    Select credentials that can be used with this tool. Agents can choose from these when using the tool.
+                                    Agents using this tool can choose from these credentials
                                 </p>
                             </div>
                         @endif
                     </div>
                 </x-ui.card>
 
-                <!-- Input Schema -->
-                <x-ui.card title="Input Schema (JSON)">
-                    <x-ui.textarea
-                        wire:model="input_schema"
-                        name="input_schema"
-                        :rows="12"
-                        required
-                        :disabled="$tool->type === 'builtin'"
-                        :error="$errors->first('input_schema')"
-                        class="font-mono text-sm"
-                    />
-                </x-ui.card>
+                <!-- JSON Schemas - Only for Custom Tools -->
+                @if($type === 'custom')
+                    <x-ui.card title="Input Parameters">
+                        <p class="text-sm text-nord3 dark:text-nord4 mb-3">
+                            Define what information the agent needs to provide when using this tool
+                        </p>
+                        <x-ui.textarea
+                            wire:model="input_schema"
+                            name="input_schema"
+                            label="Input Schema (JSON)"
+                            :rows="12"
+                            required
+                            :disabled="$tool->type === 'builtin'"
+                            :error="$errors->first('input_schema')"
+                            class="font-mono text-sm"
+                        />
+                    </x-ui.card>
 
-                <!-- Output Schema -->
-                <x-ui.card title="Output Schema (JSON)">
-                    <x-ui.textarea
-                        wire:model="output_schema"
-                        name="output_schema"
-                        :rows="8"
-                        :disabled="$tool->type === 'builtin'"
-                        :error="$errors->first('output_schema')"
-                        class="font-mono text-sm"
-                    />
-                </x-ui.card>
+                    <x-ui.card title="Output Format (Optional)">
+                        <p class="text-sm text-nord3 dark:text-nord4 mb-3">
+                            Define what data this tool returns after execution
+                        </p>
+                        <x-ui.textarea
+                            wire:model="output_schema"
+                            name="output_schema"
+                            label="Output Schema (JSON) - Optional"
+                            :rows="8"
+                            :disabled="$tool->type === 'builtin'"
+                            :error="$errors->first('output_schema')"
+                            class="font-mono text-sm"
+                        />
+                    </x-ui.card>
+                @endif
             </div>
 
             <!-- Sidebar -->
@@ -184,6 +207,24 @@
                         @endif
                     </div>
                 </x-ui.card>
+
+                @if($type === 'custom' && $tool->type !== 'builtin')
+                    <!-- Schema Help -->
+                    <x-ui.card title="Schema Guide">
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <p class="font-medium text-nord0 dark:text-nord6 mb-2">Common Types:</p>
+                                <ul class="list-disc list-inside space-y-1 text-nord3 dark:text-nord4">
+                                    <li><code class="text-nord8">string</code> - Text</li>
+                                    <li><code class="text-nord8">number</code> - Numbers</li>
+                                    <li><code class="text-nord8">boolean</code> - True/False</li>
+                                    <li><code class="text-nord8">array</code> - Lists</li>
+                                    <li><code class="text-nord8">object</code> - Complex data</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </x-ui.card>
+                @endif
 
                 <!-- Actions -->
                 @if($tool->type !== 'builtin')
