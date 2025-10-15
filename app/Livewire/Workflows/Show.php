@@ -68,12 +68,15 @@ class Show extends Component
 
     public function render()
     {
-        $executions = $this->workflow->executions()
+        $workflow = $this->workflow;
+
+        $executions = $workflow->executions()
             ->with('steps')
             ->latest()
             ->paginate(10);
 
         return view('livewire.workflows.show', [
+            'workflow' => $workflow,
             'executions' => $executions,
         ]);
     }
