@@ -6,6 +6,70 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    /* Fonts */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Nord Color Palette */
+    /* Polar Night - Dark */
+    --color-nord0: #2E3440;
+    --color-nord1: #3B4252;
+    --color-nord2: #434C5E;
+    --color-nord3: #4C566A;
+
+    /* Snow Storm - Light */
+    --color-nord4: #D8DEE9;
+    --color-nord5: #E5E9F0;
+    --color-nord6: #ECEFF4;
+
+    /* Frost - Blue/Cyan */
+    --color-nord7: #8FBCBB;
+    --color-nord8: #88C0D0;
+    --color-nord9: #81A1C1;
+    --color-nord10: #5E81AC;
+
+    /* Aurora - Accent Colors */
+    --color-nord11: #BF616A; /* Red */
+    --color-nord12: #D08770; /* Orange */
+    --color-nord13: #EBCB8B; /* Yellow */
+    --color-nord14: #A3BE8C; /* Green */
+    --color-nord15: #B48EAD; /* Purple */
+}
+
+/* Custom scrollbar for dark theme */
+.dark ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: var(--color-nord0);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: var(--color-nord3);
+    border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-nord8);
+}
+
+/* Light theme scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-nord5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-nord4);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-nord8);
 }
