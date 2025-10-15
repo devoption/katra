@@ -63,30 +63,62 @@
                                 required
                                 :error="$errors->first('model_provider')"
                             >
-                                <option value="openai">OpenAI</option>
-                                <option value="anthropic">Anthropic</option>
-                                <option value="google">Google</option>
-                                <option value="ollama">Ollama</option>
+                                <option value="ollama">Ollama (Local)</option>
                                 <option value="custom">Custom</option>
                             </x-ui.select>
 
-                            <x-ui.select
-                                wire:model="model_name"
-                                name="model_name"
-                                label="Model"
-                                required
-                                :error="$errors->first('model_name')"
-                            >
-                                @foreach($modelOptions[$model_provider] ?? [] as $model)
-                                    <option value="{{ $model }}">{{ $model }}</option>
-                                @endforeach
-                                @if(empty($modelOptions[$model_provider]))
-                                    <option value="">Enter custom model name below</option>
-                                @endif
-                            </x-ui.select>
+                            @if($model_provider === 'ollama')
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label for="model_name" class="block text-sm font-medium text-nord0 dark:text-nord6">
+                                            Model <span class="text-nord11">*</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            wire:click="refreshModels"
+                                            class="text-sm text-nord8 hover:text-nord9 flex items-center gap-1"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            Refresh
+                                        </button>
+                                    </div>
+
+                                    @if(!$ollamaAvailable)
+                                        <div class="mb-3 p-3 bg-nord11 bg-opacity-10 border border-nord11 rounded-lg">
+                                            <p class="text-sm text-nord11">
+                                                ⚠️ Ollama is not available. Please ensure Ollama is running on your system.
+                                            </p>
+                                        </div>
+                                    @endif
+
+                                    <select
+                                        wire:model="model_name"
+                                        name="model_name"
+                                        class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                        required
+                                        @if(!$ollamaAvailable) disabled @endif
+                                    >
+                                        @if(empty($availableModels))
+                                            <option value="">No models available</option>
+                                        @else
+                                            @foreach($availableModels as $model)
+                                                <option value="{{ $model }}">{{ $model }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('model_name')
+                                        <p class="mt-1 text-sm text-nord11">{{ $message }}</p>
+                                    @enderror
+                                    @if($ollamaAvailable && !empty($availableModels))
+                                        <p class="mt-1 text-xs text-nord3 dark:text-nord4">{{ count($availableModels) }} model(s) available from your Ollama instance</p>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
-                        @if($model_provider === 'custom' || empty($modelOptions[$model_provider]))
+                        @if($model_provider === 'custom')
                             <x-ui.input
                                 wire:model="model_name"
                                 type="text"

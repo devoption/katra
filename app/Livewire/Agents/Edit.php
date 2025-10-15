@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Context;
 use App\Models\Credential;
 use App\Models\Tool;
+use App\Services\OllamaService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -38,6 +39,10 @@ class Edit extends Component
 
     public string $tool_search = '';
 
+    public array $availableModels = [];
+
+    public bool $ollamaAvailable = true;
+
     // Custom model provider config
     public string $custom_api_endpoint = '';
 
@@ -52,14 +57,6 @@ class Edit extends Component
 
     public string $new_context_description = '';
 
-    public array $modelOptions = [
-        'openai' => ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-        'anthropic' => ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-sonnet-4.5'],
-        'google' => ['gemini-pro', 'gemini-ultra', 'gemini-1.5-pro'],
-        'ollama' => ['llama2', 'mistral', 'codellama', 'mixtral'],
-        'custom' => [],
-    ];
-
     public function mount(Agent $agent): void
     {
         $this->agent = $agent;
@@ -73,13 +70,50 @@ class Edit extends Component
         $this->context_id = $agent->context_id;
         $this->credential_id = $agent->credential_id;
         $this->selected_tools = $agent->tools->pluck('id')->toArray();
+
+        if ($this->model_provider === 'ollama') {
+            $this->loadOllamaModels();
+        }
+    }
+
+    public function loadOllamaModels(): void
+    {
+        $ollamaService = app(OllamaService::class);
+
+        $this->ollamaAvailable = $ollamaService->isAvailable();
+
+        if ($this->ollamaAvailable) {
+            $this->availableModels = $ollamaService->getModelNames();
+        } else {
+            $this->availableModels = [];
+            $this->dispatch('notify', [
+                'type' => 'warning',
+                'message' => 'Ollama is not available. Please ensure Ollama is running.',
+            ]);
+        }
     }
 
     public function updatedModelProvider(): void
     {
-        if (! empty($this->modelOptions[$this->model_provider])) {
-            $this->model_name = $this->modelOptions[$this->model_provider][0];
+        if ($this->model_provider === 'ollama') {
+            $this->loadOllamaModels();
+            if (! empty($this->availableModels)) {
+                $this->model_name = $this->availableModels[0];
+            }
+        } else {
+            $this->model_name = '';
+            $this->availableModels = [];
         }
+    }
+
+    public function refreshModels(): void
+    {
+        $this->loadOllamaModels();
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Models refreshed successfully!',
+        ]);
     }
 
     public function createContext(): void
@@ -115,7 +149,7 @@ class Edit extends Component
             'name' => ['required', 'string', 'max:255'],
             'role' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'model_provider' => ['required', 'in:openai,anthropic,google,ollama,custom'],
+            'model_provider' => ['required', 'in:ollama,custom'],
             'model_name' => ['required', 'string', 'max:255'],
             'system_prompt' => ['required', 'string'],
             'creativity_level' => ['required', 'numeric', 'min:0', 'max:1'],

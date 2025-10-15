@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Context;
 use App\Models\Credential;
 use App\Models\Tool;
+use App\Services\OllamaService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -20,7 +21,7 @@ class Create extends Component
 
     public string $description = '';
 
-    public string $model_provider = 'openai';
+    public string $model_provider = 'ollama';
 
     public string $model_name = '';
 
@@ -36,6 +37,10 @@ class Create extends Component
 
     public string $tool_search = '';
 
+    public array $availableModels = [];
+
+    public bool $ollamaAvailable = true;
+
     // Custom model provider config
     public string $custom_api_endpoint = '';
 
@@ -50,22 +55,50 @@ class Create extends Component
 
     public string $new_context_description = '';
 
-    public array $modelOptions = [
-        'openai' => ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-        'anthropic' => ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-sonnet-4.5'],
-        'google' => ['gemini-pro', 'gemini-ultra', 'gemini-1.5-pro'],
-        'ollama' => ['llama2', 'mistral', 'codellama', 'mixtral'],
-        'custom' => [],
-    ];
-
     public function mount(): void
     {
-        $this->model_name = $this->modelOptions[$this->model_provider][0] ?? '';
+        $this->loadOllamaModels();
+    }
+
+    public function loadOllamaModels(): void
+    {
+        $ollamaService = app(OllamaService::class);
+
+        $this->ollamaAvailable = $ollamaService->isAvailable();
+
+        if ($this->ollamaAvailable) {
+            $this->availableModels = $ollamaService->getModelNames();
+
+            if (empty($this->model_name) && ! empty($this->availableModels)) {
+                $this->model_name = $this->availableModels[0];
+            }
+        } else {
+            $this->availableModels = [];
+            $this->dispatch('notify', [
+                'type' => 'warning',
+                'message' => 'Ollama is not available. Please ensure Ollama is running.',
+            ]);
+        }
     }
 
     public function updatedModelProvider(): void
     {
-        $this->model_name = $this->modelOptions[$this->model_provider][0] ?? '';
+        if ($this->model_provider === 'ollama') {
+            $this->loadOllamaModels();
+        } else {
+            $this->model_name = '';
+            $this->availableModels = [];
+        }
+    }
+
+    public function refreshModels(): void
+    {
+        $this->loadOllamaModels();
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Models refreshed successfully!',
+        ]);
     }
 
     public function createContext(): void
@@ -101,7 +134,7 @@ class Create extends Component
             'name' => ['required', 'string', 'max:255'],
             'role' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'model_provider' => ['required', 'in:openai,anthropic,google,ollama,custom'],
+            'model_provider' => ['required', 'in:ollama,custom'],
             'model_name' => ['required', 'string', 'max:255'],
             'system_prompt' => ['required', 'string'],
             'creativity_level' => ['required', 'numeric', 'min:0', 'max:1'],
@@ -156,17 +189,10 @@ class Create extends Component
             });
         }
 
-        // Get credentials filtered by provider if applicable
-        $credentialsQuery = Credential::query();
-
-        if (in_array($this->model_provider, ['openai', 'anthropic', 'google'])) {
-            $credentialsQuery->where('provider', $this->model_provider);
-        }
-
         return view('livewire.agents.create', [
             'contexts' => Context::where('type', 'agent')->get(),
             'tools' => $toolsQuery->get(),
-            'credentials' => $credentialsQuery->get(),
+            'credentials' => Credential::all(),
         ]);
     }
 }
