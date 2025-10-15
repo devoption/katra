@@ -7,6 +7,9 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Contexts\Create as ContextCreate;
+use App\Livewire\Contexts\Edit as ContextEdit;
+use App\Livewire\Contexts\Index as ContextIndex;
 use App\Livewire\Credentials\Create as CredentialCreate;
 use App\Livewire\Credentials\Edit as CredentialEdit;
 use App\Livewire\Credentials\Index as CredentialIndex;
@@ -41,6 +44,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/tools', ToolIndex::class)->name('tools.index');
     Route::get('/tools/create', ToolCreate::class)->name('tools.create');
     Route::get('/tools/{tool}/edit', ToolEdit::class)->name('tools.edit');
+
+    // Contexts
+    Route::get('/contexts', ContextIndex::class)->name('contexts.index');
+    Route::get('/contexts/create', ContextCreate::class)->name('contexts.create');
+    Route::get('/contexts/{context}/edit', ContextEdit::class)->name('contexts.edit');
 
     // Admin only routes
     Route::middleware('admin')->group(function () {
