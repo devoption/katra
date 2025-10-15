@@ -8,18 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tool_credential', function (Blueprint $table) {
+        Schema::create('credential_tool', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tool_id')->constrained()->onDelete('cascade');
             $table->foreignId('credential_id')->constrained()->onDelete('cascade');
+            $table->foreignId('tool_id')->constrained()->onDelete('cascade');
             $table->timestamps();
 
-            $table->unique(['tool_id', 'credential_id']);
+            $table->unique(['credential_id', 'tool_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('tool_credential');
+        Schema::dropIfExists('credential_tool');
     }
 };
