@@ -7,6 +7,9 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Credentials\Create as CredentialCreate;
+use App\Livewire\Credentials\Edit as CredentialEdit;
+use App\Livewire\Credentials\Index as CredentialIndex;
 use App\Livewire\Dashboard;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +33,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/agents', AgentIndex::class)->name('agents.index');
     Route::get('/agents/create', AgentCreate::class)->name('agents.create');
     Route::get('/agents/{agent}/edit', AgentEdit::class)->name('agents.edit');
+
+    // Admin only routes
+    Route::middleware('admin')->group(function () {
+        Route::get('/credentials', CredentialIndex::class)->name('credentials.index');
+        Route::get('/credentials/create', CredentialCreate::class)->name('credentials.create');
+        Route::get('/credentials/{credential}/edit', CredentialEdit::class)->name('credentials.edit');
+    });
 
     Route::post('/logout', function () {
         auth()->logout();
