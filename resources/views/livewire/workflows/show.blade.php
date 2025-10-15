@@ -3,6 +3,8 @@
         subscribeToExecution(executionId) {
             if (!this.subscriptions.includes(executionId)) {
                 console.log('✅ Subscribing to execution:', executionId);
+                console.log('🔌 Connection state BEFORE subscribe:', Echo.connector.pusher.connection.state);
+                
                 let channel = Echo.private('workflow-executions.' + executionId);
                 console.log('📡 Channel object:', channel);
                 
@@ -14,8 +16,17 @@
                         console.error('❌ Channel subscription error:', error);
                     });
                 
+                // Log connection state changes
+                Echo.connector.pusher.connection.bind('state_change', (states) => {
+                    console.log('📶 Connection state changed:', states.previous, '→', states.current);
+                    if (states.current === 'failed' || states.current === 'unavailable') {
+                        console.error('💥 Connection failed! Check Reverb server and config.');
+                    }
+                });
+                
                 this.subscriptions.push(executionId);
                 console.log('📋 Current subscriptions:', this.subscriptions);
+                console.log('🔌 Connection state AFTER subscribe:', Echo.connector.pusher.connection.state);
             } else {
                 console.log('⏭️  Already subscribed to execution:', executionId);
             }
