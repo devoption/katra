@@ -91,6 +91,25 @@
                         @enderror
                     </div>
 
+                    <!-- Account Status -->
+                    <div>
+                        <label class="block text-sm font-medium text-nord0 dark:text-nord6 mb-3">
+                            Account Status
+                        </label>
+                        <div class="flex items-center gap-4">
+                            <x-ui.badge :variant="$user->is_active ? 'success' : 'warning'" size="sm">
+                                {{ $user->is_active ? 'Active' : 'Inactive' }}
+                            </x-ui.badge>
+                            @if($user->id !== auth()->id())
+                                <p class="text-sm text-nord3 dark:text-nord4">
+                                    Toggle status from the <a href="{{ route('admin.users.index') }}" wire:navigate class="text-nord8 hover:underline">user list</a>
+                                </p>
+                            @else
+                                <p class="text-xs text-nord3 dark:text-nord4">You cannot change your own status</p>
+                            @endif
+                        </div>
+                    </div>
+
                     <!-- Password Change (Optional) -->
                     <div class="border-t border-nord4 dark:border-nord3 pt-6">
                         <h3 class="text-sm font-medium text-nord0 dark:text-nord6 mb-4">Change Password (Optional)</h3>

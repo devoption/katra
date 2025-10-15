@@ -49,6 +49,27 @@ class Index extends Component
         ]);
     }
 
+    public function toggleActive(User $user): void
+    {
+        if ($user->id === auth()->id()) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'You cannot deactivate your own account.',
+            ]);
+
+            return;
+        }
+
+        $newStatus = ! $user->is_active;
+
+        $user->update(['is_active' => $newStatus]);
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => $newStatus ? 'User activated successfully.' : 'User deactivated successfully.',
+        ]);
+    }
+
     public function deleteUser(User $user): void
     {
         if ($user->id === auth()->id()) {

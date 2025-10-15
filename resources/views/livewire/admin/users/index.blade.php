@@ -49,6 +49,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Joined</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -90,6 +91,22 @@
                                     @endif
                                 </button>
                             </td>
+                            <td class="px-6 py-4">
+                                <button
+                                    wire:click="toggleActive({{ $user->id }})"
+                                    @if($user->id === auth()->id()) disabled @endif
+                                    class="inline-flex items-center gap-2 @if($user->id !== auth()->id()) cursor-pointer hover:opacity-75 @else cursor-not-allowed opacity-50 @endif transition-opacity"
+                                >
+                                    <x-ui.badge :variant="$user->is_active ? 'success' : 'warning'" size="sm">
+                                        {{ $user->is_active ? 'Active' : 'Inactive' }}
+                                    </x-ui.badge>
+                                    @if($user->id !== auth()->id())
+                                        <svg class="w-4 h-4 text-nord3 dark:text-nord4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            </td>
                             <td class="px-6 py-4 text-sm text-nord3 dark:text-nord4">
                                 {{ $user->created_at->format('M d, Y') }}
                             </td>
@@ -118,7 +135,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
+                            <td colspan="6" class="px-6 py-12 text-center">
                                 <svg class="mx-auto h-12 w-12 text-nord3 dark:text-nord4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
