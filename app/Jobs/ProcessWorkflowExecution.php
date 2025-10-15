@@ -23,7 +23,9 @@ class ProcessWorkflowExecution implements ShouldQueue
             'started_at' => now(),
         ]);
 
+        \Log::info('📡 Broadcasting RUNNING status for execution: '.$this->execution->id);
         broadcast(new WorkflowExecutionUpdated($this->execution))->toOthers();
+        \Log::info('✅ Broadcast dispatched for execution: '.$this->execution->id);
 
         try {
             // TODO: Parse YAML definition
@@ -43,7 +45,9 @@ class ProcessWorkflowExecution implements ShouldQueue
                 ],
             ]);
 
+            \Log::info('📡 Broadcasting COMPLETED status for execution: '.$this->execution->id);
             broadcast(new WorkflowExecutionUpdated($this->execution))->toOthers();
+            \Log::info('✅ Broadcast dispatched for execution: '.$this->execution->id);
         } catch (\Exception $e) {
             $this->execution->update([
                 'status' => 'failed',
