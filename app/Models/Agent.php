@@ -26,6 +26,7 @@ class Agent extends Model
         'is_default',
         'is_active',
         'context_id',
+        'credential_id',
         'created_by',
     ];
 
@@ -55,6 +56,11 @@ class Agent extends Model
     public function context(): BelongsTo
     {
         return $this->belongsTo(Context::class);
+    }
+
+    public function credential(): BelongsTo
+    {
+        return $this->belongsTo(Credential::class);
     }
 
     public function tools(): BelongsToMany

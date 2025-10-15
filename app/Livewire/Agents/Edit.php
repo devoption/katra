@@ -31,6 +31,8 @@ class Edit extends Component
 
     public ?int $context_id = null;
 
+    public ?int $credential_id = null;
+
     public array $selected_tools = [];
 
     public string $tool_search = '';
@@ -68,6 +70,7 @@ class Edit extends Component
         $this->system_prompt = $agent->system_prompt;
         $this->creativity_level = (float) $agent->creativity_level;
         $this->context_id = $agent->context_id;
+        $this->credential_id = $agent->credential_id;
         $this->selected_tools = $agent->tools->pluck('id')->toArray();
     }
 
@@ -116,6 +119,7 @@ class Edit extends Component
             'system_prompt' => ['required', 'string'],
             'creativity_level' => ['required', 'numeric', 'min:0', 'max:1'],
             'context_id' => ['nullable', 'exists:contexts,id'],
+            'credential_id' => ['nullable', 'exists:credentials,id'],
             'selected_tools' => ['array'],
             'selected_tools.*' => ['exists:tools,id'],
         ];
@@ -135,6 +139,7 @@ class Edit extends Component
             'system_prompt' => $validated['system_prompt'],
             'creativity_level' => $validated['creativity_level'],
             'context_id' => $validated['context_id'],
+            'credential_id' => $validated['credential_id'],
         ]);
 
         $this->agent->tools()->sync($this->selected_tools);
@@ -159,9 +164,17 @@ class Edit extends Component
             });
         }
 
+        // Get credentials filtered by provider if applicable
+        $credentialsQuery = Credential::query();
+
+        if (in_array($this->model_provider, ['openai', 'anthropic', 'google'])) {
+            $credentialsQuery->where('provider', $this->model_provider);
+        }
+
         return view('livewire.agents.edit', [
             'contexts' => Context::where('type', 'agent')->get(),
             'tools' => $toolsQuery->get(),
+            'credentials' => $credentialsQuery->get(),
         ]);
     }
 }

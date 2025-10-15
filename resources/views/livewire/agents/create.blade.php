@@ -158,6 +158,32 @@
 
             <!-- Sidebar -->
             <div class="space-y-6">
+                <!-- Credential -->
+                <x-ui.card title="Authentication">
+                    <x-ui.select
+                        wire:model="credential_id"
+                        name="credential_id"
+                        label="Credential"
+                        :error="$errors->first('credential_id')"
+                        help="Optional - Select a credential for API authentication"
+                    >
+                        <option value="">None</option>
+                        @foreach($credentials as $credential)
+                            <option value="{{ $credential->id }}">
+                                {{ $credential->name }}
+                                @if($credential->provider)
+                                    ({{ ucfirst($credential->provider) }})
+                                @endif
+                            </option>
+                        @endforeach
+                    </x-ui.select>
+                    @if($credentials->isEmpty())
+                        <p class="text-xs text-nord12 mt-2">
+                            No credentials available. Admins can create credentials in the admin panel.
+                        </p>
+                    @endif
+                </x-ui.card>
+
                 <!-- Context -->
                 <x-ui.card title="Context">
                     <div class="space-y-3">
