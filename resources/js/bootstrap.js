@@ -30,6 +30,13 @@ try {
     });
     console.log('✅ Echo initialized successfully');
     console.log('🔌 Echo connection state after init:', window.Echo.connector.pusher.connection.state);
+    
+    // Force connection if not already connecting
+    if (window.Echo.connector.pusher.connection.state === 'initialized' || 
+        window.Echo.connector.pusher.connection.state === 'failed') {
+        console.log('🔄 Forcing connection to Reverb...');
+        window.Echo.connector.pusher.connect();
+    }
 } catch (error) {
     console.error('❌ Failed to initialize Echo:', error);
 }
