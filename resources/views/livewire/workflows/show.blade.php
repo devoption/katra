@@ -2,66 +2,16 @@
         subscriptions: [],
         subscribeToExecution(executionId) {
             if (!this.subscriptions.includes(executionId)) {
-                console.log('✅ Subscribing to execution:', executionId);
-                console.log('🔌 Connection state BEFORE subscribe:', Echo.connector.pusher.connection.state);
-                
-                let channel = Echo.private('workflow-executions.' + executionId);
-                console.log('📡 Channel object:', channel);
-                
-                channel.listen('WorkflowExecutionUpdated', (e) => {
-                        console.log('🎉 Received update for execution:', e);
+                Echo.private('workflow-executions.' + executionId)
+                    .listen('WorkflowExecutionUpdated', (e) => {
                         $wire.dispatch('workflow-execution-updated');
-                    })
-                    .error((error) => {
-                        console.error('❌ Channel subscription error:', error);
                     });
                 
-                // Log connection state changes
-                Echo.connector.pusher.connection.bind('state_change', (states) => {
-                    console.log('📶 Connection state changed:', states.previous, '→', states.current);
-                    if (states.current === 'failed' || states.current === 'unavailable') {
-                        console.error('💥 Connection failed! Check Reverb server and config.');
-                    }
-                });
-                
                 this.subscriptions.push(executionId);
-                console.log('📋 Current subscriptions:', this.subscriptions);
-                console.log('🔌 Connection state AFTER subscribe:', Echo.connector.pusher.connection.state);
-            } else {
-                console.log('⏭️  Already subscribed to execution:', executionId);
             }
         }
      }"
      x-init="
-        console.log('🚀 Initializing WebSocket subscriptions...');
-        console.log('🔌 Echo status:', typeof Echo !== 'undefined' ? 'Ready' : 'Not loaded');
-        console.log('🔌 Initial connection state:', Echo.connector.pusher.connection.state);
-        
-        // Listen for connection errors
-        Echo.connector.pusher.connection.bind('error', (error) => {
-            console.error('🔥 WebSocket connection error:', error);
-        });
-        
-        Echo.connector.pusher.connection.bind('connecting', () => {
-            console.log('🔄 Attempting to connect to Reverb...');
-        });
-        
-        Echo.connector.pusher.connection.bind('connected', () => {
-            console.log('✅ Connected to Reverb!');
-        });
-        
-        Echo.connector.pusher.connection.bind('disconnected', () => {
-            console.warn('⚠️ Disconnected from Reverb');
-        });
-        
-        Echo.connector.pusher.connection.bind('failed', () => {
-            console.error('💥 Connection to Reverb FAILED');
-        });
-        
-        Echo.connector.pusher.connection.bind('unavailable', () => {
-            console.error('❌ Reverb unavailable');
-        });
-        
         @if($executions->isNotEmpty())
             @foreach($executions as $execution)
                 @if($execution->status === 'running' || $execution->status === 'pending')
