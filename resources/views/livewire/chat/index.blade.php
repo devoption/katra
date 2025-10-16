@@ -198,7 +198,7 @@
                                 </div>
                             @endif
                             @if($agent->context)
-<div>
+                                <div>
                                     <span class="text-nord3 dark:text-nord4">Context:</span>
                                     <span class="text-nord0 dark:text-nord6 ml-2">{{ $agent->context->name }}</span>
                                 </div>

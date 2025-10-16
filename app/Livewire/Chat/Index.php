@@ -25,13 +25,27 @@ class Index extends Component
 
     public bool $isSending = false;
 
-    public function mount(?Conversation $conversation = null): void
+    public function mount($conversation = null): void
     {
-        if ($conversation && $conversation->user_id === auth()->id()) {
-            $this->conversationId = $conversation->id;
-            $this->agentId = $conversation->agent_id;
-        } else {
-            // Get default Katra agent
+        // Handle conversation parameter (can be ID or model)
+        if ($conversation instanceof Conversation) {
+            if ($conversation->user_id === auth()->id()) {
+                $this->conversationId = $conversation->id;
+                $this->agentId = $conversation->agent_id;
+            }
+        } elseif (is_numeric($conversation)) {
+            $conv = Conversation::where('id', $conversation)
+                ->where('user_id', auth()->id())
+                ->first();
+            
+            if ($conv) {
+                $this->conversationId = $conv->id;
+                $this->agentId = $conv->agent_id;
+            }
+        }
+
+        // Default to Katra agent if no conversation
+        if (!$this->agentId) {
             $defaultAgent = Agent::where('is_default', true)->first();
             $this->agentId = $defaultAgent?->id;
         }
@@ -215,7 +229,7 @@ class Index extends Component
         $agents = Agent::where('is_active', true)
             ->orderByRaw('is_default DESC')
             ->get();
-
+   
         return view('livewire.chat.index', [
             'conversations' => $conversations,
             'agents' => $agents,
