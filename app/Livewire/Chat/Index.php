@@ -103,6 +103,9 @@ class Index extends Component
                 ]);
 
                 $this->conversationId = $conversation->id;
+                
+                // Dispatch event to trigger frontend subscription
+                $this->dispatch('conversationCreated', conversationId: $conversation->id);
             } else {
                 $conversation = $this->conversation;
             }
@@ -111,8 +114,10 @@ class Index extends Component
             $userMessage = $this->message;
             $this->message = '';
 
-            // Dispatch to background to avoid blocking
+            // Dispatch to background with a small delay to ensure subscription is set up
             dispatch(function () use ($chatService, $conversation, $userMessage, $agent) {
+                // Small delay to ensure frontend is subscribed
+                usleep(500000); // 0.5 seconds
                 $chatService->sendMessage($conversation, $userMessage, $agent);
             })->afterResponse();
 

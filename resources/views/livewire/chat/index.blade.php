@@ -58,6 +58,13 @@
             }
             scrollToBottom();
         });
+        
+        Livewire.on('conversationCreated', (data) => {
+            console.log('🆕 Conversation created event:', data);
+            if (data.conversationId) {
+                subscribeToConversation(data.conversationId);
+            }
+        });
     "
 >
     <!-- Conversation Sidebar -->
