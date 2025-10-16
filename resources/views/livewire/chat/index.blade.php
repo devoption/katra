@@ -3,11 +3,15 @@
     x-data="{
         streamingMessageId: null,
         streamingContent: '',
+        subscribedConversations: [],
         
         subscribeToConversation(conversationId) {
-            if (conversationId) {
+            if (conversationId && !this.subscribedConversations.includes(conversationId)) {
+                console.log('🔌 Subscribing to conversation:', conversationId);
+                
                 Echo.private('conversations.' + conversationId)
                     .listen('.message.streaming', (e) => {
+                        console.log('📨 Received streaming chunk:', e);
                         this.streamingMessageId = e.message_id;
                         
                         if (e.chunk) {
@@ -15,11 +19,17 @@
                         }
                         
                         if (e.done) {
+                            console.log('✅ Streaming complete');
                             this.streamingMessageId = null;
                             this.streamingContent = '';
                             $wire.dispatch('message-streamed');
                         }
                     });
+                
+                this.subscribedConversations.push(conversationId);
+                console.log('✅ Subscribed to conversation:', conversationId);
+            } else if (conversationId) {
+                console.log('⏭️ Already subscribed to:', conversationId);
             }
         },
         
@@ -33,12 +43,16 @@
         }
     }"
     x-init="
+        console.log('🚀 Chat component initialized');
+        console.log('Initial conversation ID:', {{ $conversation ? $conversation->id : 'null' }});
+        
         @if($conversation)
             subscribeToConversation({{ $conversation->id }});
         @endif
         scrollToBottom();
         
         $watch('$wire.conversationId', (value) => {
+            console.log('🔄 Conversation ID changed to:', value);
             if (value) {
                 subscribeToConversation(value);
             }
@@ -198,7 +212,7 @@
                                 </div>
                             @endif
                             @if($agent->context)
-                                <div>
+<div>
                                     <span class="text-nord3 dark:text-nord4">Context:</span>
                                     <span class="text-nord0 dark:text-nord6 ml-2">{{ $agent->context->name }}</span>
                                 </div>
