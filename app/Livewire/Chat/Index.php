@@ -219,6 +219,8 @@ class Index extends Component
         return view('livewire.chat.index', [
             'conversations' => $conversations,
             'agents' => $agents,
+            'conversation' => $this->conversation,
+            'agent' => $this->agent,
         ]);
     }
 }
