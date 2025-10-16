@@ -237,10 +237,19 @@
             x-on:message-added="scrollToBottom()"
         >
             @if($conversation)
-                <div class="text-xs text-gray-500 mb-2">
-                    Debug: Conversation ID {{ $conversation->id }}, Messages: {{ $conversation->messages->count() }}
+                <div class="text-xs text-gray-500 mb-2 p-2 bg-yellow-100 dark:bg-yellow-900 rounded">
+                    <strong>DEBUG:</strong><br>
+                    Conversation ID: {{ $conversation->id }}<br>
+                    Conversation exists: {{ $conversation ? 'YES' : 'NO' }}<br>
+                    Messages count: {{ $conversation->messages->count() }}<br>
+                    Messages loaded: {{ $conversation->messages ? 'YES' : 'NO' }}<br>
+                    @if($conversation->messages->count() > 0)
+                        First message role: {{ $conversation->messages->first()->role }}<br>
+                        First message content: {{ substr($conversation->messages->first()->content, 0, 50) }}...
+                    @endif
                 </div>
-                @foreach($conversation->messages as $msg)
+                @if($conversation->messages->count() > 0)
+                    @foreach($conversation->messages as $msg)
                     @if($msg->isUser())
                         <!-- User Message -->
                         <div class="flex justify-end">
@@ -335,7 +344,12 @@
                             </div>
                         </div>
                     @endif
-                @endforeach
+                    @endforeach
+                @else
+                    <div class="flex items-center justify-center h-32">
+                        <p class="text-nord3 dark:text-nord4">No messages in this conversation yet.</p>
+                    </div>
+                @endif
             @else
                 <!-- Welcome Message -->
                 <div class="flex items-center justify-center h-full">
