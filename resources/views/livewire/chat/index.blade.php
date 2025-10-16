@@ -237,6 +237,9 @@
             x-on:message-added="scrollToBottom()"
         >
             @if($conversation)
+                <div class="text-xs text-gray-500 mb-2">
+                    Debug: Conversation ID {{ $conversation->id }}, Messages: {{ $conversation->messages->count() }}
+                </div>
                 @foreach($conversation->messages as $msg)
                     @if($msg->isUser())
                         <!-- User Message -->
