@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('admin.logs.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Logs</a>
+            <a href="{{ route('admin.logs.index') }}" wire:navigate class="hover:text-primary transition-colors">Logs</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -172,7 +172,7 @@
                                 @if($feedback->tags && count($feedback->tags) > 0)
                                     <div class="mt-2 flex flex-wrap gap-1">
                                         @foreach($feedback->tags as $tag)
-                                            <span class="px-2 py-1 text-xs bg-nord8 bg-opacity-20 text-nord8 rounded">{{ $tag }}</span>
+                                            <span class="px-2 py-1 text-xs bg-nord15 bg-opacity-20 text-nord15 rounded">{{ $tag }}</span>
                                         @endforeach
                                     </div>
                                 @endif
@@ -198,7 +198,7 @@
                             <select
                                 id="rating"
                                 wire:model="rating"
-                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                             >
                                 <option value="">Select rating</option>
                                 <option value="1">1 - Poor</option>
@@ -241,7 +241,7 @@
                         <select
                             id="feedback_type"
                             wire:model="feedback_type"
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                         >
                             <option value="">Select type</option>
                             <option value="helpful">Helpful</option>
@@ -263,7 +263,7 @@
                             wire:model="correction_text"
                             rows="3"
                             placeholder="Provide the correct response for training..."
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                         ></textarea>
                         <p class="mt-1 text-xs text-nord3 dark:text-nord4">This is critical for model fine-tuning!</p>
                     </div>
@@ -278,7 +278,7 @@
                             wire:model="explanation"
                             rows="2"
                             placeholder="Explain why this correction is needed..."
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                         ></textarea>
                     </div>
 
@@ -294,7 +294,7 @@
                             step="0.01"
                             min="0"
                             max="1"
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                         >
                         <p class="mt-1 text-xs text-nord3 dark:text-nord4">Higher weight = more important for training (1.0 = maximum importance)</p>
                     </div>
@@ -309,7 +309,7 @@
                             wire:model="notes"
                             rows="2"
                             placeholder="Any additional notes..."
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                         ></textarea>
                     </div>
 
@@ -361,7 +361,7 @@
                     </div>
                     <div class="flex justify-between items-center border-t border-nord4 dark:border-nord3 pt-3">
                         <span class="text-sm text-nord3 dark:text-nord4">Total Tokens:</span>
-                        <span class="font-semibold text-nord8">{{ number_format($interaction->total_tokens ?? 0) }}</span>
+                        <span class="font-semibold text-primary">{{ number_format($interaction->total_tokens ?? 0) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-nord3 dark:text-nord4">Latency:</span>

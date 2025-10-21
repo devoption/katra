@@ -10,6 +10,7 @@ use App\Models\ConversationMessage;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ChatService
 {
@@ -26,20 +27,23 @@ class ChatService
     public function sendMessage(
         Conversation $conversation,
         string $userMessage,
-        ?Agent $agent = null
+        ?Agent $agent = null,
+        bool $persistUserMessage = true
     ): ConversationMessage {
         $agent = $agent ?? $conversation->agent;
 
-        // Create user message
-        $userMessageRecord = $conversation->messages()->create([
-            'role' => 'user',
-            'content' => $userMessage,
-            'is_complete' => true,
-        ]);
+        if ($persistUserMessage) {
+            // Create user message
+            $conversation->messages()->create([
+                'role' => 'user',
+                'content' => $userMessage,
+                'is_complete' => true,
+            ]);
 
-        // Auto-generate conversation title from first message
-        if ($conversation->messages()->where('role', 'user')->count() === 1) {
-            $conversation->generateTitle();
+            // Auto-generate conversation title from first message
+            if ($conversation->messages()->where('role', 'user')->count() === 1) {
+                $conversation->generateTitle();
+            }
         }
 
         // Create assistant message placeholder (for streaming)
@@ -171,7 +175,7 @@ class ChatService
                         $message = $data['message'];
 
                         // Handle content streaming
-                        if (isset($message['content'])) {
+                        if (isset($message['content']) && !empty(trim($message['content']))) {
                             $fullResponse .= $message['content'];
 
                             // Broadcast chunk via Reverb
@@ -200,7 +204,7 @@ class ChatService
 
             // Update assistant message
             $assistantMessage->update([
-                'content' => $fullResponse,
+                'content' => $fullResponse ?: 'I apologize, but I was unable to generate a response. Please try again.',
                 'tool_calls' => ! empty($toolCalls) ? $toolCalls : null,
                 'is_streaming' => false,
                 'is_complete' => true,

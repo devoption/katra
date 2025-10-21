@@ -79,7 +79,7 @@
     <div class="mt-6 text-center">
         <p class="text-sm text-nord3 dark:text-nord4">
             Already have an account?
-            <a href="{{ route('login') }}" wire:navigate class="font-medium text-nord8 hover:text-nord7 transition-colors">
+            <a href="{{ route('login') }}" wire:navigate class="font-medium text-primary hover:text-nord7 transition-colors">
                 Sign in
             </a>
         </p>

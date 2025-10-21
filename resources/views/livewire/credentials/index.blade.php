@@ -96,14 +96,14 @@
                                     @if($viewingCredentialId === $credential->id)
                                         <button
                                             wire:click="hideCredential"
-                                            class="px-3 py-1.5 text-sm font-medium text-nord0 dark:text-nord4 hover:text-nord8 transition-colors"
+                                            class="px-3 py-1.5 text-sm font-medium text-nord0 dark:text-nord4 hover:text-primary transition-colors"
                                         >
                                             Hide
                                         </button>
                                     @else
                                         <button
                                             wire:click="viewCredential({{ $credential->id }})"
-                                            class="px-3 py-1.5 text-sm font-medium text-nord0 dark:text-nord4 hover:text-nord8 transition-colors"
+                                            class="px-3 py-1.5 text-sm font-medium text-nord0 dark:text-nord4 hover:text-primary transition-colors"
                                         >
                                             View
                                         </button>

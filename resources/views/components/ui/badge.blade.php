@@ -8,11 +8,11 @@ $baseClasses = 'inline-flex items-center font-medium rounded-full';
 
 $variantClasses = [
     'default' => 'bg-nord4 dark:bg-nord3 text-nord0 dark:text-nord4',
-    'primary' => 'bg-nord8 bg-black/10 dark:bg-black/20 text-nord8',
-    'success' => 'bg-nord14 bg-black/10 dark:bg-black/20 text-nord14',
-    'danger' => 'bg-nord11 bg-black/10 dark:bg-black/20 text-nord11',
-    'warning' => 'bg-nord13 bg-black/10 dark:bg-black/20 text-nord13',
-    'info' => 'bg-nord15 bg-black/10 dark:bg-black/20 text-nord15',
+    'primary' => 'bg-primary text-nord3',
+    'success' => 'bg-nord14 text-nord3',
+    'danger' => 'bg-nord11 text-nord4',
+    'warning' => 'bg-nord13 text-nord3',
+    'info' => 'bg-nord15 text-nord4',
 ];
 
 $sizeClasses = [

@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('workflows.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Workflows</a>
+            <a href="{{ route('workflows.index') }}" wire:navigate class="hover:text-primary transition-colors">Workflows</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -99,7 +99,7 @@
                         <div>
                             <span class="text-nord3 dark:text-nord4">Executions:</span>
                             <div class="text-nord0 dark:text-nord6 mt-1">
-                                <a href="{{ route('workflows.show', $workflow) }}" wire:navigate class="text-nord8 hover:text-nord7">
+                                <a href="{{ route('workflows.show', $workflow) }}" wire:navigate class="text-primary hover:text-primary">
                                     {{ $workflow->executions()->count() }} run(s)
                                 </a>
                             </div>

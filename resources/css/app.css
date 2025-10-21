@@ -5,6 +5,8 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@variant dark (.dark &);
+
 @theme {
     /* Fonts */
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -34,7 +36,48 @@
     --color-nord13: #EBCB8B; /* Yellow */
     --color-nord14: #A3BE8C; /* Green */
     --color-nord15: #B48EAD; /* Purple */
+
+    --color-primary: var(--color-nord15);
 }
+
+/* Brand primary color (Katra) */
+:root {
+    --color-primary: var(--color-nord15);
+    /* Slightly darker shade for hover/focus states */
+    --color-primary-hover: #A27AA0;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Smooth page transitions - disabled to prevent conflicts with Livewire navigation */
+
+/* Smooth navigation transitions */
+.nav-item {
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item:hover {
+    transform: translateX(2px);
+}
+
+/* Primary utility helpers */
+.bg-primary { background-color: var(--color-primary); }
+.hover\:bg-primary-hover:hover { background-color: var(--color-primary-hover); }
+.text-primary { color: var(--color-primary); }
+.border-primary { border-color: var(--color-primary); }
+
+/* Button - primary (ensures good contrast in both themes) */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #ffffff; /* Chosen for sufficient contrast against nord15 */
+}
+.btn-primary:hover { background-color: var(--color-primary-hover); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Rings & focus */
+.focus\:ring-primary:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.ring-primary { box-shadow: 0 0 0 2px var(--color-primary); }
+.hover\:text-primary:hover { color: var(--color-primary); }
 
 /* Custom scrollbar for dark theme */
 .dark ::-webkit-scrollbar {
@@ -52,7 +95,7 @@
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-nord8);
+    background: var(--color-primary);
 }
 
 /* Light theme scrollbar */
@@ -71,7 +114,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-nord8);
+    background: var(--color-primary);
 }
 
 /* Markdown Content Styling for Chat */
@@ -136,11 +179,11 @@
 }
 
 .markdown-content blockquote {
-    @apply border-l-4 border-nord8 pl-4 italic mb-3;
+    @apply border-l-4 border-primary pl-4 italic mb-3;
 }
 
 .markdown-content a {
-    @apply text-nord8 hover:underline;
+    @apply text-primary hover:underline;
 }
 
 .markdown-content table {

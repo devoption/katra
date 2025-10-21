@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('admin.users.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Users</a>
+            <a href="{{ route('admin.users.index') }}" wire:navigate class="hover:text-primary transition-colors">Users</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -26,7 +26,7 @@
                                 type="text"
                                 id="first_name"
                                 wire:model="first_name"
-                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                 required
                             >
                             @error('first_name')
@@ -42,7 +42,7 @@
                                 type="text"
                                 id="last_name"
                                 wire:model="last_name"
-                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                 required
                             >
                             @error('last_name')
@@ -60,7 +60,7 @@
                             type="email"
                             id="email"
                             wire:model="email"
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                             required
                         >
                         @error('email')
@@ -77,7 +77,7 @@
                             id="role"
                             wire:model="role"
                             @if($user->id === auth()->id()) disabled @endif
-                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors @if($user->id === auth()->id()) opacity-50 cursor-not-allowed @endif"
+                            class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors @if($user->id === auth()->id()) opacity-50 cursor-not-allowed @endif"
                             required
                         >
                             <option value="user">User</option>
@@ -102,7 +102,7 @@
                             </x-ui.badge>
                             @if($user->id !== auth()->id())
                                 <p class="text-sm text-nord3 dark:text-nord4">
-                                    Toggle status from the <a href="{{ route('admin.users.index') }}" wire:navigate class="text-nord8 hover:underline">user list</a>
+            Toggle status from the <a href="{{ route('admin.users.index') }}" wire:navigate class="text-primary hover:underline">user list</a>
                                 </p>
                             @else
                                 <p class="text-xs text-nord3 dark:text-nord4">You cannot change your own status</p>
@@ -123,7 +123,7 @@
                                     type="password"
                                     id="password"
                                     wire:model="password"
-                                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                     autocomplete="new-password"
                                 >
                                 @error('password')
@@ -139,7 +139,7 @@
                                     type="password"
                                     id="password_confirmation"
                                     wire:model="password_confirmation"
-                                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                     autocomplete="new-password"
                                 >
                             </div>

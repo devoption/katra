@@ -1,8 +1,7 @@
 <div
-    class="flex h-[calc(100vh-4rem)] -m-6"
+    class="flex h-full relative"
+    x-cloak
     x-data="{
-        streamingMessageId: null,
-        streamingContent: '',
         subscribedConversations: [],
         
         subscribeToConversation(conversationId) {
@@ -12,17 +11,22 @@
                 Echo.private('conversations.' + conversationId)
                     .listen('.message.streaming', (e) => {
                         console.log('📨 Received streaming chunk:', e);
-                        this.streamingMessageId = e.message_id;
-                        
-                        if (e.chunk) {
-                            this.streamingContent += e.chunk;
-                        }
+                        console.log('📨 Echo connection state:', Echo.connector.pusher.connection.state);
                         
                         if (e.done) {
                             console.log('✅ Streaming complete');
-                            this.streamingMessageId = null;
-                            this.streamingContent = '';
-                            $wire.dispatch('message-streamed');
+                            // Final refresh to show complete message
+                            $wire.$refresh();
+                            // Scroll to bottom after refresh
+                            setTimeout(() => {
+                                const chatArea = document.getElementById('chat-messages');
+                                if (chatArea) {
+                                    chatArea.scrollTop = chatArea.scrollHeight;
+                                }
+                            }, 100);
+                        } else {
+                            // Refresh on chunks to show streaming content
+                            $wire.$refresh();
                         }
                     });
                 
@@ -40,23 +44,39 @@
                     chatArea.scrollTop = chatArea.scrollHeight;
                 }
             }, 100);
+        },
+        
+        scrollToBottomImmediate() {
+            const chatArea = document.getElementById('chat-messages');
+            if (chatArea) {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
         }
     }"
     x-init="
         console.log('🚀 Chat component initialized');
         console.log('Initial conversation ID:', {{ $conversation ? $conversation->id : 'null' }});
+        console.log('🔌 Echo connection state:', Echo.connector.pusher.connection.state);
+        console.log('🔌 Echo config:', {
+            host: Echo.connector.pusher.config.host,
+            port: Echo.connector.pusher.config.port,
+            scheme: Echo.connector.pusher.config.scheme
+        });
         
         @if($conversation)
             subscribeToConversation({{ $conversation->id }});
         @endif
-        scrollToBottom();
+        
+        // Scroll to bottom immediately when component loads
+        scrollToBottomImmediate();
         
         $watch('$wire.conversationId', (value) => {
             console.log('🔄 Conversation ID changed to:', value);
             if (value) {
                 subscribeToConversation(value);
+                // Scroll to bottom when switching conversations
+                scrollToBottomImmediate();
             }
-            scrollToBottom();
         });
         
         Livewire.on('conversationCreated', (data) => {
@@ -65,19 +85,26 @@
                 subscribeToConversation(data.conversationId);
             }
         });
+        
+        // Monitor Echo connection state changes
+        Echo.connector.pusher.connection.bind('state_change', (states) => {
+            console.log('🔌 Echo connection state changed:', states.previous, '->', states.current);
+        });
+        
+        // Test connection after a delay
+        setTimeout(() => {
+            console.log('🧪 Testing Echo connection...');
+            console.log('🔌 Final Echo state:', Echo.connector.pusher.connection.state);
+            if (Echo.connector.pusher.connection.state === 'connected') {
+                console.log('✅ Echo is connected!');
+            } else {
+                console.log('❌ Echo is not connected. State:', Echo.connector.pusher.connection.state);
+            }
+        }, 2000);
     "
 >
     <!-- Conversation Sidebar -->
-    <div
-        x-show="$wire.showSidebar"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="-translate-x-full"
-        x-transition:enter-end="translate-x-0"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="translate-x-0"
-        x-transition:leave-end="-translate-x-full"
-        class="w-80 bg-nord6 dark:bg-nord0 border-r border-nord4 dark:border-nord1 flex flex-col"
-    >
+    <div class="w-80 bg-nord6 dark:bg-nord0 border-r border-nord4 dark:border-nord1 flex flex-col flex-shrink-0">
         <!-- Sidebar Header -->
         <div class="p-4 border-b border-nord4 dark:border-nord1">
             <div class="flex items-center justify-between mb-4">
@@ -102,9 +129,10 @@
                         {{ $group }}
                     </h3>
                     @foreach($groupConversations as $conv)
-                        <button
-                            wire:click="loadConversation({{ $conv->id }})"
-                            class="w-full text-left p-3 rounded-lg mb-1 transition-colors {{ $conversationId === $conv->id ? 'bg-nord8 text-white' : 'hover:bg-nord4 dark:hover:bg-nord1 text-nord0 dark:text-nord6' }}"
+                        <a
+                            href="{{ route('chat.show', ['conversation' => $conv->id]) }}"
+                            wire:navigate
+                            class="block w-full text-left p-3 rounded-lg mb-1 transition-colors {{ $conversationId === $conv->id ? 'bg-primary text-white' : 'hover:bg-nord4 dark:hover:bg-nord1 text-nord0 dark:text-nord6' }}"
                         >
                             <div class="flex items-start justify-between">
                                 <div class="flex-1 min-w-0">
@@ -117,7 +145,7 @@
                                 </div>
                                 @if($conversationId === $conv->id)
                                     <button
-                                        wire:click.stop="deleteConversation({{ $conv->id }})"
+                                        wire:click.prevent.stop="deleteConversation({{ $conv->id }})"
                                         wire:confirm="Are you sure you want to delete this conversation?"
                                         class="ml-2 p-1 hover:bg-nord11 hover:bg-opacity-20 rounded"
                                     >
@@ -127,7 +155,7 @@
                                     </button>
                                 @endif
                             </div>
-                        </button>
+                        </a>
                     @endforeach
                 </div>
             @empty
@@ -143,22 +171,23 @@
     </div>
 
     <!-- Main Chat Area -->
-    <div class="flex-1 flex flex-col bg-white dark:bg-nord1">
+    <div class="flex-1 flex flex-col bg-white dark:bg-nord1 h-[calc(100vh-4rem)]">
+        <!-- Loading overlay to prevent flash on navigation/switch -->
+        <div wire:loading class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-nord0/70">
+            <div class="flex items-center gap-2 text-nord3 dark:text-nord4">
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Loading…</span>
+            </div>
+        </div>
         <!-- Chat Header -->
         <div class="px-6 py-4 border-b border-nord4 dark:border-nord2 bg-nord6 dark:bg-nord0">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <button
-                        wire:click="toggleSidebar"
-                        class="p-2 hover:bg-nord4 dark:hover:bg-nord1 rounded-lg transition-colors"
-                    >
-                        <svg class="w-5 h-5 text-nord0 dark:text-nord6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
 
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-nord8 rounded-full flex items-center justify-center">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                             <span class="text-white text-sm font-semibold">{{ substr($agent?->name ?? 'K', 0, 1) }}</span>
                         </div>
                         <div>
@@ -172,7 +201,7 @@
                     <!-- Agent Selector -->
                     <select
                         wire:model.live="agentId"
-                        class="px-3 py-1.5 text-sm rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                        class="px-3 py-1.5 text-sm rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                     >
                         @foreach($agents as $a)
                             <option value="{{ $a->id }}">{{ $a->name }}@if($a->is_default) ⭐@endif</option>
@@ -182,7 +211,7 @@
                     <!-- New Conversation -->
                     <button
                         wire:click="newConversation"
-                        class="px-4 py-1.5 text-sm bg-nord8 text-white rounded-lg hover:bg-nord9 transition-colors"
+                        class="px-4 py-1.5 text-sm btn-primary rounded-lg transition-colors"
                     >
                         New Chat
                     </button>
@@ -194,7 +223,7 @@
                 <div x-data="{ showInfo: false }" class="mt-3">
                     <button
                         @click="showInfo = !showInfo"
-                        class="text-xs text-nord3 dark:text-nord4 hover:text-nord8 flex items-center gap-1"
+                        class="text-xs text-nord3 dark:text-nord4 text-primary flex items-center gap-1"
                     >
                         <svg class="w-3 h-3" :class="showInfo ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -213,7 +242,7 @@
                                     <span class="text-nord3 dark:text-nord4">Tools:</span>
                                     <div class="mt-1 flex flex-wrap gap-1">
                                         @foreach($agent->tools as $tool)
-                                            <span class="px-2 py-0.5 bg-nord8 bg-opacity-20 text-nord8 rounded text-xs">{{ $tool->name }}</span>
+                                            <span class="px-2 py-0.5 bg-nord9 bg-opacity-20 text-nord6 rounded text-xs">{{ $tool->name }}</span>
                                         @endforeach
                                     </div>
                                 </div>
@@ -235,19 +264,9 @@
             id="chat-messages"
             class="flex-1 overflow-y-auto px-6 py-4 space-y-4"
             x-on:message-added="scrollToBottom()"
+            wire:loading.remove
         >
             @if($conversation)
-                <div class="text-xs text-gray-500 mb-2 p-2 bg-yellow-100 dark:bg-yellow-900 rounded">
-                    <strong>DEBUG:</strong><br>
-                    Conversation ID: {{ $conversation->id }}<br>
-                    Conversation exists: {{ $conversation ? 'YES' : 'NO' }}<br>
-                    Messages count: {{ $conversation->messages->count() }}<br>
-                    Messages loaded: {{ $conversation->messages ? 'YES' : 'NO' }}<br>
-                    @if($conversation->messages->count() > 0)
-                        First message role: {{ $conversation->messages->first()->role }}<br>
-                        First message content: {{ substr($conversation->messages->first()->content, 0, 50) }}...
-                    @endif
-                </div>
                 @if($conversation->messages->count() > 0)
                     @foreach($conversation->messages as $msg)
                     @if($msg->isUser())
@@ -258,7 +277,7 @@
                                     <span class="text-xs text-nord3 dark:text-nord4">{{ $msg->created_at->format('H:i') }}</span>
                                     <span class="text-sm font-medium text-nord0 dark:text-nord6">You</span>
                                 </div>
-                                <div class="bg-nord8 text-white rounded-2xl rounded-tr-sm px-4 py-3">
+                                <div class="bg-nord15 rounded-2xl rounded-tr-sm px-4 py-3 text-nord0 dark:text-nord6">
                                     <div class="prose prose-sm max-w-none text-white">
                                         {!! Str::markdown($msg->content) !!}
                                     </div>
@@ -309,19 +328,21 @@
                                 <!-- Assistant Response -->
                                 <div class="bg-nord4 dark:bg-nord2 text-nord0 dark:text-nord6 rounded-2xl rounded-tl-sm px-4 py-3">
                                     <div class="prose prose-sm max-w-none dark:prose-invert">
-                                        <template x-if="streamingMessageId === {{ $msg->id }}">
-                                            <div x-html="marked.parse(streamingContent || '...')" class="markdown-content"></div>
-                                        </template>
-                                        <template x-if="streamingMessageId !== {{ $msg->id }}">
+                                        @if($msg->is_streaming && !$msg->is_complete)
+                                            <div class="markdown-content animate-pulse">
+                                                <span>Thinking...</span>
+                                                <span class="animate-pulse">▋</span>
+                                            </div>
+                                        @else
                                             <div class="markdown-content">{!! Str::markdown($msg->content ?: '...') !!}</div>
-                                        </template>
+                                        @endif
                                     </div>
 
                                     @if($msg->is_streaming && !$msg->is_complete)
                                         <div class="flex items-center gap-1 mt-2 text-nord3 dark:text-nord4">
-                                            <div class="w-2 h-2 bg-nord8 rounded-full animate-pulse"></div>
-                                            <div class="w-2 h-2 bg-nord8 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
-                                            <div class="w-2 h-2 bg-nord8 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                                            <div class="w-2 h-2 bg-nord15 rounded-full animate-pulse"></div>
+                                            <div class="w-2 h-2 bg-nord15 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                                            <div class="w-2 h-2 bg-nord15 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
                                         </div>
                                     @endif
                                 </div>
@@ -354,7 +375,7 @@
                 <!-- Welcome Message -->
                 <div class="flex items-center justify-center h-full">
                     <div class="text-center max-w-2xl px-4">
-                        <div class="w-20 h-20 bg-nord8 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="text-white text-3xl font-bold">K</span>
                         </div>
                         <h1 class="text-3xl font-bold text-nord0 dark:text-nord6 mb-2">Chat with Katra</h1>
@@ -376,8 +397,8 @@
                         @endif
 
                         <div class="grid grid-cols-2 gap-3 text-sm">
-                            <div class="p-3 bg-nord10 bg-opacity-10 rounded-lg text-left">
-                                <div class="font-medium text-nord10 mb-1">💬 Natural Conversations</div>
+                            <div class="p-3 bg-nord15 bg-opacity-10 rounded-lg text-left">
+                                <div class="font-medium text-nord15 mb-1">💬 Natural Conversations</div>
                                 <p class="text-xs text-nord3 dark:text-nord4">Chat naturally and get intelligent responses</p>
                             </div>
                             <div class="p-3 bg-nord14 bg-opacity-10 rounded-lg text-left">
@@ -400,33 +421,38 @@
 
         <!-- Message Input -->
         <div class="p-6 border-t border-nord4 dark:border-nord2 bg-nord6 dark:bg-nord0">
-            <form wire:submit="sendMessage" class="flex items-end gap-3">
+            <form wire:submit="sendMessage" class="flex justify-between gap-3" x-data="{ text: @entangle('message').defer }">
                 <div class="flex-1">
                     <textarea
-                        wire:model="message"
+                        wire:model.defer="message"
                         placeholder="Type your message..."
                         rows="1"
-                        class="w-full px-4 py-3 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors resize-none"
+                        class="w-full px-4 py-3 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 placeholder:text-nord3 dark:placeholder:text-nord4 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none overflow-auto"
                         x-data="{
+                            maxH: 240,
+                            baseH: 44,
                             resize() {
-                                $el.style.height = 'auto';
-                                $el.style.height = Math.min($el.scrollHeight, 200) + 'px';
+                                requestAnimationFrame(() => {
+                                    $el.style.height = 'auto';
+                                    const next = Math.min($el.scrollHeight, this.maxH);
+                                    $el.style.height = Math.max(this.baseH, next) + 'px';
+                                    $el.style.overflowY = ($el.scrollHeight > this.maxH) ? 'auto' : 'hidden';
+                                });
                             }
                         }"
-                        x-on:input="resize()"
+                        x-on:input="text = $el.value; resize()"
+                        x-on:paste="text = $el.value; resize()"
+                        x-on:focus="resize()"
                         x-init="resize()"
-                        @keydown.enter.prevent="if (!$event.shiftKey) { $wire.sendMessage(); $el.style.height = 'auto'; }"
+                        @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); $wire.sendMessage(); $el.style.height = 'auto'; }"
                         @if($isSending) disabled @endif
                     ></textarea>
-                    <p class="text-xs text-nord3 dark:text-nord4 mt-1">
-                        Press Enter to send, Shift+Enter for new line
-                    </p>
                 </div>
 
                 <button
                     type="submit"
-                    @if($isSending || empty(trim($message))) disabled @endif
-                    class="px-6 py-3 bg-nord8 text-white rounded-lg hover:bg-nord9 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="$wire.isSending || !text || !text.trim().length"
+                    class="px-4 h-[48px]  btn-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 flex items-center justify-center"
                 >
                     @if($isSending)
                         <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,6 +465,9 @@
                     @endif
                 </button>
             </form>
+            <p class="text-xs text-nord3 dark:text-nord4 mt-2">
+                Press Enter to send, Shift+Enter for new line
+            </p>
         </div>
     </div>
 </div>

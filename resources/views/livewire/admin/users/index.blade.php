@@ -18,7 +18,7 @@
                     id="search"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search by name or email..."
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
             </div>
 
@@ -30,7 +30,7 @@
                 <select
                     id="roleFilter"
                     wire:model.live="roleFilter"
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
                     <option value="">All Roles</option>
                     <option value="admin">Admin</option>
@@ -59,7 +59,7 @@
                         <tr class="hover:bg-nord4 dark:hover:bg-nord2 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-nord8 flex items-center justify-center text-white font-semibold">
+                                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
                                         {{ strtoupper(substr($user->first_name, 0, 1)) }}{{ strtoupper(substr($user->last_name, 0, 1)) }}
                                     </div>
                                     <div>

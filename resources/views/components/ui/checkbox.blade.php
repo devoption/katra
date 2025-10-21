@@ -11,7 +11,7 @@
         name="{{ $name }}"
         id="{{ $name }}"
         {{ $attributes->merge([
-            'class' => 'w-4 h-4 rounded border-nord4 dark:border-nord2 text-nord8 focus:ring-2 focus:ring-nord8 focus:ring-offset-0 bg-nord6 dark:bg-nord0 transition-all duration-200',
+            'class' => 'w-4 h-4 rounded border-nord4 dark:border-nord2 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 bg-nord6 dark:bg-nord0 transition-all duration-200',
             'checked' => $checked,
             'disabled' => $disabled,
         ]) }}

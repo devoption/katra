@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('contexts.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Contexts</a>
+            <a href="{{ route('contexts.index') }}" wire:navigate class="hover:text-primary transition-colors">Contexts</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -72,7 +72,7 @@
                             <button
                                 type="button"
                                 @click="$wire.use_json_editor = !$wire.use_json_editor"
-                                class="text-xs text-nord8 hover:text-nord7 transition-colors"
+                                class="text-xs text-primary hover:text-primary transition-colors"
                             >
                                 {{ $use_json_editor ? 'Switch to Simple Editor' : 'Switch to JSON Editor' }}
                             </button>

@@ -11,7 +11,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.chat')]
 #[Title('Chat with Katra')]
 class Index extends Component
 {
@@ -21,12 +21,17 @@ class Index extends Component
 
     public string $message = '';
 
-    public bool $showSidebar = true;
-
     public bool $isSending = false;
 
     public function mount($conversation = null): void
     {
+        // Mount lifecycle - ensure default agent if none
+        
+        // Don't reset conversation ID if it's already set (prevents reset on re-mount)
+        if ($this->conversationId && !$conversation) {
+            return;
+        }
+        
         // Handle conversation parameter (can be ID or model)
         if ($conversation instanceof Conversation) {
             if ($conversation->user_id === auth()->id()) {
@@ -37,7 +42,7 @@ class Index extends Component
             $conv = Conversation::where('id', $conversation)
                 ->where('user_id', auth()->id())
                 ->first();
-            
+
             if ($conv) {
                 $this->conversationId = $conv->id;
                 $this->agentId = $conv->agent_id;
@@ -45,10 +50,11 @@ class Index extends Component
         }
 
         // Default to Katra agent if no conversation
-        if (!$this->agentId) {
+        if (! $this->agentId) {
             $defaultAgent = Agent::where('is_default', true)->first();
             $this->agentId = $defaultAgent?->id;
         }
+        
     }
 
     public function getConversationProperty(): ?Conversation
@@ -57,8 +63,12 @@ class Index extends Component
             return null;
         }
 
-        return Conversation::with(['messages.agent', 'agent'])
-            ->findOrFail($this->conversationId);
+        $conversation = Conversation::with(['messages.agent', 'agent'])
+            ->where('id', $this->conversationId)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        return $conversation;
     }
 
     public function getAgentProperty(): ?Agent
@@ -67,7 +77,7 @@ class Index extends Component
             return null;
         }
 
-        return Agent::with(['tools', 'context'])->findOrFail($this->agentId);
+        return Agent::with(['tools', 'context'])->find($this->agentId);
     }
 
     public function sendMessage(): void
@@ -103,22 +113,45 @@ class Index extends Component
                 ]);
 
                 $this->conversationId = $conversation->id;
-                
+
                 // Dispatch event to trigger frontend subscription
                 $this->dispatch('conversationCreated', conversationId: $conversation->id);
             } else {
                 $conversation = $this->conversation;
             }
 
-            // Send message (this handles streaming via ChatService)
+            // Optimistic UI: append the user message locally so it renders immediately
             $userMessage = $this->message;
             $this->message = '';
+
+            // Ensure conversation exists for optimistic append
+            if (! $this->conversationId) {
+                $conversation = Conversation::create([
+                    'user_id' => auth()->id(),
+                    'agent_id' => $agent->id,
+                ]);
+                $this->conversationId = $conversation->id;
+                $this->dispatch('conversationCreated', conversationId: $conversation->id);
+            } else {
+                $conversation = $this->conversation;
+            }
+
+            // Persist the user message immediately so it shows up without refresh
+            $conversation->messages()->create([
+                'role' => 'user',
+                'content' => $userMessage,
+                'is_complete' => true,
+            ]);
+
+            // Refresh to show the user message immediately and scroll to bottom
+            $this->js('$wire.$refresh(); setTimeout(() => { const chatArea = document.getElementById("chat-messages"); if (chatArea) chatArea.scrollTop = chatArea.scrollHeight; }, 100);');
 
             // Dispatch to background with a small delay to ensure subscription is set up
             dispatch(function () use ($chatService, $conversation, $userMessage, $agent) {
                 // Small delay to ensure frontend is subscribed
                 usleep(500000); // 0.5 seconds
-                $chatService->sendMessage($conversation, $userMessage, $agent);
+                // We already persisted the user message above for immediate rendering
+                $chatService->sendMessage($conversation, $userMessage, $agent, persistUserMessage: false);
             })->afterResponse();
 
         } catch (\Exception $e) {
@@ -197,11 +230,6 @@ class Index extends Component
         }
     }
 
-    public function toggleSidebar(): void
-    {
-        $this->showSidebar = ! $this->showSidebar;
-    }
-
     #[On('message-streamed')]
     public function onMessageStreamed(): void
     {
@@ -234,7 +262,7 @@ class Index extends Component
         $agents = Agent::where('is_active', true)
             ->orderByRaw('is_default DESC')
             ->get();
-   
+
         return view('livewire.chat.index', [
             'conversations' => $conversations,
             'agents' => $agents,
