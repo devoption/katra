@@ -6,11 +6,11 @@
         <!-- Quick Stats -->
         <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
             <x-ui.card :padding="true" class="text-center">
-                <div class="text-2xl font-bold text-nord8">{{ number_format($stats['total']) }}</div>
+                <div class="text-2xl font-bold text-primary">{{ number_format($stats['total']) }}</div>
                 <div class="text-xs text-nord3 dark:text-nord4 mt-1">Total</div>
             </x-ui.card>
             <x-ui.card :padding="true" class="text-center">
-                <div class="text-2xl font-bold text-nord10">{{ number_format($stats['today']) }}</div>
+                <div class="text-2xl font-bold text-primary">{{ number_format($stats['today']) }}</div>
                 <div class="text-xs text-nord3 dark:text-nord4 mt-1">Today</div>
             </x-ui.card>
             <x-ui.card :padding="true" class="text-center">
@@ -45,7 +45,7 @@
                     id="search"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search prompts, responses, UUID..."
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
             </div>
 
@@ -57,7 +57,7 @@
                 <select
                     id="typeFilter"
                     wire:model.live="typeFilter"
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
                     <option value="">All Types</option>
                     @foreach($types as $type)
@@ -74,7 +74,7 @@
                 <select
                     id="statusFilter"
                     wire:model.live="statusFilter"
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
                     <option value="">All Status</option>
                     <option value="success">Success</option>
@@ -92,7 +92,7 @@
                 <select
                     id="providerFilter"
                     wire:model.live="providerFilter"
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
                     <option value="">All Providers</option>
                     @foreach($providers as $provider)
@@ -111,7 +111,7 @@
                 <select
                     id="dateFilter"
                     wire:model.live="dateFilter"
-                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                    class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 >
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
@@ -126,7 +126,7 @@
                     <input
                         type="checkbox"
                         wire:model.live="onlyWithFeedback"
-                        class="rounded border-nord4 dark:border-nord3 text-nord8 focus:ring-nord8 focus:ring-offset-0"
+                        class="rounded border-nord4 dark:border-nord3 text-primary focus:ring-primary focus:ring-offset-0"
                     >
                     <span class="ml-2 text-sm text-nord0 dark:text-nord6">Only with Feedback</span>
                 </label>
@@ -138,7 +138,7 @@
                     <input
                         type="checkbox"
                         wire:model.live="onlyTrainingData"
-                        class="rounded border-nord4 dark:border-nord3 text-nord8 focus:ring-nord8 focus:ring-offset-0"
+                        class="rounded border-nord4 dark:border-nord3 text-primary focus:ring-primary focus:ring-offset-0"
                     >
                     <span class="ml-2 text-sm text-nord0 dark:text-nord6">Training Data Only</span>
                 </label>
@@ -160,7 +160,7 @@
                 <thead class="bg-nord4 dark:bg-nord2 border-b border-nord4 dark:border-nord3">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-nord0 dark:text-nord4 uppercase tracking-wider">
-                            <button wire:click="sortBy('created_at')" class="flex items-center gap-1 hover:text-nord8">
+                            <button wire:click="sortBy('created_at')" class="flex items-center gap-1 hover:text-primary">
                                 Time
                                 @if($sortBy === 'created_at')
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

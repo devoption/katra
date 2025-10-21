@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', mobileMenuOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,9 +39,9 @@
         @livewireStyles
     </head>
     <body class="font-sans antialiased bg-nord6 dark:bg-nord0 text-nord0 dark:text-nord4 transition-colors duration-200">
-        <div class="min-h-screen flex">
+        <div class="min-h-screen max-h-screen flex">
             <!-- Sidebar -->
-            <aside class="hidden md:flex md:flex-col md:w-64 bg-nord5 dark:bg-nord1 border-r border-nord4 dark:border-nord2 transition-colors duration-200">
+            <aside class="hidden md:flex md:flex-col md:w-64 bg-nord5 dark:bg-nord1 border-r border-nord4 dark:border-nord2 transition-colors duration-200" x-cloak>
                 <div class="flex items-center justify-between h-16 px-6 border-b border-nord4 dark:border-nord2">
                     <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
                         <svg class="h-8" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" clip-rule="evenodd" viewBox="0 0 212.89 43.0229">
@@ -54,43 +54,40 @@
                 <!-- Navigation -->
                 <x-navigation />
 
-
-                <!-- User menu -->
+                <!-- User Info -->
                 @auth
                 <div class="p-4 border-t border-nord4 dark:border-nord2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                                <span class="text-nord6 text-sm font-medium">
-                                    @if(isset(auth()->user()->first_name))
-                                        {{ substr(auth()->user()->first_name, 0, 1) }}{{ substr(auth()->user()->last_name ?? '', 0, 1) }}
-                                    @else
-                                        {{ substr(auth()->user()->name ?? auth()->user()->email, 0, 2) }}
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-nord0 dark:text-nord6 truncate">
-                                    @if(isset(auth()->user()->first_name))
-                                        {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
-                                    @else
-                                        {{ auth()->user()->name ?? 'User' }}
-                                    @endif
-                                </p>
-                                <p class="text-xs text-nord3 dark:text-nord4 truncate">
-                                    {{ auth()->user()->email }}
-                                </p>
-                            </div>
+                    <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <span class="text-nord6 text-sm font-medium">
+                                @if(isset(auth()->user()->first_name))
+                                    {{ substr(auth()->user()->first_name, 0, 1) }}{{ substr(auth()->user()->last_name, 0, 1) }}
+                                @else
+                                    {{ substr(auth()->user()->name ?? auth()->user()->email, 0, 2) }}
+                                @endif
+                            </span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-nord0 dark:text-nord6 truncate">
+                                @if(isset(auth()->user()->first_name))
+                                    {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+                                @else
+                                    {{ auth()->user()->name ?? 'User' }}
+                                @endif
+                            </p>
+                            <p class="text-xs text-nord3 dark:text-nord4 truncate">
+                                {{ auth()->user()->email }}
+                            </p>
                         </div>
                     </div>
                 </div>
                 @endauth
             </aside>
 
-            <!-- Main Content -->
+            <!-- Main Content Area - Full Width for Chat -->
             <div class="flex-1 flex flex-col overflow-hidden">
                 <!-- Top Header -->
-                <header class="bg-nord5 dark:bg-nord1 border-b border-nord4 dark:border-nord2 transition-colors duration-200">
+                <header class="bg-nord5 dark:bg-nord1 border-b border-nord4 dark:border-nord2 transition-colors duration-200" x-cloak>
                     <div class="flex items-center justify-between h-16 px-6">
                         <!-- Mobile menu button -->
                         <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-nord0 dark:text-nord4">
@@ -114,46 +111,55 @@
                         <!-- Right side actions -->
                         <div class="flex items-center space-x-4">
                             <!-- Theme toggle -->
-                            <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-nord4 dark:hover:bg-nord2 transition-colors duration-200">
-                                <svg x-show="!darkMode" class="w-5 h-5 text-nord0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                                <svg x-show="darkMode" class="w-5 h-5 text-nord4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button @click="darkMode = !darkMode" class="p-2 text-nord3 dark:text-nord4 hover:text-nord0 dark:hover:text-nord6 transition-colors duration-200">
+                                <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>
                             </button>
 
                             <!-- Notifications -->
-                            <button class="p-2 rounded-lg hover:bg-nord4 dark:hover:bg-nord2 transition-colors duration-200 relative">
-                                <svg class="w-5 h-5 text-nord0 dark:text-nord4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            <button class="p-2 text-nord3 dark:text-nord4 hover:text-nord0 dark:hover:text-nord6 transition-colors duration-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.828 7l2.586 2.586a2 2 0 002.828 0L12.828 7H4.828z" />
                                 </svg>
-                                <span class="absolute top-1 right-1 w-2 h-2 bg-nord11 rounded-full"></span>
                             </button>
 
-                            <!-- Logout -->
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="p-2 rounded-lg hover:bg-nord4 dark:hover:bg-nord2 transition-colors duration-200">
-                                    <svg class="w-5 h-5 text-nord0 dark:text-nord4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
+                            <!-- User menu -->
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="flex items-center space-x-2 p-2 text-nord3 dark:text-nord4 hover:text-nord0 dark:hover:text-nord6 transition-colors duration-200">
+                                    <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                        <span class="text-nord6 text-xs font-medium">
+                                            @if(isset(auth()->user()->first_name))
+                                                {{ substr(auth()->user()->first_name, 0, 1) }}{{ substr(auth()->user()->last_name, 0, 1) }}
+                                            @else
+                                                {{ substr(auth()->user()->name ?? auth()->user()->email, 0, 2) }}
+                                            @endif
+                                        </span>
+                                    </div>
                                 </button>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </header>
 
-                <!-- Page Content -->
-                <main class="flex-1 overflow-y-auto bg-nord6 dark:bg-nord0 transition-colors duration-200">
-                    <div class="container mx-auto px-6 py-8">
-                        {{ $slot }}
-                    </div>
+                <!-- Chat Content - Full Width -->
+                <main class="flex-1 overflow-hidden">
+                    {{ $slot }}
                 </main>
+            </div>
+        </div>
+
+        <!-- Mobile sidebar -->
+        <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-0 z-50 md:hidden" style="display: none;">
+            <div class="fixed inset-0 bg-nord0 bg-opacity-50" @click="mobileMenuOpen = false"></div>
+            <div class="relative flex-1 flex flex-col max-w-xs w-full bg-nord5 dark:bg-nord1">
+                <!-- Mobile sidebar content would go here -->
             </div>
         </div>
 
         @livewireScripts
     </body>
 </html>
-

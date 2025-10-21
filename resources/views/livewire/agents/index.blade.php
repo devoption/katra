@@ -63,8 +63,8 @@
                         <tr class="hover:bg-nord4 dark:hover:bg-nord2 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="shrink-0 w-10 h-10 bg-nord8 bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-nord8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="shrink-0 w-10 h-10 bg-primary bg-black/10 dark:bg-black/20 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
                                     </div>

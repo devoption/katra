@@ -24,7 +24,7 @@
             'class' => 'w-full px-4 py-2 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ' .
                 ($error
                     ? 'border-nord11 focus:ring-nord11 focus:border-nord11 bg-nord11/5'
-                    : 'border-nord4 dark:border-nord2 bg-nord6 dark:bg-nord0 text-nord0 dark:text-nord4 focus:ring-nord8 focus:border-nord8'),
+                    : 'border-nord4 dark:border-nord2 bg-nord6 dark:bg-nord0 text-nord0 dark:text-nord4 focus:ring-primary focus:border-primary'),
             'disabled' => $disabled,
             'required' => $required,
         ]) }}

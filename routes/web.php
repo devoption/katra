@@ -12,6 +12,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Chat\Index as ChatIndex;
 use App\Livewire\Contexts\Create as ContextCreate;
 use App\Livewire\Contexts\Edit as ContextEdit;
 use App\Livewire\Contexts\Index as ContextIndex;
@@ -43,6 +44,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+    // Chat
+    Route::get('/chat', ChatIndex::class)->name('chat.index');
+    Route::get('/chat/{conversation}', ChatIndex::class)->name('chat.show');
 
     // Agents
     Route::get('/agents', AgentIndex::class)->name('agents.index');

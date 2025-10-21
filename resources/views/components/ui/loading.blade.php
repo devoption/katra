@@ -1,6 +1,6 @@
 @props([
     'size' => 'md',
-    'color' => 'nord8',
+    'color' => 'primary',
 ])
 
 @php

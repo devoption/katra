@@ -74,4 +74,14 @@ class Agent extends Model
     {
         return $this->hasMany(WorkflowStep::class);
     }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
+    public function conversationMessages(): HasMany
+    {
+        return $this->hasMany(ConversationMessage::class);
+    }
 }

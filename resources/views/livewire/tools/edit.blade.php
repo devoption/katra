@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('tools.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Tools</a>
+            <a href="{{ route('tools.index') }}" wire:navigate class="hover:text-primary transition-colors">Tools</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -109,7 +109,7 @@
                         </div>
 
                         @if($requires_credential && $tool->type !== 'builtin')
-                            <div class="pl-6 pt-2 border-l-2 border-nord8">
+                            <div class="pl-6 pt-2 border-l-2 border-primary">
                                 <label class="block text-sm font-medium text-nord0 dark:text-nord4 mb-2">
                                     Select Credentials
                                 </label>
@@ -120,7 +120,7 @@
                                                 type="checkbox"
                                                 wire:model="selected_credentials"
                                                 value="{{ $credential->id }}"
-                                                class="mt-0.5 w-4 h-4 rounded border-nord4 dark:border-nord2 text-nord8 focus:ring-2 focus:ring-nord8 focus:ring-offset-0"
+                                                class="mt-0.5 w-4 h-4 rounded border-nord4 dark:border-nord2 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                                             >
                                             <div class="ml-3">
                                                 <div class="text-sm font-medium text-nord0 dark:text-nord6">{{ $credential->name }}</div>
@@ -215,11 +215,11 @@
                             <div>
                                 <p class="font-medium text-nord0 dark:text-nord6 mb-2">Common Types:</p>
                                 <ul class="list-disc list-inside space-y-1 text-nord3 dark:text-nord4">
-                                    <li><code class="text-nord8">string</code> - Text</li>
-                                    <li><code class="text-nord8">number</code> - Numbers</li>
-                                    <li><code class="text-nord8">boolean</code> - True/False</li>
-                                    <li><code class="text-nord8">array</code> - Lists</li>
-                                    <li><code class="text-nord8">object</code> - Complex data</li>
+                                    <li><code class="text-primary">string</code> - Text</li>
+                                    <li><code class="text-primary">number</code> - Numbers</li>
+                                    <li><code class="text-primary">boolean</code> - True/False</li>
+                                    <li><code class="text-primary">array</code> - Lists</li>
+                                    <li><code class="text-primary">object</code> - Complex data</li>
                                 </ul>
                             </div>
                         </div>

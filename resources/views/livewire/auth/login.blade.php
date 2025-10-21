@@ -45,7 +45,7 @@
                 label="Remember me"
             />
 
-            <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-medium text-nord8 hover:text-nord7 transition-colors">
+            <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-medium text-primary hover:text-nord7 transition-colors">
                 Forgot password?
             </a>
         </div>
@@ -64,7 +64,7 @@
     <div class="mt-6 text-center">
         <p class="text-sm text-nord3 dark:text-nord4">
             Don't have an account?
-            <a href="{{ route('register') }}" wire:navigate class="font-medium text-nord8 hover:text-nord7 transition-colors">
+            <a href="{{ route('register') }}" wire:navigate class="font-medium text-primary hover:text-nord7 transition-colors">
                 Create one now
             </a>
         </p>

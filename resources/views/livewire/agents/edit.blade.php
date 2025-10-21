@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-sm text-nord3 dark:text-nord4 mb-2">
-            <a href="{{ route('agents.index') }}" wire:navigate class="hover:text-nord8 transition-colors">Agents</a>
+            <a href="{{ route('agents.index') }}" wire:navigate class="hover:text-primary transition-colors">Agents</a>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -72,7 +72,7 @@
                                         <button
                                             type="button"
                                             wire:click="refreshModels"
-                                            class="text-sm text-nord8 hover:text-nord9 flex items-center gap-1"
+                                            class="text-sm text-primary hover:text-primary flex items-center gap-1"
                                         >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -92,7 +92,7 @@
                                     <select
                                         wire:model="model_name"
                                         name="model_name"
-                                        class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-nord8 focus:border-transparent transition-colors"
+                                        class="w-full px-4 py-2 rounded-lg border border-nord4 dark:border-nord3 bg-white dark:bg-nord1 text-nord0 dark:text-nord6 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                                         required
                                         @if(!$ollamaAvailable) disabled @endif
                                     >
@@ -166,7 +166,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-nord0 dark:text-nord4 mb-2">
-                                Creativity Level: <span class="text-nord8">{{ number_format($creativity_level, 2) }}</span>
+                                Creativity Level: <span class="text-primary">{{ number_format($creativity_level, 2) }}</span>
                             </label>
                             <input
                                 type="range"
@@ -174,7 +174,7 @@
                                 min="0"
                                 max="1"
                                 step="0.01"
-                                class="w-full h-2 bg-nord4 dark:bg-nord2 rounded-lg appearance-none cursor-pointer accent-nord8"
+                                class="w-full h-2 bg-nord4 dark:bg-nord2 rounded-lg appearance-none cursor-pointer accent-primary"
                             >
                             <div class="flex justify-between text-xs text-nord3 dark:text-nord4 mt-1">
                                 <span>Focused (0.0)</span>
@@ -286,7 +286,7 @@
 
                         <!-- Selected Tools Count -->
                         @if(count($selected_tools) > 0)
-                            <div class="text-sm text-nord8">
+                            <div class="text-sm text-primary">
                                 {{ count($selected_tools) }} tool(s) selected
                             </div>
                         @endif
@@ -299,7 +299,7 @@
                                         type="checkbox"
                                         wire:model="selected_tools"
                                         value="{{ $tool->id }}"
-                                        class="mt-0.5 w-4 h-4 rounded border-nord4 dark:border-nord2 text-nord8 focus:ring-2 focus:ring-nord8 focus:ring-offset-0"
+                                        class="mt-0.5 w-4 h-4 rounded border-nord4 dark:border-nord2 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                                     >
                                     <div class="ml-3 flex-1">
                                         <div class="text-sm font-medium text-nord0 dark:text-nord6">{{ $tool->name }}</div>

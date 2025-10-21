@@ -97,7 +97,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 @if($workflow->executions_count > 0)
-                                    <a href="{{ route('workflows.show', $workflow) }}" wire:navigate class="text-sm text-nord8 hover:text-nord7 transition-colors">
+                                    <a href="{{ route('workflows.show', $workflow) }}" wire:navigate class="text-sm text-primary hover:text-primary transition-colors">
                                         {{ $workflow->executions_count }} run(s)
                                     </a>
                                 @else
