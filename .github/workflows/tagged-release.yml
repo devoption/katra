@@ -130,7 +130,7 @@ jobs:
       - context
       - release
     if: needs.context.outputs.should_release == 'true'
-    runs-on: macos-13
+    runs-on: macos-15-intel
     env:
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
@@ -210,7 +210,7 @@ jobs:
           {
             echo "## macOS Packaging"
             echo
-            echo "- Runner: \`macos-13\`"
+            echo "- Runner: \`macos-15-intel\`"
             echo "- Architecture: \`x64\`"
             echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
             echo
