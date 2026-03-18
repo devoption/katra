@@ -20,9 +20,10 @@ Current protection expectations:
 - direct pushes to `main` are disabled
 - force pushes to `main` are disabled
 - branch deletion is disabled for `main`
-- at least one approving review is required before merge
 - conversation resolution is required before merge
 - admins are also subject to branch protection
+
+At the moment, an approving review is not required because the repository is being maintained through a single authenticated GitHub account in this workflow. That rule can be tightened later when the review flow supports it cleanly.
 
 Required status checks are part of the policy as well. The branch protection structure is in place, and the concrete required check names should be finalized alongside the PR validation workflow.
 
