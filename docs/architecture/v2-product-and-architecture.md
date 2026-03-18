@@ -91,7 +91,7 @@ That means:
 
 The user experience may begin with chat, but the underlying system should not collapse everything into transcript text.
 
-Katra should support conversation nodes layered on top of GraphRAG-oriented graph structures so the application can move fluidly between discussion, memory, tasking, and execution.
+Katra should support conversation nodes layered on top of Graph-based Retrieval-Augmented Generation (GraphRAG)-oriented graph structures so the application can move fluidly between discussion, memory, tasking, and execution.
 
 ### 5. Context Must Expand And Contract Intelligently
 
