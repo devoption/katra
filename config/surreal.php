@@ -3,20 +3,29 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | SurrealDB Spike Configuration
+    | SurrealDB Foundation Configuration
     |--------------------------------------------------------------------------
     |
-    | This spike proves a local-first SurrealDB flow by starting a local
-    | SurrealDB process and then driving it from Laravel via the `surreal`
-    | CLI. It does not prove true in-process embedded PHP support.
+    | The first SurrealDB foundation for Katra uses the Surreal CLI as the
+    | runtime bridge. In local desktop development it can auto-start a local
+    | Surreal runtime when the CLI is available. Server deployments can point
+    | Laravel at an already-running SurrealDB endpoint instead.
     |
     */
+
+    'driver' => env('SURREAL_DRIVER', 'cli'),
+
+    'runtime' => env('SURREAL_RUNTIME', 'local'),
+
+    'autostart' => env('SURREAL_AUTOSTART', true),
 
     'binary' => env('SURREAL_BINARY', 'surreal'),
 
     'host' => env('SURREAL_HOST', '127.0.0.1'),
 
     'port' => (int) env('SURREAL_PORT', 18001),
+
+    'endpoint' => env('SURREAL_ENDPOINT', sprintf('ws://%s:%d', env('SURREAL_HOST', '127.0.0.1'), (int) env('SURREAL_PORT', 18001))),
 
     'username' => env('SURREAL_USER', 'root'),
 
@@ -29,4 +38,8 @@ return [
     'storage_engine' => env('SURREAL_STORAGE_ENGINE', 'surrealkv'),
 
     'storage_path' => env('SURREAL_STORAGE_PATH', storage_path('app/surrealdb/dev')),
+
+    'runtime_pid_path' => env('SURREAL_RUNTIME_PID_PATH', storage_path('app/surrealdb/runtime.pid')),
+
+    'runtime_log_path' => env('SURREAL_RUNTIME_LOG_PATH', storage_path('logs/surreal-runtime.log')),
 ];
