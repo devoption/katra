@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Services\Surreal\SurrealDocumentStore;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 abstract class SurrealModel extends Model
 {
@@ -71,8 +73,21 @@ abstract class SurrealModel extends Model
     /**
      * @param  array<int, string>  $columns
      */
-    public static function find($id, $columns = ['*']): ?static
+    public static function find($id, $columns = ['*']): EloquentCollection|static|null
     {
+        if (is_array($id) || $id instanceof Collection) {
+            return new EloquentCollection(array_values(array_filter(array_map(
+                static fn (mixed $identifier): ?static => is_scalar($identifier) || (is_object($identifier) && method_exists($identifier, '__toString'))
+                    ? static::find((string) $identifier, $columns)
+                    : null,
+                is_array($id) ? $id : $id->all(),
+            ))));
+        }
+
+        if (! is_scalar($id) && ! (is_object($id) && method_exists($id, '__toString'))) {
+            throw new InvalidArgumentException('SurrealModel::find expects a scalar id, a stringable id, or an array / collection of ids.');
+        }
+
         $record = app(SurrealDocumentStore::class)->find((new static)->getTable(), (string) $id);
 
         return $record === null ? null : static::newFromRecord($record);

@@ -7,6 +7,7 @@ use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Symfony\Component\Process\Process;
 
 test('the surreal workspace model completes a basic crud flow', function () {
     $client = app(SurrealCliClient::class);
@@ -15,39 +16,31 @@ test('the surreal workspace model completes a basic crud flow', function () {
         $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
     }
 
-    $port = reserveWorkspacePort();
     $storagePath = storage_path('app/surrealdb/workspace-test-'.Str::uuid());
-    $endpoint = sprintf('ws://127.0.0.1:%d', $port);
 
     File::deleteDirectory($storagePath);
     File::ensureDirectoryExists(dirname($storagePath));
 
-    config()->set('surreal.host', '127.0.0.1');
-    config()->set('surreal.port', $port);
-    config()->set('surreal.endpoint', $endpoint);
-    config()->set('surreal.username', 'root');
-    config()->set('surreal.password', 'root');
-    config()->set('surreal.namespace', 'katra');
-    config()->set('surreal.database', 'workspace_model_test');
-    config()->set('surreal.storage_engine', 'surrealkv');
-    config()->set('surreal.storage_path', $storagePath);
-    config()->set('surreal.runtime', 'local');
-    config()->set('surreal.autostart', false);
-
-    app()->forgetInstance(SurrealConnection::class);
-    app()->forgetInstance(SurrealRuntimeManager::class);
-    app()->forgetInstance(SurrealDocumentStore::class);
-
-    $server = $client->startLocalServer(
-        bindAddress: sprintf('127.0.0.1:%d', $port),
-        datastorePath: $storagePath,
-        username: 'root',
-        password: 'root',
-        storageEngine: 'surrealkv',
-    );
-
     try {
-        expect($client->waitUntilReady($endpoint))->toBeTrue();
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_model_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        app()->forgetInstance(SurrealConnection::class);
+        app()->forgetInstance(SurrealRuntimeManager::class);
+        app()->forgetInstance(SurrealDocumentStore::class);
 
         $workspace = Workspace::create([
             'name' => 'Download Preview Workspace',
@@ -76,13 +69,54 @@ test('the surreal workspace model completes a basic crud flow', function () {
 
         expect(Workspace::all())->toHaveCount(1);
 
+        $collection = Workspace::find([$workspace->id]);
+
+        expect($collection)->toHaveCount(1)
+            ->and($collection->first()?->id)->toBe($workspace->id);
+
         expect($workspace->delete())->toBeTrue()
             ->and(Workspace::find($workspace->id))->toBeNull();
     } finally {
-        $server->stop(1);
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
         File::deleteDirectory($storagePath);
     }
 });
+
+/**
+ * @return array{endpoint: string, port: int, process: Process}
+ */
+function retryStartingWorkspaceServer(SurrealCliClient $client, string $storagePath, int $attempts = 3): array
+{
+    $lastException = null;
+
+    for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+        $port = reserveWorkspacePort();
+        $endpoint = sprintf('ws://127.0.0.1:%d', $port);
+        $process = $client->startLocalServer(
+            bindAddress: sprintf('127.0.0.1:%d', $port),
+            datastorePath: $storagePath,
+            username: 'root',
+            password: 'root',
+            storageEngine: 'surrealkv',
+        );
+
+        if ($client->waitUntilReady($endpoint)) {
+            return [
+                'endpoint' => $endpoint,
+                'port' => $port,
+                'process' => $process,
+            ];
+        }
+
+        $process->stop(1);
+        $lastException = new RuntimeException(sprintf('SurrealDB did not become ready on %s.', $endpoint));
+    }
+
+    throw $lastException ?? new RuntimeException('Unable to start the SurrealDB workspace test runtime.');
+}
 
 function reserveWorkspacePort(): int
 {

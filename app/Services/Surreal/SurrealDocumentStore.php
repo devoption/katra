@@ -18,7 +18,7 @@ class SurrealDocumentStore
      */
     public function all(string $table): array
     {
-        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $table))[0] ?? []);
+        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->normalizeTable($table)))[0] ?? []);
     }
 
     /**
@@ -68,7 +68,7 @@ class SurrealDocumentStore
     private function run(string $query): array
     {
         if (! $this->runtimeManager->ensureReady()) {
-            throw new RuntimeException('The SurrealDB runtime is not available. Install the `surreal` CLI or configure a reachable SurrealDB endpoint.');
+            throw new RuntimeException('The SurrealDB runtime is not available for the current CLI-backed driver. Install the `surreal` CLI and provide a reachable runtime, or switch to a future non-CLI driver.');
         }
 
         return $this->client->runQuery(
@@ -83,15 +83,34 @@ class SurrealDocumentStore
 
     private function normalizeRecordId(string $table, string $id): string
     {
+        $normalizedTable = $this->normalizeTable($table);
+
         if ($id === '') {
-            throw new RuntimeException(sprintf('The SurrealDB record id for table [%s] must not be empty.', $table));
+            throw new RuntimeException(sprintf('The SurrealDB record id for table [%s] must not be empty.', $normalizedTable));
         }
 
         if (str_contains($id, ':')) {
+            if (! preg_match('/^[A-Za-z0-9_]+:[A-Za-z0-9_-]+$/', $id)) {
+                throw new RuntimeException(sprintf('The SurrealDB record id [%s] contains unsupported characters.', $id));
+            }
+
             return $id;
         }
 
-        return sprintf('%s:%s', $table, $id);
+        if (! preg_match('/^[A-Za-z0-9_-]+$/', $id)) {
+            throw new RuntimeException(sprintf('The SurrealDB record id [%s] contains unsupported characters.', $id));
+        }
+
+        return sprintf('%s:%s', $normalizedTable, $id);
+    }
+
+    private function normalizeTable(string $table): string
+    {
+        if (! preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+            throw new RuntimeException(sprintf('The SurrealDB table [%s] contains unsupported characters.', $table));
+        }
+
+        return $table;
     }
 
     /**

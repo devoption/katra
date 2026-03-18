@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Workspace;
 use App\Services\Surreal\SurrealConnection;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
 use Throwable;
@@ -21,8 +22,11 @@ class HomeController extends Controller
             $surrealStatus = 'connected';
             $surrealMessage = sprintf('The preview workspace is persisted through the Surreal foundation at %s.', $connection->endpoint);
         } catch (Throwable $exception) {
-            if (! $exception instanceof RuntimeException) {
+            if ($exception instanceof RuntimeException) {
+                $surrealMessage = Str::limit($exception->getMessage(), 220);
+            } else {
                 report($exception);
+                $surrealMessage = 'The Surreal-backed model layer hit an unexpected error while loading the preview workspace.';
             }
         }
 
