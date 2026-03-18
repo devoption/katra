@@ -32,6 +32,16 @@ The graph-oriented model is expected to make several things possible:
 - Lower token usage and faster responses through more focused context reconstruction
 - Real-time project management rooted in the same conversation and task graph
 
+## SurrealDB Runtime Direction
+
+Katra's SurrealDB plan now separates local and server runtimes more explicitly:
+
+- NativePHP desktop mode should use an embedded SurrealDB runtime owned by the Electron side of the app
+- server and hosted deployments should use an external SurrealDB instance or cluster
+- Laravel should work through a stable persistence boundary so the graph model can survive both runtime modes
+
+The deeper integration strategy lives in [SurrealDB Laravel Integration Strategy](architecture/surreal-integration-strategy.md).
+
 ## Next Step
 
 The deeper product and architecture direction is documented in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md) and tracked in [issue #13](https://github.com/devoption/katra/issues/13).
