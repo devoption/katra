@@ -180,7 +180,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: katra-macos-x64-${{ needs.context.outputs.version }}
-          path: /Users/runner/work/katra/katra/nativephp/electron/dist
+          path: ${{ github.workspace }}/nativephp/electron/dist
           if-no-files-found: error
 
       - name: Upload release assets
@@ -189,7 +189,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          mapfile -t release_files < <(find nativephp/electron/dist -maxdepth 1 -type f | sort)
+          shopt -s nullglob
+          release_files=()
+
+          for candidate in nativephp/electron/dist/*; do
+            if [[ -f "$candidate" ]]; then
+              release_files+=("$candidate")
+            fi
+          done
 
           if (( ${#release_files[@]} == 0 )); then
             echo "No macOS release files were generated." >&2
