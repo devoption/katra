@@ -13,7 +13,7 @@ Current expectations:
 
 ## Branch Protection
 
-The `main` branch is intended to stay protected so the rewrite history remains reviewable and predictable.
+The `main` branch is intended to stay protected so the branch history remains reviewable and predictable.
 
 Current protection expectations:
 
