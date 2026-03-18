@@ -11,8 +11,15 @@
 /.phpunit.cache
 /.vscode
 /.zed
+/.amp/settings.json
+/.codex/config.toml
+/.cursor/mcp.json
+/.gemini/settings.json
+/.junie/mcp/mcp.json
+/.mcp.json
 /auth.json
 /node_modules
+/opencode.json
 /public/build
 /public/hot
 /public/storage
