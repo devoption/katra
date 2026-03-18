@@ -9,9 +9,10 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "laravel/framework": "^13.0",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "nativephp/desktop": "dev-l13-compatibility"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -42,6 +43,7 @@
             "@php artisan key:generate",
             "@php artisan migrate --force",
             "npm install",
+            "@php artisan native:install --force --quiet",
             "npm run build"
         ],
         "dev": [
@@ -58,7 +60,8 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php artisan boost:update --ansi",
+            "@php artisan native:install --force --no-interaction --quiet"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -70,6 +73,10 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "native:dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -k -c \"#93c5fd,#c4b5fd\" \"php artisan native:run --no-interaction\" \"npm run dev\" --names=app,vite"
         ]
     },
     "extra": {
@@ -87,5 +94,12 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "name": "nativephp-desktop-l13",
+            "type": "vcs",
+            "url": "https://github.com/laravel-shift/desktop.git"
+        }
+    ]
 }

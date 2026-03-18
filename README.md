@@ -52,6 +52,7 @@ Contributions are welcome as the rewrite takes shape. For now, the best place to
 Repository workflow, commit conventions, and release policy are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Optional local AI tooling setup is documented in [Laravel Boost Setup](docs/development/laravel-boost.md).
+Native desktop bootstrap and local shell setup are documented in [NativePHP Desktop Setup](docs/development/nativephp.md).
 
 ## License
 
