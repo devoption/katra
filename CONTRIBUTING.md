@@ -11,6 +11,21 @@ Current expectations:
 - use the repository pull request template
 - keep pull requests focused and reviewable
 
+## Branch Protection
+
+The `main` branch is intended to stay protected so the rewrite history remains reviewable and predictable.
+
+Current protection expectations:
+
+- direct pushes to `main` are disabled
+- force pushes to `main` are disabled
+- branch deletion is disabled for `main`
+- at least one approving review is required before merge
+- conversation resolution is required before merge
+- admins are also subject to branch protection
+
+Required status checks are part of the policy as well. The branch protection structure is in place, and the concrete required check names should be finalized alongside the PR validation workflow.
+
 ## Conventional Commits
 
 Katra uses Conventional Commits for commit messages—especially pull request titles (used as squash-merge commit titles)—to keep merge history and release automation consistent.
