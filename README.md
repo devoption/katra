@@ -43,6 +43,7 @@ Katra v2 is an active rewrite. The repository is being reset and rebuilt in smal
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
+- [Katra v2 Product and Architecture Principles](docs/architecture/v2-product-and-architecture.md)
 - [Katra Brand Foundation](docs/brand/README.md)
 - [Issue #13: Katra v2 product vision and architecture principles](https://github.com/devoption/katra/issues/13)
 
