@@ -1,57 +1,49 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Katra
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Katra is an open source, graph-native AI workspace for conversations, tasks, and collaborative intelligence.
 
-## About Laravel
+> [!WARNING]
+> `main` now tracks the in-progress Katra v2 rewrite.
+> Looking for the original proof of concept? See [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Katra v2
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Katra v2 is being rebuilt as a local-first Laravel application that can run in multiple environments. NativePHP is the first-class local shell, but the application is also intended to support server, container, and Kubernetes-style deployment targets.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+The long-term direction is a graph-native system where conversations, tasks, decisions, artifacts, and related context become first-class objects instead of disposable chat history. That foundation is intended to support multi-user and multi-model collaboration, subagents, GraphRAG-style retrieval, and real-time project management.
 
-## Learning Laravel
+## Planned Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Laravel 13
+- NativePHP
+- SurrealDB v3, embedded-first
+- Laravel AI
+- Laravel MCP
+- Laravel Fortify
+- Livewire
+- Tailwind CSS
+- Pest
+- Laravel Boost for local development
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Runtime Targets
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- Local-first desktop experience through NativePHP
+- Traditional Laravel server deployments
+- Docker-based deployments
+- Helm and Kubernetes-oriented deployments
 
-## Agentic Development
+## Current Status
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Katra v2 is an active rewrite. The repository is being reset and rebuilt in small, reviewable pull requests. The proof of concept is preserved at [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0) for historical reference and is not being actively developed.
 
-```bash
-composer require laravel/boost --dev
+## Planning Docs
 
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- [Katra v2 Overview](docs/v2-overview.md)
+- [Issue #13: Katra v2 product vision and architecture principles](https://github.com/devoption/katra/issues/13)
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Contributions are welcome as the rewrite takes shape. For now, the best place to follow the work is the issue tracker and the planning docs linked above.
 
 ## License
 
