@@ -162,7 +162,7 @@ Katra v2 should support multiple runtime modes:
 
 - Laravel 13
 - NativePHP
-- SurrealDB v3 with an embedded-first strategy
+- SurrealDB v3 with a desktop-embedded and server-remote runtime strategy
 - Laravel AI
 - Laravel MCP
 - Fortify

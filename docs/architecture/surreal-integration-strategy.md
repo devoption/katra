@@ -42,7 +42,7 @@ In desktop mode, the NativePHP / Electron runtime should own the embedded Surrea
 
 Preferred properties:
 
-- data stored locally with `SurrealKV`
+- data stored locally with `SurrealKV`, SurrealDB's local key-value storage engine for embedded single-runtime use
 - lifecycle managed by the desktop shell
 - fast local graph reads and writes
 - no requirement for a separately installed database by the end user
