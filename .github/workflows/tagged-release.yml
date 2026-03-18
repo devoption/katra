@@ -4,38 +4,76 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_call:
+    inputs:
+      tag:
+        required: false
+        type: string
+      version:
+        required: false
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: tagged-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
-  release:
+  context:
     runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version.outputs.should_release }}
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Derive release version from tag
         id: version
         shell: bash
         env:
-          TAG: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_VERSION: ${{ inputs.version }}
+          PUSH_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
-          if [[ ! "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          tag="${INPUT_TAG:-$PUSH_TAG}"
+
+          if [[ -z "$tag" ]]; then
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
+          if [[ ! "$tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ -n "$INPUT_VERSION" ]]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "should_release=true" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> "$GITHUB_OUTPUT"
 
+  release:
+    needs:
+      - context
+    if: needs.context.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Create or update GitHub release
-        if: steps.version.outputs.should_release == 'true'
         uses: actions/github-script@v7
         env:
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ needs.context.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.context.outputs.version }}
         with:
           script: |
             const owner = context.repo.owner;
@@ -86,3 +124,99 @@ jobs:
 
               console.log(`Created GitHub release for ${tag} (${version}).`);
             }
+
+  macos_artifacts:
+    needs:
+      - context
+      - release
+    if: needs.context.outputs.should_release == 'true'
+    runs-on: macos-13
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      NATIVEPHP_APP_VERSION: ${{ needs.context.outputs.version }}
+      NATIVEPHP_UPDATER_ENABLED: false
+      NATIVEPHP_APPLE_ID: ${{ secrets.NATIVEPHP_APPLE_ID }}
+      NATIVEPHP_APPLE_ID_PASS: ${{ secrets.NATIVEPHP_APPLE_ID_PASS }}
+      NATIVEPHP_APPLE_TEAM_ID: ${{ secrets.NATIVEPHP_APPLE_TEAM_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sqlite3, pdo_sqlite
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Prepare application environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Install NativePHP resources
+        run: php artisan native:install --force --no-interaction
+
+      - name: Build macOS desktop artifact
+        run: php artisan native:build mac x64 --no-interaction
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: katra-macos-x64-${{ needs.context.outputs.version }}
+          path: ${{ github.workspace }}/nativephp/electron/dist
+          if-no-files-found: error
+
+      - name: Upload release assets
+        env:
+          RELEASE_TAG: ${{ needs.context.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          release_files=()
+
+          for candidate in nativephp/electron/dist/*; do
+            if [[ -f "$candidate" ]]; then
+              release_files+=("$candidate")
+            fi
+          done
+
+          if (( ${#release_files[@]} == 0 )); then
+            echo "No macOS release files were generated." >&2
+            exit 1
+          fi
+
+          gh release upload "$RELEASE_TAG" "${release_files[@]}" --clobber
+
+      - name: Summarize packaging status
+        run: |
+          {
+            echo "## macOS Packaging"
+            echo
+            echo "- Runner: \`macos-13\`"
+            echo "- Architecture: \`x64\`"
+            echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
+            echo
+            if [[ -n "${NATIVEPHP_APPLE_ID}" && -n "${NATIVEPHP_APPLE_ID_PASS}" && -n "${NATIVEPHP_APPLE_TEAM_ID}" ]]; then
+              echo "- Apple notarization credentials were provided to the build."
+            else
+              echo "- Apple notarization credentials were not provided. The workflow still builds and uploads macOS artifacts, but notarization/signing follow-up remains manual."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

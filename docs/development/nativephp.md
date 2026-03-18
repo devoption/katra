@@ -62,6 +62,27 @@ If you want to run the NativePHP shell directly and manage frontend tooling sepa
 php artisan native:run --no-interaction
 ```
 
+## Release Artifacts
+
+Tagged releases build a macOS desktop artifact in GitHub Actions and attach the generated top-level `nativephp/electron/dist` files to the GitHub Release.
+
+The current workflow intentionally keeps this first packaging path small:
+
+- target platform: macOS
+- current architecture target: `x64`
+- workflow artifact: preserved in GitHub Actions
+- release assets: uploaded to the matching GitHub Release
+
+### Signing And Notarization
+
+If the repository provides the following secrets, the macOS build can attempt notarization during packaging:
+
+- `NATIVEPHP_APPLE_ID`
+- `NATIVEPHP_APPLE_ID_PASS`
+- `NATIVEPHP_APPLE_TEAM_ID`
+
+If those secrets are not configured, the workflow still builds and uploads artifacts, but signing and notarization remain a manual follow-up step.
+
 ## Current Bootstrap Behavior
 
 The initial shell is intentionally small and focused:
