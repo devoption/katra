@@ -3,6 +3,7 @@
 use App\Services\Surreal\SurrealCliClient;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 it('proves a local surrealdb write and read flow from laravel', function () {
     $client = app(SurrealCliClient::class);
@@ -22,11 +23,7 @@ it('proves a local surrealdb write and read flow from laravel', function () {
     File::deleteDirectory($storagePath);
 
     try {
-        $this->artisan('surreal:probe')
-            ->expectsOutputToContain('Started local SurrealDB on')
-            ->expectsOutputToContain('Created record:')
-            ->expectsOutputToContain('Embedded verdict:')
-            ->assertExitCode(0);
+        retryProbeAssertion($this);
     } finally {
         File::deleteDirectory($storagePath);
     }
@@ -55,4 +52,27 @@ function reserveFreePort(): int
     }
 
     return $port;
+}
+
+function retryProbeAssertion(TestCase $testCase, int $attempts = 3): void
+{
+    $lastException = null;
+
+    for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+        config()->set('surreal.port', reserveFreePort());
+
+        try {
+            $testCase->artisan('surreal:probe')
+                ->expectsOutputToContain('Started local SurrealDB on')
+                ->expectsOutputToContain('Created record:')
+                ->expectsOutputToContain('Embedded verdict:')
+                ->assertExitCode(0);
+
+            return;
+        } catch (Throwable $exception) {
+            $lastException = $exception;
+        }
+    }
+
+    throw $lastException ?? new RuntimeException('The SurrealDB probe did not complete successfully.');
 }

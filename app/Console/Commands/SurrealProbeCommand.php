@@ -30,9 +30,22 @@ class SurrealProbeCommand extends Command
 
         $host = (string) config('surreal.host');
         $port = (int) ($this->option('port') ?: config('surreal.port'));
+        $storagePath = trim((string) ($this->option('path') ?: config('surreal.storage_path')));
+
+        if ($port < 1 || $port > 65535) {
+            $this->components->error('The SurrealDB port must be between 1 and 65535.');
+
+            return self::FAILURE;
+        }
+
+        if ($storagePath === '') {
+            $this->components->error('The SurrealDB storage path must not be empty.');
+
+            return self::FAILURE;
+        }
+
         $bindAddress = sprintf('%s:%d', $host, $port);
         $endpoint = sprintf('ws://%s', $bindAddress);
-        $storagePath = (string) ($this->option('path') ?: config('surreal.storage_path'));
         $storageEngine = (string) config('surreal.storage_engine');
         $username = (string) config('surreal.username');
         $password = (string) config('surreal.password');

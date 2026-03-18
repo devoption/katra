@@ -89,7 +89,15 @@ class SurrealCliClient
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new RuntimeException(trim($process->getErrorOutput()) ?: 'Failed to execute the SurrealDB probe query.');
+            $stderr = trim($process->getErrorOutput());
+            $stdout = trim($process->getOutput());
+            $details = array_filter([
+                sprintf('exit code %d', $process->getExitCode() ?? 1),
+                $stderr !== '' ? sprintf('stderr: %s', $stderr) : null,
+                $stdout !== '' ? sprintf('stdout: %s', $stdout) : null,
+            ]);
+
+            throw new RuntimeException('Failed to execute the SurrealDB probe query ('.implode('; ', $details).').');
         }
 
         return $this->decodeJsonOutput($process->getOutput());
