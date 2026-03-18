@@ -128,6 +128,23 @@ Recommended implementation order:
 4. cache, sessions, and queues only after runtime semantics are understood
 5. streaming graph APIs after the model and runtime boundary are stable
 
+## Initial Foundation Notes
+
+The current repository foundation for SurrealDB now includes:
+
+- configuration in `config/surreal.php`
+- service registration in `AppServiceProvider`
+- a runtime connection object, runtime manager, and document store
+- an initial `Workspace` model backed by the Surreal foundation
+
+For now, the implementation uses the `surreal` CLI as the Laravel-side bridge.
+
+That means:
+
+- local desktop development can auto-start a local Surreal runtime when the CLI is available
+- remote or server deployments can point Laravel at a separately managed SurrealDB endpoint
+- the desktop shell must degrade gracefully when the runtime is unavailable or not yet bundled into app distribution
+
 ## Eloquent Strategy
 
 Katra should not begin by forcing SurrealDB to impersonate a relational database everywhere.

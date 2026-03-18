@@ -2,21 +2,20 @@
 
 namespace App\Providers;
 
+use App\Services\Surreal\SurrealConnection;
+use App\Services\Surreal\SurrealDocumentStore;
+use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->singleton(SurrealConnection::class, fn (): SurrealConnection => SurrealConnection::fromConfig(config('surreal')));
+        $this->app->singleton(SurrealRuntimeManager::class);
+        $this->app->singleton(SurrealDocumentStore::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         //

@@ -61,7 +61,7 @@
                                 <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-100/70">Runtime</p>
                                 <h2 class="mt-4 text-2xl font-semibold text-white">Desktop-first loop</h2>
                                 <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    Launch the app with <span class="font-mono text-cyan-100">composer native:dev</span> and iterate on a real desktop window while Vite stays hot.
+                                    Launch the app with <span class="font-mono text-cyan-100">composer native:dev</span> and iterate on a real desktop window while the Surreal foundation can auto-start a local runtime when the CLI is available.
                                 </p>
                             </article>
 
@@ -75,9 +75,9 @@
 
                             <article class="rounded-[28px] border border-emerald-200/12 bg-emerald-300/8 p-5">
                                 <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-emerald-100/70">Release</p>
-                                <h2 class="mt-4 text-2xl font-semibold text-white">Ready for v2</h2>
+                                <h2 class="mt-4 text-2xl font-semibold text-white">Downloadable preview</h2>
                                 <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    The release flow is in place, and the first release-worthy merge on this rewrite line will floor automatically at <span class="font-mono text-emerald-100">v2.0.0</span>.
+                                    The release flow is in place, and the next release-worthy feature merge should produce the first downloadable macOS preview artifact for the Katra rewrite line.
                                 </p>
                             </article>
                         </div>
@@ -91,12 +91,21 @@
 
                                 <div class="grid gap-3 text-sm text-slate-200/80 sm:grid-cols-2">
                                     <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Window</p>
-                                        <p class="mt-2">NativePHP opens the Katra home route in a remembered desktop window with desktop-friendly defaults.</p>
+                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Surreal Foundation</p>
+                                        <p class="mt-2">
+                                            <span class="font-mono uppercase tracking-[0.2em] {{ $surrealStatus === 'connected' ? 'text-emerald-200' : 'text-amber-200' }}">{{ $surrealStatus }}</span>
+                                        </p>
+                                        <p class="mt-2">{{ $surrealMessage }}</p>
                                     </div>
                                     <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Setup</p>
-                                        <p class="mt-2">The repo now includes local steps for installing, running, and understanding the temporary Laravel 13 compatibility pin.</p>
+                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Preview Workspace</p>
+                                        @if ($workspace)
+                                            <p class="mt-2 font-semibold text-white">{{ $workspace->name }}</p>
+                                            <p class="mt-2 text-xs font-mono uppercase tracking-[0.22em] text-cyan-100/72">{{ $workspace->id }}</p>
+                                            <p class="mt-2">{{ $workspace->summary }}</p>
+                                        @else
+                                            <p class="mt-2">The shell is ready, but no Surreal-backed preview workspace is available on this machine yet.</p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -127,9 +136,9 @@
                             <div class="rounded-[28px] border border-white/10 bg-white/5 p-5">
                                 <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/72">Next layers</p>
                                 <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-200/78">
-                                    <li>Native menus and window controls tuned for Katra workflows</li>
+                                    <li>Graph repositories and Surreal-backed model flows beyond the preview workspace</li>
                                     <li>Fortify auth and conversation scaffolding inside the desktop shell</li>
-                                    <li>Tagged desktop artifacts once NativePHP packaging work lands</li>
+                                    <li>Bundled Surreal runtime decisions for downloadable desktop builds</li>
                                 </ul>
                             </div>
 

@@ -42,16 +42,7 @@ class SurrealCliClient
     public function waitUntilReady(string $endpoint, int $attempts = 20, int $sleepMilliseconds = 250): bool
     {
         for ($attempt = 0; $attempt < $attempts; $attempt++) {
-            $process = new Process([
-                $this->requireBinary(),
-                'is-ready',
-                '--endpoint',
-                $endpoint,
-            ], base_path());
-
-            $process->run();
-
-            if ($process->isSuccessful()) {
+            if ($this->isReady($endpoint)) {
                 return true;
             }
 
@@ -59,6 +50,77 @@ class SurrealCliClient
         }
 
         return false;
+    }
+
+    public function isReady(string $endpoint): bool
+    {
+        $process = new Process([
+            $this->requireBinary(),
+            'is-ready',
+            '--endpoint',
+            $endpoint,
+        ], base_path());
+
+        $process->run();
+
+        return $process->isSuccessful();
+    }
+
+    public function startDetachedLocalServer(
+        string $bindAddress,
+        string $datastorePath,
+        string $username,
+        string $password,
+        string $storageEngine,
+        string $logPath,
+    ): int {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            throw new RuntimeException('Detached SurrealDB startup is not implemented for Windows yet.');
+        }
+
+        $command = implode(' ', [
+            'nohup',
+            escapeshellarg($this->requireBinary()),
+            'start',
+            '--bind',
+            escapeshellarg($bindAddress),
+            '--user',
+            escapeshellarg($username),
+            '--pass',
+            escapeshellarg($password),
+            '--no-banner',
+            escapeshellarg(sprintf('%s://%s', $storageEngine, $datastorePath)),
+            '>>',
+            escapeshellarg($logPath),
+            '2>&1',
+            '<',
+            '/dev/null',
+            '&',
+            'echo',
+            '$!',
+        ]);
+
+        $process = Process::fromShellCommandline($command, base_path());
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            $stderr = trim($process->getErrorOutput());
+            $stdout = trim($process->getOutput());
+
+            throw new RuntimeException('Failed to start the detached SurrealDB runtime ('.implode('; ', array_filter([
+                sprintf('exit code %d', $process->getExitCode() ?? 1),
+                $stderr !== '' ? sprintf('stderr: %s', $stderr) : null,
+                $stdout !== '' ? sprintf('stdout: %s', $stdout) : null,
+            ])).').');
+        }
+
+        $pid = (int) trim($process->getOutput());
+
+        if ($pid <= 0) {
+            throw new RuntimeException('Failed to determine the SurrealDB runtime process id.');
+        }
+
+        return $pid;
     }
 
     /**
@@ -97,7 +159,7 @@ class SurrealCliClient
                 $stdout !== '' ? sprintf('stdout: %s', $stdout) : null,
             ]);
 
-            throw new RuntimeException('Failed to execute the SurrealDB probe query ('.implode('; ', $details).').');
+            throw new RuntimeException('Failed to execute the SurrealDB query ('.implode('; ', $details).').');
         }
 
         return $this->decodeJsonOutput($process->getOutput());
