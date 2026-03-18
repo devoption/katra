@@ -134,7 +134,8 @@ Target behavior:
 - the next semantic version is calculated automatically
 - because `v1.0.0` preserves the original prototype, the v2 rewrite line on `main` floors its first automated product release at `v2.0.0`
 - a tag in `vX.Y.Z` format is created automatically
-- a separate tagged-release workflow creates or updates the GitHub release from that tag automatically
+- the release-tagging workflow creates or updates the GitHub release from the automated tag, including generated release notes
+- the separate tagged-release workflow remains available for semantic version tags that are pushed manually outside the main release automation flow
 
 This means contributors should think of pull request titles and merge commits as release inputs, not just review labels.
 
