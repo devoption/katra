@@ -1,0 +1,153 @@
+name: Release Tagging
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  RELEASE_FLOOR_TAG: v2.0.0
+
+concurrency:
+  group: release-tagging-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next release tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_tag=$(git tag --merged HEAD --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1)
+
+          if [[ -n "$latest_tag" ]]; then
+            range="${latest_tag}..HEAD"
+          else
+            latest_tag='v0.0.0'
+            range='HEAD'
+          fi
+
+          bump_level=0
+          breaking_type_pattern='^[a-z]+!:'
+          breaking_scope_pattern='^[a-z]+\([^)]+\)!:'
+          minor_pattern='^feat(\([^)]+\))?:'
+          patch_pattern='^(fix|perf)(\([^)]+\))?:'
+
+          while IFS= read -r commit; do
+            [[ -n "$commit" ]] || continue
+
+            message=$(git show -s --format=%B "$commit")
+            subject=$(printf '%s\n' "$message" | sed -n '1p')
+            conventional_line="$subject"
+
+            if [[ "$subject" =~ ^Merge\ pull\ request\ #[0-9]+ ]]; then
+              conventional_line=$(printf '%s\n' "$message" | awk 'NR > 1 && NF { print; exit }')
+            fi
+
+            conventional_line=$(printf '%s' "$conventional_line" | tr -d '\r')
+
+            if [[ -z "$conventional_line" ]]; then
+              continue
+            fi
+
+            if printf '%s' "$message" | grep -Eq '(^|[[:space:]])BREAKING CHANGE:' || [[ "$conventional_line" =~ $breaking_type_pattern ]] || [[ "$conventional_line" =~ $breaking_scope_pattern ]]; then
+              bump_level=3
+              break
+            fi
+
+            if [[ "$conventional_line" =~ $minor_pattern ]]; then
+              if (( bump_level < 2 )); then
+                bump_level=2
+              fi
+
+              continue
+            fi
+
+            if [[ "$conventional_line" =~ $patch_pattern ]] && (( bump_level < 1 )); then
+              bump_level=1
+            fi
+          done < <(git rev-list --first-parent --reverse "$range")
+
+          if (( bump_level == 0 )); then
+            echo "should_tag=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          current_version=${latest_tag#v}
+          IFS='.' read -r major minor patch <<< "$current_version"
+
+          case "$bump_level" in
+            3)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              bump_name='major'
+              ;;
+            2)
+              minor=$((minor + 1))
+              patch=0
+              bump_name='minor'
+              ;;
+            1)
+              patch=$((patch + 1))
+              bump_name='patch'
+              ;;
+          esac
+
+          next_tag="v${major}.${minor}.${patch}"
+          floor_tag="${RELEASE_FLOOR_TAG}"
+
+          if ! git tag --list "${floor_tag}" | grep -q .; then
+            floor_version=${floor_tag#v}
+            IFS='.' read -r floor_major floor_minor floor_patch <<< "$floor_version"
+
+            if (( major < floor_major )) || (( major == floor_major && minor < floor_minor )) || (( major == floor_major && minor == floor_minor && patch < floor_patch )); then
+              next_tag="${floor_tag}"
+              bump_name='major'
+            fi
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/${next_tag}" >/dev/null; then
+            echo "should_tag=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_tag=true" >> "$GITHUB_OUTPUT"
+          echo "current_tag=${latest_tag}" >> "$GITHUB_OUTPUT"
+          echo "tag=${next_tag}" >> "$GITHUB_OUTPUT"
+          echo "bump=${bump_name}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release tag
+        if: steps.version.outputs.should_tag == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          tag='${{ steps.version.outputs.tag }}'
+
+          git fetch --force --tags origin
+
+          if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+            echo "Tag $tag already exists."
+            exit 0
+          fi
+
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "refs/tags/$tag"
