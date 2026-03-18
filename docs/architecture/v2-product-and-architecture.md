@@ -108,7 +108,7 @@ The expected benefits are:
 
 ### 6. Authorization Must Be Relationship-Aware
 
-Katra intends to use ReBAC for graph authorization.
+Katra intends to use Relationship-Based Access Control (ReBAC) for graph authorization.
 
 This is important because access should depend on graph relationships, not only flat roles. As the system grows into multi-user and multi-agent collaboration, authorization needs to reason about objects and relationships such as:
 
