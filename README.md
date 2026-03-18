@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/brand/katra-logo.svg" alt="Katra" width="360">
+</p>
+
 # Katra
 
 Katra is an open source, graph-native AI workspace for conversations, tasks, and collaborative intelligence.
@@ -39,6 +43,7 @@ Katra v2 is an active rewrite. The repository is being reset and rebuilt in smal
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
+- [Katra Brand Foundation](docs/brand/README.md)
 - [Issue #13: Katra v2 product vision and architecture principles](https://github.com/devoption/katra/issues/13)
 
 ## Contributing
