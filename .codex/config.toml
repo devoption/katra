@@ -1,0 +1,13 @@
+
+[mcp_servers.laravel-boost]
+command = "php"
+args = ["artisan", "boost:mcp"]
+cwd = "/Users/ibourgeois/code/github/devoption/katra/katra"
+
+[mcp_servers.herd]
+command = "php"
+args = ["/Applications/Herd.app/Contents/Resources/herd-mcp.phar"]
+cwd = "/Users/ibourgeois/code/github/devoption/katra/katra"
+
+[mcp_servers.herd.env]
+SITE_PATH = "/Users/ibourgeois/code/github/devoption/katra/katra"
