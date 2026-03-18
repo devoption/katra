@@ -19,7 +19,7 @@ This is intended as a temporary bridge until NativePHP publishes Laravel 13 supp
 
 ## Prerequisites
 
-- PHP `8.3+`
+- PHP `8.4+`
 - Node `22+`
 - a supported desktop OS for NativePHP development
 
