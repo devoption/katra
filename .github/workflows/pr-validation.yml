@@ -28,13 +28,8 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+      - name: Validate Composer configuration
+        run: composer validate --no-check-publish
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
@@ -46,9 +41,6 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
-
-      - name: Validate Composer configuration
-        run: composer validate --no-check-publish
 
       - name: Check code style with Pint
         run: vendor/bin/pint --test
