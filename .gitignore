@@ -25,6 +25,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/history.txt
 /vendor
 Homestead.json
 Homestead.yaml
