@@ -49,6 +49,8 @@ Katra v2 is an active rewrite. The repository is being reset and rebuilt in smal
 
 Contributions are welcome as the rewrite takes shape. For now, the best place to follow the work is the issue tracker and the planning docs linked above.
 
+Repository workflow, commit conventions, and release policy are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 Optional local AI tooling setup is documented in [Laravel Boost Setup](docs/development/laravel-boost.md).
 
 ## License
