@@ -13,7 +13,7 @@ Current expectations:
 
 ## Conventional Commits
 
-Katra uses Conventional Commits for pull requests, merge history, and release automation.
+Katra uses Conventional Commits for commit messages—especially pull request titles (used as squash-merge commit titles)—to keep merge history and release automation consistent.
 
 Expected format:
 
