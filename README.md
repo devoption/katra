@@ -2,8 +2,6 @@
   <img src="docs/brand/katra-logo.svg" alt="Katra" width="360">
 </p>
 
-# Katra
-
 Katra is an open source, graph-native AI workspace for conversations, tasks, and collaborative intelligence.
 
 > [!WARNING]
