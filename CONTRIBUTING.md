@@ -81,11 +81,13 @@ Because Katra intends to automate version bumps and releases from merges to `mai
 
 Current policy:
 
-- prefer squash merges into `main`
 - the pull request title should follow Conventional Commits
 - the final merged commit on `main` should clearly describe the released change
 
-In practice, this means the pull request title matters. If a PR is squash-merged, the squash commit title should remain a valid conventional commit.
+In practice, this means the pull request title matters. Release automation reads the first-parent history on `main`.
+
+- for GitHub merge commits, the workflow reads the first non-empty conventional commit line in the merge commit message, which should match the pull request title
+- for squash merges, the squash commit title should remain a valid conventional commit
 
 ## Semantic Versioning
 
@@ -130,8 +132,9 @@ Target behavior:
 - a pull request is merged into `main`
 - release automation evaluates the conventional commit on `main`
 - the next semantic version is calculated automatically
+- because `v1.0.0` preserves the original prototype, the v2 rewrite line on `main` floors its first automated product release at `v2.0.0`
 - a tag in `vX.Y.Z` format is created automatically
-- a GitHub release is created from that tag automatically
+- a separate tagged-release workflow creates or updates the GitHub release from that tag automatically
 
 This means contributors should think of pull request titles and merge commits as release inputs, not just review labels.
 
