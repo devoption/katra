@@ -10,6 +10,8 @@ Katra is being reimagined as a local-first, graph-native AI workspace built on L
 
 The product direction is broader than an AI workflow engine. Katra v2 aims to treat conversations, tasks, decisions, artifacts, and related context as durable graph objects that can support collaborative knowledge work over time.
 
+The deeper product and architecture principles now live in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md).
+
 ## Planned Foundations
 
 - Laravel 13 as the application core
@@ -32,4 +34,4 @@ The graph-oriented model is expected to make several things possible:
 
 ## Next Step
 
-The deeper product and architecture direction is tracked in [issue #13](https://github.com/devoption/katra/issues/13) and will be expanded into fuller project documentation as the rewrite progresses.
+The deeper product and architecture direction is documented in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md) and tracked in [issue #13](https://github.com/devoption/katra/issues/13).
