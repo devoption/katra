@@ -25,7 +25,7 @@ Current protection expectations:
 
 At the moment, an approving review is not required because the repository is being maintained through a single authenticated GitHub account in this workflow. That rule can be tightened later when the review flow supports it cleanly.
 
-Required status checks are part of the policy as well. The branch protection structure is in place, and the concrete required check names should be finalized alongside the PR validation workflow.
+Required status checks are part of the policy as well. The current required status check for pull requests is `validate`, provided by the `PR Validation` GitHub Actions workflow.
 
 ## Conventional Commits
 
