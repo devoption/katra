@@ -162,7 +162,7 @@ Katra v2 should support multiple runtime modes:
 
 - Laravel 13
 - NativePHP
-- SurrealDB v3 with an embedded-first strategy
+- SurrealDB v3 with a desktop-embedded and server-remote runtime strategy
 - Laravel AI
 - Laravel MCP
 - Fortify
@@ -186,7 +186,11 @@ This should support:
 
 ### SurrealDB Direction
 
-SurrealDB is planned as an embedded-first persistence layer with graph capabilities that can support the graph-native model directly.
+SurrealDB remains the planned persistence layer for the graph-native model, but the runtime strategy is now more explicit:
+
+- desktop mode should prefer an embedded SurrealDB runtime owned by the NativePHP / Electron side of the app
+- server mode should prefer an external SurrealDB instance or cluster
+- Laravel should sit behind a stable persistence boundary instead of assuming PHP-native in-process embedding
 
 Katra also expects to rely on SurrealDB for deeper Laravel integration work over time, including:
 
@@ -196,7 +200,7 @@ Katra also expects to rely on SurrealDB for deeper Laravel integration work over
 - queues
 - graph traversal and streaming graph APIs
 
-This remains an area of technical risk and should continue to be validated through spikes before large-scale implementation work is locked in.
+This remains an area of technical risk and should continue to be validated through spikes before large-scale implementation work is locked in. The current implementation strategy is documented in [SurrealDB Laravel Integration Strategy](surreal-integration-strategy.md).
 
 ### AI Direction
 
@@ -218,7 +222,6 @@ The following areas are important but intentionally not finalized yet:
 - the exact shape of the conversation-node schema
 - the exact GraphRAG implementation model
 - synchronization strategy between local and shared deployments
-- how embedded and remote SurrealDB modes should coexist over time
 - the first production-ready model provider set
 - how release, packaging, and distribution should evolve after the initial NativePHP foundation
 - whether a dedicated public website should live at `katra.io`, and how it should relate to docs and releases
@@ -232,6 +235,7 @@ The following areas are important but intentionally not finalized yet:
 - Supporting both local-first and shared deployment modes may introduce synchronization and complexity tradeoffs early.
 - Multi-model and subagent capabilities can create product sprawl if they are treated as ends instead of capabilities.
 - NativePHP packaging and release automation may constrain the speed of local-first iteration.
+- The bridge between Laravel and the desktop-owned embedded SurrealDB runtime may become more complex than expected.
 
 ### Open Questions
 
@@ -256,5 +260,6 @@ In the near term, contributors should use this document to keep the rewrite alig
 ## Related Docs
 
 - [Katra v2 Overview](../v2-overview.md)
+- [SurrealDB Laravel Integration Strategy](surreal-integration-strategy.md)
 - [Katra Brand Foundation](../brand/README.md)
 - [Issue #41: define the katra.io domain plan](https://github.com/devoption/katra/issues/41)
