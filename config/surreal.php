@@ -21,6 +21,10 @@ return [
 
     'binary' => env('SURREAL_BINARY', 'surreal'),
 
+    'extras_path' => env('NATIVEPHP_EXTRAS_PATH'),
+
+    'bundled_binary_relative_path' => env('SURREAL_BUNDLED_BINARY_RELATIVE_PATH', 'surreal/bin/surreal'),
+
     'host' => env('SURREAL_HOST', '127.0.0.1'),
 
     'port' => (int) env('SURREAL_PORT', 18001),

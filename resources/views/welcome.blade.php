@@ -75,9 +75,9 @@
 
                             <article class="rounded-[28px] border border-emerald-200/12 bg-emerald-300/8 p-5">
                                 <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-emerald-100/70">Release</p>
-                                <h2 class="mt-4 text-2xl font-semibold text-white">Downloadable preview</h2>
+                                <h2 class="mt-4 text-2xl font-semibold text-white">Bundled preview</h2>
                                 <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    The release flow is in place, and the next release-worthy feature merge should produce the first downloadable macOS preview artifact for the Katra rewrite line.
+                                    Downloadable macOS previews can now carry the local Surreal runtime instead of depending on a separately installed machine-local CLI.
                                 </p>
                             </article>
                         </div>
@@ -138,7 +138,7 @@
                                 <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-200/78">
                                     <li>Graph repositories and Surreal-backed model flows beyond the preview workspace</li>
                                     <li>Fortify auth and conversation scaffolding inside the desktop shell</li>
-                                    <li>Bundled Surreal runtime decisions for downloadable desktop builds</li>
+                                    <li>Signed desktop builds, auto-updates, and release polish</li>
                                 </ul>
                             </div>
 

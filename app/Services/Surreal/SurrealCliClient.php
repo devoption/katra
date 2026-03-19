@@ -11,6 +11,8 @@ class SurrealCliClient
 {
     public function __construct(
         private readonly ?string $configuredBinary = null,
+        private readonly ?string $extrasPath = null,
+        private readonly ?string $bundledBinaryRelativePath = null,
     ) {}
 
     public function isAvailable(): bool
@@ -167,13 +169,31 @@ class SurrealCliClient
 
     public function binary(): ?string
     {
-        $binary = $this->configuredBinary ?: (string) config('surreal.binary', 'surreal');
+        foreach ($this->binaryCandidates() as $candidate) {
+            if (is_file($candidate) && is_executable($candidate)) {
+                return $candidate;
+            }
 
-        if (is_file($binary) && is_executable($binary)) {
-            return $binary;
+            $resolvedBinary = (new ExecutableFinder)->find($candidate);
+
+            if ($resolvedBinary !== null) {
+                return $resolvedBinary;
+            }
         }
 
-        return (new ExecutableFinder)->find($binary);
+        return null;
+    }
+
+    public function usesBundledBinary(): bool
+    {
+        $bundledBinary = $this->bundledBinary();
+        $resolvedBinary = $this->binary();
+
+        if ($bundledBinary === null || $resolvedBinary === null) {
+            return false;
+        }
+
+        return realpath($bundledBinary) === realpath($resolvedBinary);
     }
 
     /**
@@ -215,9 +235,79 @@ class SurrealCliClient
         $binary = $this->binary();
 
         if ($binary === null) {
-            throw new RuntimeException('Unable to find the `surreal` CLI. Install it or set SURREAL_BINARY to the executable path.');
+            throw new RuntimeException('Unable to find the `surreal` CLI. '.implode(' ', $this->missingBinaryGuidance()));
         }
 
         return $binary;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function binaryCandidates(): array
+    {
+        $configuredBinary = $this->configuredBinary ?: (string) config('surreal.binary', 'surreal');
+        $defaultBinary = 'surreal';
+        $bundledBinary = $this->bundledBinary();
+
+        return array_values(array_unique(array_filter([
+            $configuredBinary !== $defaultBinary ? $configuredBinary : null,
+            $bundledBinary,
+            $configuredBinary,
+        ])));
+    }
+
+    private function bundledBinary(): ?string
+    {
+        $extrasPath = $this->extrasPath;
+
+        if ($extrasPath === null || $extrasPath === '') {
+            $configuredExtrasPath = config('surreal.extras_path');
+
+            if (is_string($configuredExtrasPath) && $configuredExtrasPath !== '') {
+                $extrasPath = $configuredExtrasPath;
+            }
+        }
+
+        if ($extrasPath === null || $extrasPath === '') {
+            return null;
+        }
+
+        $bundledBinaryRelativePath = $this->bundledBinaryRelativePath;
+
+        if ($bundledBinaryRelativePath === null || $bundledBinaryRelativePath === '') {
+            $configuredBundledPath = config('surreal.bundled_binary_relative_path', 'surreal/bin/surreal');
+            $bundledBinaryRelativePath = is_string($configuredBundledPath) ? $configuredBundledPath : 'surreal/bin/surreal';
+        }
+
+        return rtrim($extrasPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.ltrim($bundledBinaryRelativePath, DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function missingBinaryGuidance(): array
+    {
+        $guidance = [];
+        $bundledBinary = $this->bundledBinary();
+
+        if ($bundledBinary !== null) {
+            $guidance[] = sprintf('Checked bundled NativePHP extras path [%s].', $bundledBinary);
+        }
+
+        $configuredBinary = $this->configuredBinary ?: (string) config('surreal.binary', 'surreal');
+        $guidance[] = $this->looksLikeBinaryPath($configuredBinary)
+            ? sprintf('Checked configured Surreal binary path [%s].', $configuredBinary)
+            : sprintf('Checked the current process PATH for [%s].', $configuredBinary);
+        $guidance[] = 'Install the CLI manually for local source development or set SURREAL_BINARY to a custom executable path.';
+
+        return $guidance;
+    }
+
+    private function looksLikeBinaryPath(string $binary): bool
+    {
+        return str_contains($binary, '/')
+            || str_contains($binary, '\\')
+            || str_starts_with($binary, '.');
     }
 }
