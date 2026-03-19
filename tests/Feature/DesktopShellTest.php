@@ -10,5 +10,9 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
         ->assertSee('Katra is taking shape as a graph-native workspace')
         ->assertSee('Surreal Foundation')
         ->assertSee('Bundled preview')
-        ->assertSee('local Surreal runtime');
+        ->assertSee('local Surreal runtime')
+        ->assertSee('Runtime')
+        ->assertSee('Binary')
+        ->assertSee('Endpoint')
+        ->assertSee('Unavailable');
 });

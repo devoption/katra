@@ -4,6 +4,7 @@ namespace App\Services\Surreal;
 
 use Illuminate\Support\Facades\File;
 use RuntimeException;
+use Symfony\Component\Process\Process;
 
 class SurrealRuntimeManager
 {
@@ -62,5 +63,32 @@ class SurrealRuntimeManager
             flock($lockHandle, LOCK_UN);
             fclose($lockHandle);
         }
+    }
+
+    public function runningProcessId(): ?int
+    {
+        if (! $this->connection->usesLocalRuntime() || ! File::exists($this->connection->runtimePidPath)) {
+            return null;
+        }
+
+        $pid = (int) trim((string) File::get($this->connection->runtimePidPath));
+
+        if ($pid <= 0) {
+            return null;
+        }
+
+        return $this->processIsRunning($pid) ? $pid : null;
+    }
+
+    private function processIsRunning(int $pid): bool
+    {
+        if (function_exists('posix_kill')) {
+            return @posix_kill($pid, 0);
+        }
+
+        $process = new Process(['ps', '-p', (string) $pid]);
+        $process->run();
+
+        return $process->isSuccessful();
     }
 }

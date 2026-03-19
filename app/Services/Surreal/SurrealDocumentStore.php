@@ -26,7 +26,7 @@ class SurrealDocumentStore
      */
     public function find(string $table, string $id): ?array
     {
-        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->normalizeRecordId($table, $id)))[0] ?? [])[0] ?? null;
+        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->recordSelector($table, $id)))[0] ?? [])[0] ?? null;
     }
 
     /**
@@ -39,7 +39,7 @@ class SurrealDocumentStore
         $attributes['id'] = $id;
         $payload = Arr::except($attributes, ['id']);
 
-        return $this->normalizeRecordSet($this->run(sprintf('CREATE ONLY %s CONTENT %s;', $id, $this->encodeAttributes($payload)))[0] ?? [])[0]
+        return $this->normalizeRecordSet($this->run(sprintf('CREATE ONLY %s CONTENT %s;', $this->recordSelector($table, $id), $this->encodeAttributes($payload)))[0] ?? [])[0]
             ?? throw new RuntimeException(sprintf('Failed to create the SurrealDB record [%s].', $id));
     }
 
@@ -53,13 +53,13 @@ class SurrealDocumentStore
         $attributes['id'] = $recordId;
         $payload = Arr::except($attributes, ['id']);
 
-        return $this->normalizeRecordSet($this->run(sprintf('UPDATE %s CONTENT %s;', $recordId, $this->encodeAttributes($payload)))[0] ?? [])[0]
+        return $this->normalizeRecordSet($this->run(sprintf('UPDATE %s CONTENT %s;', $this->recordSelector($table, $recordId), $this->encodeAttributes($payload)))[0] ?? [])[0]
             ?? throw new RuntimeException(sprintf('Failed to update the SurrealDB record [%s].', $recordId));
     }
 
     public function delete(string $table, string $id): void
     {
-        $this->run(sprintf('DELETE %s;', $this->normalizeRecordId($table, $id)));
+        $this->run(sprintf('DELETE %s;', $this->recordSelector($table, $id)));
     }
 
     /**
@@ -104,6 +104,14 @@ class SurrealDocumentStore
         return sprintf('%s:%s', $normalizedTable, $id);
     }
 
+    private function recordSelector(string $table, string $id): string
+    {
+        $recordId = $this->normalizeRecordId($table, $id);
+        [$recordTable, $recordKey] = explode(':', $recordId, 2);
+
+        return sprintf('type::record(%s, %s)', $this->encodeString($recordTable), $this->encodeString($recordKey));
+    }
+
     private function normalizeTable(string $table): string
     {
         if (! preg_match('/^[A-Za-z0-9_]+$/', $table)) {
@@ -132,12 +140,12 @@ class SurrealDocumentStore
 
         if (is_array($firstValue) && $this->isAssociative($firstValue)) {
             /** @var array<int, array<string, mixed>> $values */
-            return $values;
+            return array_map(fn (array $record): array => $this->normalizeRecord($record), $values);
         }
 
         if (is_array($firstValue) && ! $this->isAssociative($firstValue)) {
             /** @var array<int, array<string, mixed>> $firstValue */
-            return $firstValue;
+            return array_map(fn (array $record): array => $this->normalizeRecord($record), $firstValue);
         }
 
         return [];
@@ -155,6 +163,30 @@ class SurrealDocumentStore
         }
 
         return $encoded;
+    }
+
+    private function encodeString(string $value): string
+    {
+        $encoded = json_encode($value, JSON_THROW_ON_ERROR);
+
+        if (! is_string($encoded)) {
+            throw new RuntimeException('Failed to encode the SurrealDB record identifier.');
+        }
+
+        return $encoded;
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     * @return array<string, mixed>
+     */
+    private function normalizeRecord(array $record): array
+    {
+        if (isset($record['id']) && is_string($record['id'])) {
+            $record['id'] = preg_replace('/^([A-Za-z0-9_]+):`(.+)`$/', '$1:$2', $record['id']) ?? $record['id'];
+        }
+
+        return $record;
     }
 
     /**
