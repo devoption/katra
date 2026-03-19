@@ -130,7 +130,15 @@ jobs:
       - context
       - release
     if: needs.context.outputs.should_release == 'true'
-    runs-on: macos-15-intel
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: macos-15-intel
+          - architecture: arm64
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
@@ -174,13 +182,50 @@ jobs:
         run: php artisan native:install --force --no-interaction
 
       - name: Build macOS desktop artifact
-        run: php artisan native:build mac x64 --no-interaction
+        run: php artisan native:build mac ${{ matrix.architecture }} --no-interaction
+
+      - name: Stage architecture-specific release assets
+        run: |
+          set -euo pipefail
+
+          mkdir -p nativephp/electron/release-assets
+          shopt -s nullglob
+
+          staged_files=0
+
+          for candidate in nativephp/electron/dist/*; do
+            if [[ ! -f "$candidate" ]]; then
+              continue
+            fi
+
+            filename="$(basename "$candidate")"
+            staged_name="$filename"
+
+            if [[ "$filename" != *"-${{ matrix.architecture }}."* ]]; then
+              extension="${filename##*.}"
+              basename="${filename%.*}"
+
+              if [[ "$basename" == "$filename" ]]; then
+                staged_name="${filename}-${{ matrix.architecture }}"
+              else
+                staged_name="${basename}-${{ matrix.architecture }}.${extension}"
+              fi
+            fi
+
+            cp "$candidate" "nativephp/electron/release-assets/$staged_name"
+            staged_files=$((staged_files + 1))
+          done
+
+          if (( staged_files == 0 )); then
+            echo "No macOS release files were generated." >&2
+            exit 1
+          fi
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: katra-macos-x64-${{ needs.context.outputs.version }}
-          path: ${{ github.workspace }}/nativephp/electron/dist
+          name: katra-macos-${{ matrix.architecture }}-${{ needs.context.outputs.version }}
+          path: ${{ github.workspace }}/nativephp/electron/release-assets
           if-no-files-found: error
 
       - name: Upload release assets
@@ -192,7 +237,7 @@ jobs:
           shopt -s nullglob
           release_files=()
 
-          for candidate in nativephp/electron/dist/*; do
+          for candidate in nativephp/electron/release-assets/*; do
             if [[ -f "$candidate" ]]; then
               release_files+=("$candidate")
             fi
@@ -210,8 +255,8 @@ jobs:
           {
             echo "## macOS Packaging"
             echo
-            echo "- Runner: \`macos-15-intel\`"
-            echo "- Architecture: \`x64\`"
+            echo "- Runner: \`${{ matrix.runner }}\`"
+            echo "- Architecture: \`${{ matrix.architecture }}\`"
             echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
             echo
             if [[ -n "${NATIVEPHP_APPLE_ID}" && -n "${NATIVEPHP_APPLE_ID_PASS}" && -n "${NATIVEPHP_APPLE_TEAM_ID}" ]]; then
