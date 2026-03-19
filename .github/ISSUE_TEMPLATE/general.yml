@@ -1,7 +1,5 @@
 name: General Issue
 description: Track a scoped piece of work using Katra's standard issue structure.
-title: ""
-labels: []
 body:
   - type: markdown
     attributes:
