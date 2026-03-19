@@ -6,6 +6,7 @@ Katra v2 is being developed in the open through issues and pull requests.
 
 Current expectations:
 
+- open new work through the repository issue form
 - follow the Branch Protection policy for `main` (see "Branch Protection" below)
 - every pull request should reference an issue
 - use the repository pull request template
