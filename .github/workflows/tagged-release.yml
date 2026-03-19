@@ -146,10 +146,8 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       NATIVEPHP_APP_VERSION: ${{ needs.context.outputs.version }}
       NATIVEPHP_UPDATER_ENABLED: false
-      NATIVEPHP_APPLE_ID: ${{ secrets.NATIVEPHP_APPLE_ID }}
-      NATIVEPHP_APPLE_ID_PASS: ${{ secrets.NATIVEPHP_APPLE_ID_PASS }}
-      NATIVEPHP_APPLE_TEAM_ID: ${{ secrets.NATIVEPHP_APPLE_TEAM_ID }}
       SURREAL_VERSION: v3.0.4
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
     steps:
       - name: Checkout
@@ -216,6 +214,48 @@ jobs:
 
           tar -xzf "$archive_path" -C "$runtime_dir"
           chmod +x "$runtime_dir/surreal"
+
+      - name: Force consistent ad-hoc macOS signing
+        run: |
+          node <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs');
+
+          const path = 'vendor/nativephp/desktop/resources/electron/electron-builder.mjs';
+          const current = readFileSync(path, 'utf8');
+          const normalized = current.replace(/\r\n/g, '\n');
+          const pattern = /^(\s*mac:\s*\{\n)([\s\S]*?)(^\s*\},\n)/m;
+          const match = normalized.match(pattern);
+
+          if (! match) {
+            throw new Error('Unable to locate the NativePHP mac builder block.');
+          }
+
+          const macBlock = match[2];
+
+          if (! macBlock.includes("entitlementsInherit: 'build/entitlements.mac.plist'")) {
+            throw new Error('NativePHP mac builder block is missing entitlementsInherit.');
+          }
+
+          const adHocSettings = [
+            "        identity: '-'",
+            '        hardenedRuntime: false',
+            '        notarize: false',
+            '        gatekeeperAssess: false',
+          ];
+
+          const updatedMacBlock = macBlock.includes("identity: '-'")
+            ? macBlock
+            : macBlock.replace(
+                /(^\s*entitlementsInherit:\s*'build\/entitlements\.mac\.plist',\n)/m,
+                `$1${adHocSettings.join('\n')}\n`,
+              );
+
+          if (updatedMacBlock === macBlock) {
+            throw new Error('Unable to apply preview macOS signing overrides.');
+          }
+
+          writeFileSync(path, normalized.replace(pattern, `$1${updatedMacBlock}$3`));
+          NODE
 
       - name: Build macOS desktop artifact
         run: php artisan native:build mac ${{ matrix.architecture }} --no-interaction
@@ -296,9 +336,6 @@ jobs:
             echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
             echo "- Bundled Surreal runtime: \`${SURREAL_VERSION}\` (\`${{ matrix.surreal_asset_architecture }}\` asset)"
             echo
-            if [[ -n "${NATIVEPHP_APPLE_ID}" && -n "${NATIVEPHP_APPLE_ID_PASS}" && -n "${NATIVEPHP_APPLE_TEAM_ID}" ]]; then
-              echo "- Apple notarization credentials were provided to the build."
-            else
-              echo "- Apple notarization credentials were not provided. The workflow still builds and uploads macOS artifacts, but notarization/signing follow-up remains manual."
-            fi
+            echo "- Preview builds are packaged with an explicit ad-hoc macOS signature for launch consistency."
+            echo "- Developer ID signing and notarization remain tracked separately before trusted distribution."
           } >> "$GITHUB_STEP_SUMMARY"
