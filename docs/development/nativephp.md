@@ -62,6 +62,14 @@ If you want to run the NativePHP shell directly and manage frontend tooling sepa
 php artisan native:run --no-interaction
 ```
 
+## Trying A Release Build
+
+If you want to try Katra without cloning the repository, use the desktop assets attached to the [GitHub Releases](https://github.com/devoption/katra/releases) page.
+
+- choose the asset that matches your Mac architecture when it is available: `x64` for Intel or `arm64` for Apple Silicon
+- expect preview-quality behavior while the desktop shell and local runtime story are still being built out
+- expect Gatekeeper prompts until macOS signing and notarization are in place
+
 ## Release Artifacts
 
 Tagged releases build macOS desktop artifacts in GitHub Actions, stage a release-safe copy of the generated files, and attach those staged assets to the GitHub Release.

@@ -18,7 +18,7 @@ The long-term direction is a graph-native system where conversations, tasks, dec
 
 - Laravel 13
 - NativePHP
-- SurrealDB v3, embedded-first
+- SurrealDB v3 with a desktop-embedded and server-remote runtime strategy
 - Laravel AI
 - Laravel MCP
 - Laravel Fortify
@@ -36,7 +36,26 @@ The long-term direction is a graph-native system where conversations, tasks, dec
 
 ## Current Status
 
-Katra v2 is an active rewrite. The repository is being reset and rebuilt in small, reviewable pull requests. The proof of concept is preserved at [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0) for historical reference and is not being actively developed.
+Katra v2 is an active rewrite. The repository is being rebuilt in small, reviewable pull requests, and preview macOS desktop artifacts are now attached to GitHub Releases as the shell evolves. The proof of concept is preserved at [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0) for historical reference and is not being actively developed.
+
+## Try Katra
+
+There are two practical ways to try Katra today.
+
+### Download A Desktop Preview
+
+- Browse the [GitHub Releases](https://github.com/devoption/katra/releases) page and download the latest macOS desktop asset for your machine.
+- Choose the architecture-specific asset that matches your Mac when it is available: `x64` for Intel, `arm64` for Apple Silicon.
+- Current desktop builds are preview-quality and the app is not yet signed or notarized, so macOS may require `Open Anyway` or a control-click `Open` flow the first time you launch it.
+
+### Run From Source
+
+```bash
+composer setup
+composer native:dev
+```
+
+That path installs dependencies, prepares the Laravel app, bootstraps NativePHP, and starts the local desktop development loop.
 
 ## Planning Docs
 
@@ -52,7 +71,7 @@ Contributions are welcome as the rewrite takes shape. For now, the best place to
 Repository workflow, commit conventions, and release policy are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Optional local AI tooling setup is documented in [Laravel Boost Setup](docs/development/laravel-boost.md).
-Native desktop bootstrap and local shell setup are documented in [NativePHP Desktop Setup](docs/development/nativephp.md).
+Native desktop bootstrap, release artifacts, and local shell setup are documented in [NativePHP Desktop Setup](docs/development/nativephp.md).
 
 ## License
 

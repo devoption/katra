@@ -2,7 +2,7 @@
 
 ## Status
 
-Katra v2 is an in-progress rewrite of the original proof of concept. The rewrite is happening in the open through small pull requests and linked GitHub issues.
+Katra v2 is an in-progress rewrite of the original proof of concept. The rewrite is happening in the open through small pull requests and linked GitHub issues, and preview macOS desktop artifacts now ship through GitHub Releases as the shell evolves.
 
 ## Product Direction
 
