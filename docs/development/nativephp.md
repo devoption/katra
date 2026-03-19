@@ -69,7 +69,7 @@ If you want to try Katra without cloning the repository, use the desktop assets 
 - choose the asset that matches your Mac architecture when it is available: `x64` for Intel or `arm64` for Apple Silicon
 - release builds now bundle the Surreal runtime through NativePHP `extras`, so the desktop shell does not require a separate machine-local `surreal` CLI install
 - expect preview-quality behavior while the desktop shell and local runtime story are still being built out
-- expect Gatekeeper prompts until macOS signing and notarization are in place
+- expect Gatekeeper prompts until Developer ID signing and notarization are in place
 
 ## Release Artifacts
 
@@ -87,13 +87,9 @@ The current workflow intentionally keeps this first packaging path small:
 
 ### Signing And Notarization
 
-If the repository provides the following secrets, the macOS build can attempt notarization during packaging:
+Preview release builds currently force a consistent ad-hoc macOS signature during packaging and disable hardened runtime/notarization in that path so the generated Intel and Apple Silicon apps launch reliably after download.
 
-- `NATIVEPHP_APPLE_ID`
-- `NATIVEPHP_APPLE_ID_PASS`
-- `NATIVEPHP_APPLE_TEAM_ID`
-
-If those secrets are not configured, the workflow still builds and uploads artifacts, but signing and notarization remain a manual follow-up step.
+That keeps the release artifacts usable for early testing, but they are still not trusted macOS distributions. Gatekeeper prompts remain expected until dedicated Developer ID signing, notarization, and stapling land through the tracked distribution work.
 
 ## Current Bootstrap Behavior
 

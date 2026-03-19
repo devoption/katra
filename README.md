@@ -47,7 +47,7 @@ There are two practical ways to try Katra today.
 - Browse the [GitHub Releases](https://github.com/devoption/katra/releases) page and download the latest macOS desktop asset for your machine.
 - Choose the architecture-specific asset that matches your Mac when it is available: `x64` for Intel, `arm64` for Apple Silicon.
 - Desktop preview builds now bundle the local Surreal runtime instead of expecting a separate machine-local `surreal` CLI install.
-- Current desktop builds are preview-quality and the app is not yet signed or notarized, so macOS may require `Open Anyway` or a control-click `Open` flow the first time you launch it.
+- Current desktop builds are preview-quality and use ad-hoc macOS signing, so macOS may require `Open Anyway` or a control-click `Open` flow the first time you launch it.
 
 ### Run From Source
 
