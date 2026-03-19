@@ -5,6 +5,7 @@ namespace App\Services\Surreal;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class SurrealRuntimeManager
 {
@@ -86,9 +87,17 @@ class SurrealRuntimeManager
             return @posix_kill($pid, 0);
         }
 
-        $process = new Process(['ps', '-p', (string) $pid]);
-        $process->run();
+        if (DIRECTORY_SEPARATOR === '\\') {
+            return false;
+        }
 
-        return $process->isSuccessful();
+        try {
+            $process = new Process(['ps', '-p', (string) $pid]);
+            $process->run();
+
+            return $process->isSuccessful();
+        } catch (Throwable) {
+            return false;
+        }
     }
 }
