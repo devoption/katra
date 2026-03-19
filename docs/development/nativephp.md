@@ -64,13 +64,14 @@ php artisan native:run --no-interaction
 
 ## Release Artifacts
 
-Tagged releases build macOS desktop artifacts in GitHub Actions and attach the generated top-level `nativephp/electron/dist` files to the GitHub Release.
+Tagged releases build macOS desktop artifacts in GitHub Actions, stage a release-safe copy of the generated files, and attach those staged assets to the GitHub Release.
 
 The current workflow intentionally keeps this first packaging path small:
 
 - target platform: macOS
 - current architecture targets: `x64` and `arm64`
-- workflow artifact: preserved in GitHub Actions
+- raw build output: generated under `nativephp/electron/dist`
+- workflow artifact: preserved from the staged `nativephp/electron/release-assets` directory
 - release assets: uploaded to the matching GitHub Release with architecture-explicit filenames
 - current GitHub-hosted runners: `macos-15-intel` for Intel builds and `macos-15` for Apple Silicon builds
 
