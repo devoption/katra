@@ -1,0 +1,43 @@
+name: General Issue
+description: Track a scoped piece of work using Katra's standard issue structure.
+title: ""
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for product, architecture, CI, docs, design, and repository work.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Start with "As a `<role>`, I need..."
+      placeholder: |
+        As a `<role>`, I need...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: List the outcomes that must be true before the issue is done.
+      value: |
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Optional details, implementation constraints, references, or edge cases.
+      placeholder: Optional details, implementation constraints, references, or edge cases.
+    validations:
+      required: false
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: Optional. Explicitly excluded from this issue.
+      placeholder: Optional. Explicitly excluded from this issue.
+    validations:
+      required: false
