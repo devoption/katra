@@ -85,6 +85,59 @@ test('the surreal workspace model completes a basic crud flow', function () {
     }
 });
 
+test('the desktop preview workspace can be created through the surreal document store', function () {
+    $client = app(SurrealCliClient::class);
+
+    if (! $client->isAvailable()) {
+        $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
+    }
+
+    $storagePath = storage_path('app/surrealdb/workspace-preview-test-'.Str::uuid());
+
+    File::deleteDirectory($storagePath);
+    File::ensureDirectoryExists(dirname($storagePath));
+
+    try {
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_preview_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        app()->forgetInstance(SurrealConnection::class);
+        app()->forgetInstance(SurrealRuntimeManager::class);
+        app()->forgetInstance(SurrealDocumentStore::class);
+
+        $workspace = Workspace::desktopPreview();
+
+        expect($workspace->id)->toBe('workspaces:desktop-preview')
+            ->and($workspace->name)->toBe('Desktop Preview Workspace')
+            ->and($workspace->status)->toBe('active');
+
+        $fetchedWorkspace = Workspace::find('desktop-preview');
+
+        expect($fetchedWorkspace)->not->toBeNull()
+            ->and($fetchedWorkspace?->id)->toBe('workspaces:desktop-preview')
+            ->and($fetchedWorkspace?->summary)->toContain('Surreal-backed workspace record');
+    } finally {
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
+        File::deleteDirectory($storagePath);
+    }
+});
+
 /**
  * @return array{endpoint: string, port: int, process: Process}
  */
