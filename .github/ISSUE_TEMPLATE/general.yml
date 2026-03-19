@@ -11,9 +11,9 @@ body:
     id: context
     attributes:
       label: Context
-      description: Start with "As a <role>, I need..."
+      description: Start with "As a `<role>`, I need..."
       placeholder: |
-        As a <role>, I need...
+        As a `<role>`, I need...
     validations:
       required: true
   - type: textarea
