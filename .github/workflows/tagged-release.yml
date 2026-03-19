@@ -255,6 +255,8 @@ jobs:
 
       - name: Import Developer ID certificate
         run: |
+          set -euo pipefail
+
           node <<'NODE'
           const { readFileSync, writeFileSync } = require('node:fs');
 
@@ -280,6 +282,8 @@ jobs:
           certificate_path="$RUNNER_TEMP/katra-developer-id-application.p12"
           keychain_password="$(openssl rand -hex 24)"
 
+          echo "KATRA_MACOS_CERTIFICATE_PATH=$certificate_path" >> "$GITHUB_ENV"
+
           if ! printf '%s' "$KATRA_MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$certificate_path" 2>/dev/null; then
             printf '%s' "$KATRA_MACOS_CERTIFICATE_P12_BASE64" | base64 -D > "$certificate_path"
           fi
@@ -294,6 +298,9 @@ jobs:
             -T /usr/bin/security \
             -T /usr/bin/productbuild \
             -T /usr/bin/productsign
+
+          rm -f "$certificate_path"
+
           security set-key-partition-list \
             -S apple-tool:,apple:,codesign: \
             -s \
@@ -429,6 +436,10 @@ jobs:
         run: |
           if [[ -n "${KATRA_MACOS_SIGNING_KEYCHAIN:-}" ]]; then
             security delete-keychain "$KATRA_MACOS_SIGNING_KEYCHAIN" || true
+          fi
+
+          if [[ -n "${KATRA_MACOS_CERTIFICATE_PATH:-}" ]]; then
+            rm -f "$KATRA_MACOS_CERTIFICATE_PATH" || true
           fi
 
       - name: Summarize packaging status
