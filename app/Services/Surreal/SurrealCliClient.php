@@ -247,7 +247,7 @@ class SurrealCliClient
     private function binaryCandidates(): array
     {
         $configuredBinary = $this->configuredBinary ?: (string) config('surreal.binary', 'surreal');
-        $defaultBinary = (string) config('surreal.binary', 'surreal');
+        $defaultBinary = 'surreal';
         $bundledBinary = $this->bundledBinary();
 
         return array_values(array_unique(array_filter([

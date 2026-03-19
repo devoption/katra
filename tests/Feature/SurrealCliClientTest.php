@@ -61,3 +61,33 @@ test('it reports the configured binary path when the surreal binary is missing f
         File::deleteDirectory($extrasPath);
     }
 });
+
+test('it honors an explicitly configured surreal binary before the bundled binary', function () {
+    $workspaceRoot = storage_path('framework/testing/nativephp-extras-'.Str::uuid());
+    $configuredBinary = $workspaceRoot.'/custom/surreal';
+    $bundledBinary = $workspaceRoot.'/extras/surreal/bin/surreal';
+
+    File::ensureDirectoryExists(dirname($configuredBinary));
+    File::put($configuredBinary, "#!/bin/sh\nexit 0\n");
+    chmod($configuredBinary, 0755);
+
+    File::ensureDirectoryExists(dirname($bundledBinary));
+    File::put($bundledBinary, "#!/bin/sh\nexit 0\n");
+    chmod($bundledBinary, 0755);
+
+    try {
+        config()->set('surreal.binary', $configuredBinary);
+
+        $client = new SurrealCliClient(
+            configuredBinary: null,
+            extrasPath: $workspaceRoot.'/extras',
+            bundledBinaryRelativePath: 'surreal/bin/surreal',
+        );
+
+        expect($client->binary())->toBe($configuredBinary)
+            ->and($client->usesBundledBinary())->toBeFalse();
+    } finally {
+        File::deleteDirectory($workspaceRoot);
+        config()->set('surreal.binary', 'surreal');
+    }
+});
