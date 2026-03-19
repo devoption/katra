@@ -190,6 +190,7 @@ jobs:
 
           runtime_dir="extras/surreal/bin"
           archive="surreal-${SURREAL_VERSION}.darwin-${{ matrix.surreal_asset_architecture }}.tgz"
+          archive_path="build/surreal-runtime/$archive"
 
           rm -rf extras/surreal
           mkdir -p "$runtime_dir" build/surreal-runtime
@@ -199,7 +200,21 @@ jobs:
             --pattern "$archive" \
             --dir build/surreal-runtime
 
-          tar -xzf "build/surreal-runtime/$archive" -C "$runtime_dir"
+          expected_digest="$(gh api repos/surrealdb/surrealdb/releases/tags/${SURREAL_VERSION} --jq ".assets[] | select(.name == \"${archive}\") | .digest")"
+
+          if [[ -z "$expected_digest" || "$expected_digest" == "null" ]]; then
+            echo "Unable to resolve a published digest for ${archive}." >&2
+            exit 1
+          fi
+
+          actual_digest="sha256:$(shasum -a 256 "$archive_path" | awk '{print $1}')"
+
+          if [[ "$actual_digest" != "$expected_digest" ]]; then
+            echo "Digest mismatch for ${archive}: expected ${expected_digest}, got ${actual_digest}." >&2
+            exit 1
+          fi
+
+          tar -xzf "$archive_path" -C "$runtime_dir"
           chmod +x "$runtime_dir/surreal"
 
       - name: Build macOS desktop artifact

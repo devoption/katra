@@ -296,9 +296,18 @@ class SurrealCliClient
         }
 
         $configuredBinary = $this->configuredBinary ?: (string) config('surreal.binary', 'surreal');
-        $guidance[] = sprintf('Checked the current process PATH for [%s].', $configuredBinary);
+        $guidance[] = $this->looksLikeBinaryPath($configuredBinary)
+            ? sprintf('Checked configured Surreal binary path [%s].', $configuredBinary)
+            : sprintf('Checked the current process PATH for [%s].', $configuredBinary);
         $guidance[] = 'Install the CLI manually for local source development or set SURREAL_BINARY to a custom executable path.';
 
         return $guidance;
+    }
+
+    private function looksLikeBinaryPath(string $binary): bool
+    {
+        return str_contains($binary, '/')
+            || str_contains($binary, '\\')
+            || str_starts_with($binary, '.');
     }
 }

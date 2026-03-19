@@ -21,7 +21,11 @@ class HomeController extends Controller
         try {
             $workspace = Workspace::desktopPreview();
             $surrealStatus = 'connected';
-            $runtimeLabel = $client->usesBundledBinary() ? 'bundled Surreal runtime' : 'local Surreal runtime';
+            $runtimeLabel = match (true) {
+                ! $connection->usesLocalRuntime() => 'remote Surreal runtime',
+                $client->usesBundledBinary() => 'bundled Surreal runtime',
+                default => 'local Surreal runtime',
+            };
             $surrealMessage = sprintf('The preview workspace is persisted through the %s at %s.', $runtimeLabel, $connection->endpoint);
         } catch (Throwable $exception) {
             if ($exception instanceof RuntimeException) {

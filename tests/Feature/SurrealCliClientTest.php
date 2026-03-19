@@ -43,3 +43,21 @@ test('it reports the bundled lookup path when no surreal binary is available', f
         File::deleteDirectory($extrasPath);
     }
 });
+
+test('it reports the configured binary path when the surreal binary is missing from an explicit path', function () {
+    $extrasPath = storage_path('framework/testing/nativephp-extras-'.Str::uuid());
+    $missingBinary = $extrasPath.'/custom/surreal';
+
+    try {
+        $client = new SurrealCliClient(
+            configuredBinary: $missingBinary,
+            extrasPath: null,
+            bundledBinaryRelativePath: null,
+        );
+
+        expect(fn () => $client->isReady('ws://127.0.0.1:18001'))
+            ->toThrow(RuntimeException::class, sprintf('Checked configured Surreal binary path [%s].', $missingBinary));
+    } finally {
+        File::deleteDirectory($extrasPath);
+    }
+});
