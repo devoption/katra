@@ -237,10 +237,10 @@ jobs:
           }
 
           const adHocSettings = [
-            "        identity: '-'",
-            '        hardenedRuntime: false',
-            '        notarize: false',
-            '        gatekeeperAssess: false',
+            "        identity: '-',",
+            '        hardenedRuntime: false,',
+            '        notarize: false,',
+            '        gatekeeperAssess: false,',
           ];
 
           const updatedMacBlock = macBlock.includes("identity: '-'")
@@ -256,6 +256,9 @@ jobs:
 
           writeFileSync(path, normalized.replace(pattern, `$1${updatedMacBlock}$3`));
           NODE
+
+      - name: Validate patched Electron builder config
+        run: node --check vendor/nativephp/desktop/resources/electron/electron-builder.mjs
 
       - name: Build macOS desktop artifact
         run: php artisan native:build mac ${{ matrix.architecture }} --no-interaction
