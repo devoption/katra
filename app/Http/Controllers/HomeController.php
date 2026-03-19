@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Workspace;
+use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -11,7 +12,7 @@ use Throwable;
 
 class HomeController extends Controller
 {
-    public function __invoke(SurrealConnection $connection): View
+    public function __invoke(SurrealConnection $connection, SurrealCliClient $client): View
     {
         $workspace = null;
         $surrealStatus = 'degraded';
@@ -20,7 +21,8 @@ class HomeController extends Controller
         try {
             $workspace = Workspace::desktopPreview();
             $surrealStatus = 'connected';
-            $surrealMessage = sprintf('The preview workspace is persisted through the Surreal foundation at %s.', $connection->endpoint);
+            $runtimeLabel = $client->usesBundledBinary() ? 'bundled Surreal runtime' : 'local Surreal runtime';
+            $surrealMessage = sprintf('The preview workspace is persisted through the %s at %s.', $runtimeLabel, $connection->endpoint);
         } catch (Throwable $exception) {
             if ($exception instanceof RuntimeException) {
                 $surrealMessage = Str::limit($exception->getMessage(), 220);

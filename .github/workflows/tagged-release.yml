@@ -136,8 +136,10 @@ jobs:
         include:
           - architecture: x64
             runner: macos-15-intel
+            surreal_asset_architecture: amd64
           - architecture: arm64
             runner: macos-15
+            surreal_asset_architecture: arm64
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -147,6 +149,7 @@ jobs:
       NATIVEPHP_APPLE_ID: ${{ secrets.NATIVEPHP_APPLE_ID }}
       NATIVEPHP_APPLE_ID_PASS: ${{ secrets.NATIVEPHP_APPLE_ID_PASS }}
       NATIVEPHP_APPLE_TEAM_ID: ${{ secrets.NATIVEPHP_APPLE_TEAM_ID }}
+      SURREAL_VERSION: v3.0.4
 
     steps:
       - name: Checkout
@@ -180,6 +183,24 @@ jobs:
 
       - name: Install NativePHP resources
         run: php artisan native:install --force --no-interaction
+
+      - name: Bundle Surreal runtime
+        run: |
+          set -euo pipefail
+
+          runtime_dir="extras/surreal/bin"
+          archive="surreal-${SURREAL_VERSION}.darwin-${{ matrix.surreal_asset_architecture }}.tgz"
+
+          rm -rf extras/surreal
+          mkdir -p "$runtime_dir" build/surreal-runtime
+
+          gh release download "$SURREAL_VERSION" \
+            --repo surrealdb/surrealdb \
+            --pattern "$archive" \
+            --dir build/surreal-runtime
+
+          tar -xzf "build/surreal-runtime/$archive" -C "$runtime_dir"
+          chmod +x "$runtime_dir/surreal"
 
       - name: Build macOS desktop artifact
         run: php artisan native:build mac ${{ matrix.architecture }} --no-interaction
@@ -258,6 +279,7 @@ jobs:
             echo "- Runner: \`${{ matrix.runner }}\`"
             echo "- Architecture: \`${{ matrix.architecture }}\`"
             echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
+            echo "- Bundled Surreal runtime: \`${SURREAL_VERSION}\` (\`${{ matrix.surreal_asset_architecture }}\` asset)"
             echo
             if [[ -n "${NATIVEPHP_APPLE_ID}" && -n "${NATIVEPHP_APPLE_ID_PASS}" && -n "${NATIVEPHP_APPLE_TEAM_ID}" ]]; then
               echo "- Apple notarization credentials were provided to the build."

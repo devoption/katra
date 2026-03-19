@@ -67,6 +67,7 @@ php artisan native:run --no-interaction
 If you want to try Katra without cloning the repository, use the desktop assets attached to the [GitHub Releases](https://github.com/devoption/katra/releases) page.
 
 - choose the asset that matches your Mac architecture when it is available: `x64` for Intel or `arm64` for Apple Silicon
+- release builds now bundle the Surreal runtime through NativePHP `extras`, so the desktop shell does not require a separate machine-local `surreal` CLI install
 - expect preview-quality behavior while the desktop shell and local runtime story are still being built out
 - expect Gatekeeper prompts until macOS signing and notarization are in place
 
@@ -80,6 +81,7 @@ The current workflow intentionally keeps this first packaging path small:
 - current architecture targets: `x64` and `arm64`
 - raw build output: generated under `nativephp/electron/dist`
 - workflow artifact: preserved from the staged `nativephp/electron/release-assets` directory
+- bundled local data runtime: the official SurrealDB macOS CLI is downloaded during release builds and packaged under NativePHP `extras`
 - release assets: uploaded to the matching GitHub Release with architecture-explicit filenames
 - current GitHub-hosted runners: `macos-15-intel` for Intel builds and `macos-15` for Apple Silicon builds
 

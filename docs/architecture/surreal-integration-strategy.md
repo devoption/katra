@@ -143,7 +143,8 @@ That means:
 
 - local desktop development can auto-start a local Surreal runtime when the CLI is available
 - remote or server deployments can point Laravel at a separately managed SurrealDB endpoint
-- the desktop shell must degrade gracefully when the runtime is unavailable or not yet bundled into app distribution
+- downloadable macOS desktop releases can bundle the official SurrealDB CLI into NativePHP `extras` so the app can auto-start a local runtime without a separate user install
+- the desktop shell should still degrade gracefully in local source environments when no CLI is available
 
 ## Eloquent Strategy
 
