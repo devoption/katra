@@ -215,6 +215,109 @@ Katra should be capable of supporting:
 
 Not all of this needs to exist in the first implementation, but the architecture should avoid blocking it.
 
+## Desktop MVP Shell Guidance
+
+### Purpose Of The First Real Shell
+
+The first meaningful desktop shell should stop behaving like a developer runtime explainer and start behaving like the early surface of a real product.
+
+That means the downloadable app should:
+
+- feel branded and intentional on first open
+- communicate the shape of the workspace clearly even before all features are functional
+- create room for feedback on structure, navigation, and priorities
+- avoid teaching users about runtime internals they do not need to care about
+
+The shell should be honest about Katra being early, but it should not center that honesty around database or runtime diagnostics.
+
+### UX Direction
+
+The intended desktop direction is inspired by the OpenAI Codex desktop app in tone, clarity, and focus, but without carrying over developer-specific tools or framing.
+
+At the same time, the navigation model should be closer to collaboration products such as Slack, Teams, or WebEx than to transcript-sprawl AI chat applications.
+
+This means the shell should bias toward:
+
+- persistent spaces over disposable sessions
+- clear navigation and durable objects over a single oversized transcript surface
+- collaboration-oriented conversation organization
+- a calm desktop-first frame that feels like a workspace rather than a prompt playground
+
+### MVP Shell Structure
+
+The first desktop MVP shell should introduce the product through a few durable top-level areas:
+
+- workspaces
+- conversations
+- tasks
+- artifacts
+- decisions
+- agents
+
+Not all of these areas need to be functional immediately, but they should define the product surface honestly enough that later implementation can grow into them instead of replacing them.
+
+The shell should make it possible to understand:
+
+- where the current workspace lives
+- where persistent conversations belong
+- where task and artifact-oriented work will appear
+- where agent or model participation fits into the product
+
+### Conversation And Navigation Principles
+
+Katra should not inherit the default UX assumptions of current AI harnesses.
+
+In particular:
+
+- the product should not encourage creating many disposable conversations with the same model or agent just to manage context limits
+- conversation navigation should support group chats, chats with users, chats with models, and chats with agents
+- conversations should be treated as durable graph-native collaboration spaces
+- the shell should leave room for conversation-linked tasks, artifacts, and decisions instead of isolating chat from the rest of the workspace
+
+The expected result is a system where conversation organization feels closer to channels, rooms, and durable threads than to one-transcript-per-task prompt tools.
+
+### What The First Shell Should Not Center
+
+The first meaningful desktop shell should not center:
+
+- SurrealDB connection details
+- embedded runtime status
+- developer-oriented setup instructions
+- local shell commands
+- implementation caveats that belong in docs or logs
+
+Those details still matter for debugging and development, but they should live in logs, developer-focused surfaces, or documentation instead of the primary hero content.
+
+### Brand And Presentation Requirements
+
+The MVP shell should follow the current Katra brand baseline documented in [Katra Brand Foundation](../brand/README.md) and should reuse the current Katra logo asset in [katra-logo.svg](../brand/katra-logo.svg).
+
+The immediate visual requirements are:
+
+- Nord palette alignment
+- `nord15` as the primary accent
+- a product-like desktop presentation that feels cohesive with the README, docs, and app icon direction
+
+The UI should feel intentional and specific, not like a generic admin panel or a default AI chat scaffold.
+
+### Implementation Guardrails For Follow-Up Work
+
+Follow-up UI work should preserve optionality for both Katra and future derivative applications built from the same local-first Laravel + NativePHP foundation.
+
+That means early shell work should prefer:
+
+- generic workspace primitives over product-specific one-offs
+- reusable UI components over page-level markup duplication
+- feature flags for staged or mock-first surfaces
+- structures that can support local-first and remote-connected modes later
+
+It should avoid:
+
+- hard-coding setup flows into the app shell
+- binding the product identity too tightly to chat-only interactions
+- collapsing every future object type into a single conversation transcript view
+- exposing low-level runtime details as part of the normal product experience
+
 ## Deferred Decisions
 
 The following areas are important but intentionally not finalized yet:
@@ -256,6 +359,7 @@ In the near term, contributors should use this document to keep the rewrite alig
 - durable graph state matters more than transcript accumulation
 - MCP is important, but not the center
 - ReBAC is the intended authorization model
+- the first real desktop shell should present a branded workspace, not a runtime diagnostic page
 
 ## Related Docs
 
