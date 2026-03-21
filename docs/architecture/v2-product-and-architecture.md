@@ -301,7 +301,7 @@ This is important because Katra should not force all non-human interaction into 
 
 The default product assumption should be that Katra does not need many disposable conversations with the same model or agent just to work around context window limits.
 
-Instead, the model should prefer:
+Instead, the product should prefer:
 
 - one durable direct space with a given model
 - one durable direct space with a given agent
@@ -334,7 +334,7 @@ It should not imply:
 
 ### What Remains Deferred
 
-This issue does not finalize the full storage schema or collaboration transport mechanics.
+This section does not finalize the full storage schema or collaboration transport mechanics.
 
 The following details still remain implementation-level decisions:
 
