@@ -18,6 +18,7 @@ The emerging desktop UX direction is:
 - closer to the OpenAI Codex desktop app in tone and focus, without developer-only features
 - closer to Slack, Teams, or WebEx in conversation navigation than to disposable AI transcript apps
 - oriented around persistent graph-native spaces rather than one-thread-per-context-window behavior
+- built around durable workspace-scoped conversations that may include people, models, and agents as first-class participants
 
 The deeper product and architecture principles now live in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md).
 
@@ -56,3 +57,5 @@ The deeper integration strategy lives in [SurrealDB Laravel Integration Strategy
 The deeper product and architecture direction is documented in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md) and tracked in [issue #13](https://github.com/devoption/katra/issues/13).
 
 The current desktop shell and navigation definition work is tracked in [issue #100](https://github.com/devoption/katra/issues/100).
+
+The conversation and channel model definition work is tracked in [issue #102](https://github.com/devoption/katra/issues/102).
