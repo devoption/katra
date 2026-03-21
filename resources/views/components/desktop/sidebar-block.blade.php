@@ -2,6 +2,7 @@
     'eyebrow',
     'title' => null,
     'tone' => 'slate',
+    'contentClass' => 'text-sm leading-6 text-slate-200/78',
 ])
 
 @php
@@ -25,7 +26,7 @@
     @if ($title)
         <h2 class="mt-3 text-2xl font-semibold tracking-[-0.04em] text-white">{{ $title }}</h2>
     @endif
-    <div class="@if($title) mt-3 @else mt-4 @endif text-sm leading-6 text-slate-200/78">
+    <div class="@if($title) mt-3 @else mt-4 @endif {{ $contentClass }}">
         {{ $slot }}
     </div>
 </div>

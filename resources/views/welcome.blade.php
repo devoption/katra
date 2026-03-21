@@ -76,12 +76,12 @@
                             </div>
 
                             <div class="space-y-4">
-                                <x-desktop.sidebar-block eyebrow="Primary" tone="cyan" class="rounded-2xl p-4">
+                                <x-desktop.sidebar-block eyebrow="Primary" tone="cyan" content-class="text-sm leading-6 text-slate-200/76" class="rounded-2xl p-4">
                                     <p class="font-mono text-sm text-white">composer native:dev</p>
                                     <p class="mt-2">Starts NativePHP and Vite together for the local desktop loop.</p>
                                 </x-desktop.sidebar-block>
 
-                                <x-desktop.sidebar-block eyebrow="Fallback" class="rounded-2xl p-4">
+                                <x-desktop.sidebar-block eyebrow="Fallback" content-class="text-sm leading-6 text-slate-200/76" class="rounded-2xl p-4">
                                     <p class="font-mono text-sm text-white">php artisan native:run --no-interaction</p>
                                     <p class="mt-2">Runs the desktop shell directly if you want to manage Vite separately.</p>
                                 </x-desktop.sidebar-block>
@@ -96,12 +96,12 @@
                             </x-desktop.sidebar-block>
 
                             @if ($workspaceNavigationEnabled)
-                                <x-desktop.sidebar-block eyebrow="Workspace navigation pilot" tone="fuchsia">
+                                <x-desktop.sidebar-block eyebrow="Workspace navigation pilot" tone="fuchsia" content-class="text-sm leading-7 text-slate-200/82">
                                     A staged desktop navigation surface is enabled for feedback. This area exists behind Pennant so mock or incomplete UI can be rolled out deliberately instead of becoming permanent by accident.
                                 </x-desktop.sidebar-block>
                             @endif
 
-                            <x-desktop.sidebar-block eyebrow="Compatibility note" tone="amber">
+                            <x-desktop.sidebar-block eyebrow="Compatibility note" tone="amber" content-class="text-sm leading-7 text-slate-200/82">
                                 NativePHP does not yet ship an official Laravel 13 release. This bootstrap uses the upstream Laravel 13 compatibility branch so Katra can move forward while the official package catches up.
                             </x-desktop.sidebar-block>
                         </div>
