@@ -44,6 +44,26 @@ test('desktop ui rollout defaults are resolved through pennant', function () {
     ]);
 });
 
+test('desktop ui rollout falls back to defaults when the Pennant database store is not ready', function () {
+    config()->set('pennant.default', 'database');
+    config()->set('pennant.stores.database.connection', 'pennant_fallback');
+    config()->set('database.connections.pennant_fallback', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+        'foreign_key_constraints' => true,
+    ]);
+
+    expect(DesktopUi::states())->toMatchArray([
+        'ui.desktop.mvp-shell' => true,
+        'ui.desktop.workspace-navigation' => false,
+        'ui.desktop.conversation-channels' => false,
+        'ui.desktop.task-surfaces' => false,
+        'ui.desktop.artifact-surfaces' => false,
+        'ui.desktop.agent-presence' => false,
+    ]);
+});
+
 test('desktop ui surfaces can be staged on without changing the shell implementation', function () {
     config()->set('pennant.default', 'array');
 

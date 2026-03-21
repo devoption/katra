@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Features\Desktop\WorkspaceNavigation;
 use App\Models\Workspace;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
@@ -27,7 +28,7 @@ class HomeController extends Controller
             ['label' => 'Endpoint', 'value' => $connection->endpoint],
         ];
         $desktopUiFlags = DesktopUi::states();
-        $workspaceNavigationEnabled = DesktopUi::workspaceNavigationEnabled();
+        $workspaceNavigationEnabled = DesktopUi::enabled($desktopUiFlags, WorkspaceNavigation::class);
 
         try {
             $runtimeReady = $runtimeManager->ensureReady();
