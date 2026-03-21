@@ -15,6 +15,7 @@
     "nightwatch_mcp": false,
     "sail": false,
     "skills": [
+        "pennant-development",
         "pest-testing",
         "tailwindcss-development"
     ]

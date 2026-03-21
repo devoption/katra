@@ -1,6 +1,7 @@
 <?php
 
 test('the desktop shell exposes the katra bootstrap screen', function () {
+    config()->set('pennant.default', 'array');
     config()->set('surreal.autostart', false);
     config()->set('surreal.host', '127.0.0.1');
     config()->set('surreal.port', 18999);
@@ -18,5 +19,6 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
         ->assertSee('Runtime')
         ->assertSee('Binary')
         ->assertSee('Endpoint')
-        ->assertSee('Unavailable');
+        ->assertSee('Unavailable')
+        ->assertDontSee('Workspace navigation pilot');
 });

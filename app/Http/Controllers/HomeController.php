@@ -6,6 +6,7 @@ use App\Models\Workspace;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealRuntimeManager;
+use App\Support\Features\DesktopUi;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
@@ -25,6 +26,8 @@ class HomeController extends Controller
             ['label' => 'Binary', 'value' => $this->binaryLabel($connection, $client)],
             ['label' => 'Endpoint', 'value' => $connection->endpoint],
         ];
+        $desktopUiFlags = DesktopUi::states();
+        $workspaceNavigationEnabled = DesktopUi::workspaceNavigationEnabled();
 
         try {
             $runtimeReady = $runtimeManager->ensureReady();
@@ -42,6 +45,8 @@ class HomeController extends Controller
                     : sprintf('The remote Surreal runtime is not responding at %s.', $connection->endpoint);
 
                 return view('welcome', [
+                    'desktopUiFlags' => $desktopUiFlags,
+                    'workspaceNavigationEnabled' => $workspaceNavigationEnabled,
                     'workspace' => $workspace,
                     'surrealStatus' => $surrealStatus,
                     'surrealMessage' => $surrealMessage,
@@ -65,6 +70,8 @@ class HomeController extends Controller
         }
 
         return view('welcome', [
+            'desktopUiFlags' => $desktopUiFlags,
+            'workspaceNavigationEnabled' => $workspaceNavigationEnabled,
             'workspace' => $workspace,
             'surrealStatus' => $surrealStatus,
             'surrealMessage' => $surrealMessage,

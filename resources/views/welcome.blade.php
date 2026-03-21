@@ -157,6 +157,15 @@
                                 </ul>
                             </div>
 
+                            @if ($workspaceNavigationEnabled)
+                                <div class="rounded-[28px] border border-fuchsia-200/15 bg-fuchsia-300/10 p-5">
+                                    <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-fuchsia-100/78">Workspace navigation pilot</p>
+                                    <p class="mt-3 text-sm leading-7 text-slate-200/82">
+                                        A staged desktop navigation surface is enabled for feedback. This area exists behind Pennant so mock or incomplete UI can be rolled out deliberately instead of becoming permanent by accident.
+                                    </p>
+                                </div>
+                            @endif
+
                             <div class="rounded-[28px] border border-amber-200/12 bg-amber-300/8 p-5">
                                 <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-amber-100/78">Compatibility note</p>
                                 <p class="mt-3 text-sm leading-7 text-slate-200/82">
