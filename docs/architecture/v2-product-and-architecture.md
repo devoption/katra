@@ -276,6 +276,76 @@ In particular:
 
 The expected result is a system where conversation organization feels closer to channels, rooms, and durable threads than to one-transcript-per-task prompt tools.
 
+### Persistent Conversation And Channel Model
+
+For product and shell purposes, Katra should treat a conversation as a durable collaboration space inside a workspace.
+
+The intended hierarchy is:
+
+- workspace as the parent context
+- durable conversations or channels inside that workspace
+- participants attached to those spaces
+- tasks, artifacts, and decisions related to those spaces through the graph
+
+The shell should assume that a conversation can be one of several interaction shapes:
+
+- a group conversation among people
+- a direct conversation between people
+- a direct conversation with a model
+- a direct conversation with an agent
+- a mixed conversation that includes people, models, and agents together
+
+This is important because Katra should not force all non-human interaction into a separate sidecar UX. Models and agents should be able to appear as first-class participants in the same broader conversation system.
+
+### One Persistent Space Per Participant Set
+
+The default product assumption should be that Katra does not need many disposable conversations with the same model or agent just to work around context window limits.
+
+Instead, the model should prefer:
+
+- one durable direct space with a given model
+- one durable direct space with a given agent
+- durable group spaces that continue over time
+- narrower linked objects such as tasks, artifacts, and decisions when work needs to branch
+
+This keeps the conversation model aligned with the broader graph-native approach:
+
+- the conversation remains stable
+- the graph carries durable work state
+- context can be reconstructed from graph relationships instead of depending on transcript replay alone
+
+### Shell Implications
+
+The MVP desktop shell should reflect this model visibly.
+
+In practice, that means the shell should make room for:
+
+- workspace-scoped conversation lists
+- direct spaces and group spaces in the same broader navigation model
+- model and agent presence as part of normal conversation navigation
+- linked work objects that can sit alongside a conversation instead of disappearing into the transcript
+
+It should not imply:
+
+- one new conversation per task
+- one new conversation per model prompt
+- a strict separation between human chat and AI interaction
+- that chat history is the only durable object the product cares about
+
+### What Remains Deferred
+
+This issue does not finalize the full storage schema or collaboration transport mechanics.
+
+The following details still remain implementation-level decisions:
+
+- the exact conversation-node schema
+- the exact shape of channel membership and participant records
+- thread and reply semantics
+- message delivery and real-time transport
+- how shared and local conversation synchronization should work
+
+What is settled here is the product model: conversations are durable, workspace-scoped collaboration spaces that may include humans, models, and agents as peers in the same system.
+
 ### What The First Shell Should Not Center
 
 The first meaningful desktop shell should not center:
