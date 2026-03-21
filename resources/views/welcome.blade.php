@@ -20,24 +20,7 @@
             <div class="absolute right-0 top-12 h-96 w-96 rounded-full bg-sky-300/10 blur-3xl"></div>
 
             <main class="mx-auto flex min-h-screen max-w-7xl flex-col gap-10 px-6 py-8 lg:px-10 lg:py-10">
-                <section class="rounded-[32px] border border-white/10 bg-white/6 p-3 shadow-2xl shadow-slate-950/40 backdrop-blur">
-                    <div class="rounded-[26px] border border-white/10 bg-slate-950/65 px-5 py-4">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-3">
-                                <div class="flex gap-2">
-                                    <span class="h-3 w-3 rounded-full bg-rose-400"></span>
-                                    <span class="h-3 w-3 rounded-full bg-amber-300"></span>
-                                    <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
-                                </div>
-                                <p class="font-mono text-xs uppercase tracking-[0.32em] text-sky-100/70">Katra Native Runtime</p>
-                            </div>
-
-                            <div class="rounded-full border border-white/10 bg-white/6 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-100/70">
-                                local-first preview
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <x-desktop.window-frame label="Katra Native Runtime" badge="local-first preview" />
 
                 <section class="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_360px]">
                     <div class="space-y-8">
@@ -57,29 +40,17 @@
                         </div>
 
                         <div class="grid gap-5 md:grid-cols-3">
-                            <article class="rounded-[28px] border border-cyan-200/12 bg-cyan-300/8 p-5">
-                                <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-100/70">Runtime</p>
-                                <h2 class="mt-4 text-2xl font-semibold text-white">Desktop-first loop</h2>
-                                <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    Launch the app with <span class="font-mono text-cyan-100">composer native:dev</span> and iterate on a real desktop window while the Surreal foundation can auto-start a local runtime when the CLI is available.
-                                </p>
-                            </article>
+                            <x-desktop.feature-card eyebrow="Runtime" title="Desktop-first loop" tone="cyan">
+                                Launch the app with <span class="font-mono text-cyan-100">composer native:dev</span> and iterate on a real desktop window while the Surreal foundation can auto-start a local runtime when the CLI is available.
+                            </x-desktop.feature-card>
 
-                            <article class="rounded-[28px] border border-sky-200/12 bg-sky-300/8 p-5">
-                                <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-100/70">Graph</p>
-                                <h2 class="mt-4 text-2xl font-semibold text-white">State over transcript</h2>
-                                <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    Conversations, tasks, decisions, and artifacts are headed toward first-class graph objects, not disposable chat history.
-                                </p>
-                            </article>
+                            <x-desktop.feature-card eyebrow="Graph" title="State over transcript" tone="sky">
+                                Conversations, tasks, decisions, and artifacts are headed toward first-class graph objects, not disposable chat history.
+                            </x-desktop.feature-card>
 
-                            <article class="rounded-[28px] border border-emerald-200/12 bg-emerald-300/8 p-5">
-                                <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-emerald-100/70">Release</p>
-                                <h2 class="mt-4 text-2xl font-semibold text-white">Bundled preview</h2>
-                                <p class="mt-3 text-sm leading-7 text-slate-200/78">
-                                    Downloadable macOS previews can now carry the local Surreal runtime instead of depending on a separately installed machine-local CLI.
-                                </p>
-                            </article>
+                            <x-desktop.feature-card eyebrow="Release" title="Bundled preview" tone="emerald">
+                                Downloadable macOS previews can now carry the local Surreal runtime instead of depending on a separately installed machine-local CLI.
+                            </x-desktop.feature-card>
                         </div>
 
                         <div class="rounded-[32px] border border-white/10 bg-slate-950/55 p-6 shadow-xl shadow-slate-950/30">
@@ -90,38 +61,8 @@
                                 </div>
 
                                 <div class="grid gap-3 text-sm text-slate-200/80 sm:grid-cols-2">
-                                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Surreal Foundation</p>
-                                        @php
-                                            $surrealStatusTone = match ($surrealStatus) {
-                                                'connected' => 'text-emerald-200',
-                                                'runtime-ready' => 'text-cyan-200',
-                                                default => 'text-amber-200',
-                                            };
-                                        @endphp
-                                        <p class="mt-2">
-                                            <span class="font-mono uppercase tracking-[0.2em] {{ $surrealStatusTone }}">{{ str_replace('-', ' ', $surrealStatus) }}</span>
-                                        </p>
-                                        <p class="mt-2">{{ $surrealMessage }}</p>
-                                        <dl class="mt-4 grid gap-3 text-xs text-slate-200/78 sm:grid-cols-2">
-                                            @foreach ($surrealDetails as $detail)
-                                                <div class="rounded-xl border border-white/8 bg-white/4 px-3 py-2">
-                                                    <dt class="font-mono uppercase tracking-[0.24em] text-slate-400/80">{{ $detail['label'] }}</dt>
-                                                    <dd class="mt-2 break-all font-mono text-[11px] text-sky-100/88">{{ $detail['value'] }}</dd>
-                                                </div>
-                                            @endforeach
-                                        </dl>
-                                    </div>
-                                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/70">Preview Workspace</p>
-                                        @if ($workspace)
-                                            <p class="mt-2 font-semibold text-white">{{ $workspace->name }}</p>
-                                            <p class="mt-2 text-xs font-mono uppercase tracking-[0.22em] text-cyan-100/72">{{ $workspace->id }}</p>
-                                            <p class="mt-2">{{ $workspace->summary }}</p>
-                                        @else
-                                            <p class="mt-2">The runtime is visible now, but no Surreal-backed preview workspace has been materialized on this machine yet.</p>
-                                        @endif
-                                    </div>
+                                    <x-desktop.runtime-status-card :status="$surrealStatus" :message="$surrealMessage" :details="$surrealDetails" />
+                                    <x-desktop.workspace-status-card :workspace="$workspace" />
                                 </div>
                             </div>
                         </div>
@@ -135,43 +76,34 @@
                             </div>
 
                             <div class="space-y-4">
-                                <div class="rounded-2xl border border-cyan-200/12 bg-cyan-300/8 p-4">
-                                    <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-100/72">Primary</p>
-                                    <p class="mt-3 font-mono text-sm text-white">composer native:dev</p>
-                                    <p class="mt-2 text-sm leading-6 text-slate-200/76">Starts NativePHP and Vite together for the local desktop loop.</p>
-                                </div>
+                                <x-desktop.sidebar-block eyebrow="Primary" tone="cyan" content-class="text-sm leading-6 text-slate-200/76" class="rounded-2xl p-4">
+                                    <p class="font-mono text-sm text-white">composer native:dev</p>
+                                    <p class="mt-2">Starts NativePHP and Vite together for the local desktop loop.</p>
+                                </x-desktop.sidebar-block>
 
-                                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                    <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/72">Fallback</p>
-                                    <p class="mt-3 font-mono text-sm text-white">php artisan native:run --no-interaction</p>
-                                    <p class="mt-2 text-sm leading-6 text-slate-200/76">Runs the desktop shell directly if you want to manage Vite separately.</p>
-                                </div>
+                                <x-desktop.sidebar-block eyebrow="Fallback" content-class="text-sm leading-6 text-slate-200/76" class="rounded-2xl p-4">
+                                    <p class="font-mono text-sm text-white">php artisan native:run --no-interaction</p>
+                                    <p class="mt-2">Runs the desktop shell directly if you want to manage Vite separately.</p>
+                                </x-desktop.sidebar-block>
                             </div>
 
-                            <div class="rounded-[28px] border border-white/10 bg-white/5 p-5">
-                                <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-slate-300/72">Next layers</p>
-                                <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-200/78">
+                            <x-desktop.sidebar-block eyebrow="Next layers">
+                                <ul class="space-y-3">
                                     <li>Graph repositories and Surreal-backed model flows beyond the preview workspace</li>
                                     <li>Fortify auth and conversation scaffolding inside the desktop shell</li>
                                     <li>Signed desktop builds, auto-updates, and release polish</li>
                                 </ul>
-                            </div>
+                            </x-desktop.sidebar-block>
 
                             @if ($workspaceNavigationEnabled)
-                                <div class="rounded-[28px] border border-fuchsia-200/15 bg-fuchsia-300/10 p-5">
-                                    <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-fuchsia-100/78">Workspace navigation pilot</p>
-                                    <p class="mt-3 text-sm leading-7 text-slate-200/82">
-                                        A staged desktop navigation surface is enabled for feedback. This area exists behind Pennant so mock or incomplete UI can be rolled out deliberately instead of becoming permanent by accident.
-                                    </p>
-                                </div>
+                                <x-desktop.sidebar-block eyebrow="Workspace navigation pilot" tone="fuchsia" content-class="text-sm leading-7 text-slate-200/82">
+                                    A staged desktop navigation surface is enabled for feedback. This area exists behind Pennant so mock or incomplete UI can be rolled out deliberately instead of becoming permanent by accident.
+                                </x-desktop.sidebar-block>
                             @endif
 
-                            <div class="rounded-[28px] border border-amber-200/12 bg-amber-300/8 p-5">
-                                <p class="font-mono text-[11px] uppercase tracking-[0.28em] text-amber-100/78">Compatibility note</p>
-                                <p class="mt-3 text-sm leading-7 text-slate-200/82">
-                                    NativePHP does not yet ship an official Laravel 13 release. This bootstrap uses the upstream Laravel 13 compatibility branch so Katra can move forward while the official package catches up.
-                                </p>
-                            </div>
+                            <x-desktop.sidebar-block eyebrow="Compatibility note" tone="amber" content-class="text-sm leading-7 text-slate-200/82">
+                                NativePHP does not yet ship an official Laravel 13 release. This bootstrap uses the upstream Laravel 13 compatibility branch so Katra can move forward while the official package catches up.
+                            </x-desktop.sidebar-block>
                         </div>
                     </aside>
                 </section>
