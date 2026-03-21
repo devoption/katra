@@ -157,3 +157,13 @@ Current convention:
 - desktop shell code should check rollout flags through feature classes or the `App\Support\Features\DesktopUi` helper, not raw string literals scattered through Blade or controller code
 
 This keeps staged UI work explicit, testable, and easy to disable while mock or feedback-only surfaces are still settling.
+
+## UI Components
+
+Desktop UI work should be built from small Blade or Livewire components instead of expanding page-level templates with raw repeated markup.
+
+Current convention:
+
+- prefer reusable components under `resources/views/components/desktop/*` for desktop shell primitives
+- keep component responsibilities narrow so mock surfaces can evolve without rewriting the whole shell
+- if Livewire is introduced later, keep the same atomic component mindset instead of rebuilding the desktop UI around large monolithic pages
