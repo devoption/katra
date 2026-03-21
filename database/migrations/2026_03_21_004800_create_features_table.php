@@ -11,7 +11,7 @@ return new class extends PennantMigration
      */
     public function up(): void
     {
-        Schema::create('features', function (Blueprint $table) {
+        Schema::create($this->tableName(), function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('scope');
@@ -27,6 +27,11 @@ return new class extends PennantMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('features');
+        Schema::dropIfExists($this->tableName());
+    }
+
+    private function tableName(): string
+    {
+        return config('pennant.stores.database.table', 'features');
     }
 };
