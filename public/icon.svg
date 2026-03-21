@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="katra-app-icon-title">
+  <title id="katra-app-icon-title">Katra app icon</title>
+  <defs>
+    <linearGradient id="katra-icon-bg" x1="140" x2="884" y1="120" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B4252"/>
+      <stop offset="1" stop-color="#2E3440"/>
+    </linearGradient>
+    <linearGradient id="katra-icon-sheen" x1="176" x2="858" y1="176" y2="858" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5E81AC" stop-opacity=".24"/>
+      <stop offset=".58" stop-color="#81A1C1" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#81A1C1" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#katra-icon-bg)" rx="232"/>
+  <rect width="1024" height="1024" fill="url(#katra-icon-sheen)" rx="232"/>
+  <rect width="1024" height="1024" fill="none" stroke="#4C566A" stroke-width="18" rx="232"/>
+  <g transform="translate(184 193) scale(13.96)">
+    <path fill="#B48EAD" d="M4.572 4.05839H16.54V38.9384H4.572V4.05839Z"/>
+    <path fill="#ECEFF4" d="M47.073 4.05839 30.817 21.5304l16.256 17.408H32.737l-16.32-17.408 16.32-17.47201h14.336Z"/>
+  </g>
+</svg>
