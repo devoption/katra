@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.4",
         "laravel/framework": "^13.0",
+        "laravel/pennant": "^1.0",
         "laravel/tinker": "^3.0",
         "nativephp/desktop": "dev-l13-compatibility"
     },

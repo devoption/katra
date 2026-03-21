@@ -145,3 +145,15 @@ This means contributors should think of pull request titles and merge commits as
 - if a pull request contains mixed work, choose the title based on the highest-impact user-facing change
 - if a pull request includes a breaking change, make that explicit in the title or body
 - if release behavior becomes more specific later, this policy should be updated to match the automation
+
+## Feature Flags
+
+Desktop UI rollout work should use Laravel Pennant instead of ad hoc booleans or environment checks.
+
+Current convention:
+
+- desktop UI rollout flags live in `App\Features\Desktop\*`
+- stored Pennant names should use the `ui.desktop.*` namespace
+- desktop shell code should check rollout flags through feature classes or the `App\Support\Features\DesktopUi` helper, not raw string literals scattered through Blade or controller code
+
+This keeps staged UI work explicit, testable, and easy to disable while mock or feedback-only surfaces are still settling.
