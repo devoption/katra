@@ -2,12 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Features\Desktop\AgentPresence;
-use App\Features\Desktop\ArtifactSurfaces;
-use App\Features\Desktop\ConversationChannels;
 use App\Features\Desktop\MvpShell;
-use App\Features\Desktop\TaskSurfaces;
-use App\Features\Desktop\WorkspaceNavigation;
 use App\Models\Workspace;
 use App\Services\Surreal\SurrealRuntimeManager;
 use App\Support\Features\DesktopUi;
@@ -35,7 +30,7 @@ class HomeController extends Controller
      *     messages: array<int, array{speaker: string, role: string, body: string, meta: string, tone: string}>
      * }>
      */
-    private function workspaces(?Workspace $workspace, bool $localReady): array
+    private function workspaces(bool $localReady): array
     {
         return [
             'katra-local' => [
@@ -474,19 +469,13 @@ class HomeController extends Controller
 
     public function __invoke(Request $request, SurrealRuntimeManager $runtimeManager): View
     {
-        $workspace = null;
         $localReady = false;
         $desktopUiStates = DesktopUi::states();
         $mvpShellEnabled = DesktopUi::enabled($desktopUiStates, MvpShell::class);
-        $workspaceNavigationEnabled = DesktopUi::enabled($desktopUiStates, WorkspaceNavigation::class);
-        $conversationChannelsEnabled = DesktopUi::enabled($desktopUiStates, ConversationChannels::class);
-        $taskSurfacesEnabled = DesktopUi::enabled($desktopUiStates, TaskSurfaces::class);
-        $artifactSurfacesEnabled = DesktopUi::enabled($desktopUiStates, ArtifactSurfaces::class);
-        $agentPresenceEnabled = DesktopUi::enabled($desktopUiStates, AgentPresence::class);
 
         try {
             if ($runtimeManager->ensureReady()) {
-                $workspace = Workspace::desktopPreview();
+                Workspace::desktopPreview();
                 $localReady = true;
             }
         } catch (Throwable $exception) {
@@ -495,20 +484,13 @@ class HomeController extends Controller
             }
         }
 
-        $workspaces = $this->workspaces($workspace, $localReady);
+        $workspaces = $this->workspaces($localReady);
         $selectedWorkspace = $request->string('workspace')->value();
         $activeWorkspace = array_key_exists($selectedWorkspace, $workspaces) ? $selectedWorkspace : 'katra-local';
         $activeWorkspaceState = $workspaces[$activeWorkspace];
 
         return view('welcome', [
             'mvpShellEnabled' => $mvpShellEnabled,
-            'workspaceNavigationEnabled' => $workspaceNavigationEnabled,
-            'conversationChannelsEnabled' => $conversationChannelsEnabled,
-            'taskSurfacesEnabled' => $taskSurfacesEnabled,
-            'artifactSurfacesEnabled' => $artifactSurfacesEnabled,
-            'agentPresenceEnabled' => $agentPresenceEnabled,
-            'workspace' => $workspace,
-            'previewState' => $activeWorkspaceState['roomStatus'],
             'activeWorkspace' => $activeWorkspaceState,
             'workspaceLinks' => $this->workspaceLinks($workspaces, $activeWorkspace),
             'workspaceTargets' => $this->workspaceTargets(),
@@ -518,10 +500,6 @@ class HomeController extends Controller
             'chatContacts' => $this->chatContacts(),
             'conversationNodeTabs' => $this->conversationNodeTabs($activeWorkspaceState),
             'messages' => $activeWorkspaceState['messages'],
-            'linkedTasks' => $activeWorkspaceState['tasks'],
-            'linkedArtifacts' => $activeWorkspaceState['artifacts'],
-            'decisions' => $activeWorkspaceState['decisions'],
-            'feedbackGoals' => $activeWorkspaceState['notes'],
             'participants' => $activeWorkspaceState['participants'],
         ]);
     }

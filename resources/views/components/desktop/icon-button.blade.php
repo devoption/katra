@@ -5,7 +5,7 @@
 
 <button
     type="button"
-    @if ($dialogId) onclick="document.getElementById('{{ $dialogId }}')?.showModal()" @endif
+    @if ($dialogId) data-dialog-target="{{ $dialogId }}" @endif
     {{ $attributes->class(['shell-icon-button inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors']) }}
     aria-label="{{ $label }}"
     title="{{ $label }}"

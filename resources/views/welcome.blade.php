@@ -600,7 +600,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-1">
-                    <button type="button" class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors" onclick="document.getElementById('workspace-creator-modal')?.close()">
+                    <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
                         Cancel
                     </button>
                     <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
@@ -623,7 +623,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-1">
-                    <button type="button" class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors" onclick="document.getElementById('room-creator-modal')?.close()">
+                    <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
                         Cancel
                     </button>
                     <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
@@ -684,7 +684,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-1">
-                    <button type="button" class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors" onclick="document.getElementById('chat-creator-modal')?.close()">
+                    <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
                         Cancel
                     </button>
                     <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
@@ -727,6 +727,9 @@
                 const rightRailPinButtons = shell.querySelectorAll('[data-right-rail-pin]');
                 const rightRailResizeHandle = shell.querySelector('[data-right-rail-resize-handle]');
                 const modals = document.querySelectorAll('[data-shell-modal]');
+                const dialogButtons = document.querySelectorAll('[data-dialog-target]');
+                const dialogCloseButtons = document.querySelectorAll('[data-dialog-close]');
+                const navSectionButtons = shell.querySelectorAll('[data-nav-section-toggle]');
                 const contactSelector = document.querySelector('[data-contact-selector]');
                 const storageKey = 'katra.desktop.sidebar.preference';
                 const rightRailStorageKey = 'katra.desktop.right-rail.preference';
@@ -1367,6 +1370,41 @@
                         if (event.target === modal) {
                             modal.close();
                         }
+                    });
+                });
+
+                dialogButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const dialogId = button.getAttribute('data-dialog-target');
+
+                        if (! dialogId) {
+                            return;
+                        }
+
+                        document.getElementById(dialogId)?.showModal();
+                    });
+                });
+
+                dialogCloseButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        button.closest('dialog')?.close();
+                    });
+                });
+
+                navSectionButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const sectionId = button.getAttribute('data-nav-section-target');
+
+                        if (! sectionId) {
+                            return;
+                        }
+
+                        const content = document.getElementById(sectionId);
+                        const expanded = button.getAttribute('aria-expanded') === 'true';
+
+                        content?.classList.toggle('hidden', expanded);
+                        button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                        button.classList.toggle('rotate-180', ! expanded);
                     });
                 });
 

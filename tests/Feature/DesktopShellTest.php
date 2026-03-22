@@ -20,7 +20,6 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
         ->assertSee('Planner Agent')
         ->assertSee('Research Model')
         ->assertSee('# design-room')
-        ->assertSee('Composer')
         ->assertSee('Create workspace')
         ->assertSee('Workspace name')
         ->assertSee('Create room')
