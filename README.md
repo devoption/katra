@@ -38,6 +38,14 @@ The long-term direction is a graph-native system where conversations, tasks, dec
 
 Katra v2 is an active rewrite. The repository is being rebuilt in small, reviewable pull requests, and preview macOS desktop artifacts are now attached to GitHub Releases as the shell evolves. The proof of concept is preserved at [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0) for historical reference and is not being actively developed.
 
+## Desktop Preview
+
+The current desktop shell is now installable as a real macOS app preview. It is still early, but the downloadable build already shows the direction clearly: durable rooms, a conversation-first center pane, a contextual right rail, and a local-first desktop shell that can grow into local and remote workflows.
+
+| Dark Theme | Light Theme |
+| --- | --- |
+| ![Katra desktop shell in dark mode](docs/images/readme/katra-dark.png) | ![Katra desktop shell in light mode](docs/images/readme/katra-light.png) |
+
 ## Try Katra
 
 There are two practical ways to try Katra today.
