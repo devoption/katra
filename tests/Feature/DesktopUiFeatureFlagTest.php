@@ -74,5 +74,18 @@ test('desktop ui surfaces can be staged on without changing the shell implementa
 
     $this->get('/')
         ->assertSuccessful()
-        ->assertSee('Workspace navigation pilot');
+        ->assertSee('# design-room')
+        ->assertSee('Katra');
+});
+
+test('the desktop shell can be hidden behind the mvp flag', function () {
+    config()->set('pennant.default', 'array');
+
+    Feature::for(DesktopUi::scope())->deactivate(MvpShell::class);
+
+    $this->get('/')
+        ->assertSuccessful()
+        ->assertSee('The MVP workspace shell is currently hidden.')
+        ->assertDontSee('# design-room')
+        ->assertDontSee('Notes');
 });
