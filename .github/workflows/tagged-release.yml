@@ -147,7 +147,12 @@ jobs:
       NATIVEPHP_APP_VERSION: ${{ needs.context.outputs.version }}
       NATIVEPHP_UPDATER_ENABLED: false
       SURREAL_VERSION: v3.0.4
-      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'true'
+      NATIVEPHP_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+      NATIVEPHP_APPLE_ID_PASS: ${{ secrets.MACOS_NOTARY_APP_SPECIFIC_PASSWORD }}
+      NATIVEPHP_APPLE_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+      KATRA_MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_P12_BASE64 }}
+      KATRA_MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -215,90 +220,187 @@ jobs:
           tar -xzf "$archive_path" -C "$runtime_dir"
           chmod +x "$runtime_dir/surreal"
 
-      - name: Force consistent ad-hoc macOS signing
+      - name: Validate macOS signing inputs
         run: |
+          set -euo pipefail
+
+          missing=()
+
+          for required_env in \
+            NATIVEPHP_APPLE_ID \
+            NATIVEPHP_APPLE_ID_PASS \
+            NATIVEPHP_APPLE_TEAM_ID \
+            KATRA_MACOS_CERTIFICATE_P12_BASE64 \
+            KATRA_MACOS_CERTIFICATE_PASSWORD
+          do
+            if [[ -z "${!required_env:-}" ]]; then
+              missing+=("$required_env")
+            fi
+          done
+
+          if (( ${#missing[@]} > 0 )); then
+            {
+              echo "::error title=Missing macOS signing inputs::Tagged releases now require Developer ID signing and Apple notarization."
+              echo "Missing environment values: ${missing[*]}"
+              echo "Expected GitHub secrets:"
+              echo "- MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_P12_BASE64"
+              echo "- MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD"
+              echo "- MACOS_NOTARY_APPLE_ID"
+              echo "- MACOS_NOTARY_APP_SPECIFIC_PASSWORD"
+              echo "- MACOS_NOTARY_TEAM_ID"
+            } >&2
+
+            exit 1
+          fi
+
+      - name: Import Developer ID certificate
+        run: |
+          set -euo pipefail
+
           node <<'NODE'
           const { readFileSync, writeFileSync } = require('node:fs');
 
-          const path = 'vendor/nativephp/desktop/resources/electron/electron-builder.mjs';
+          const path = 'vendor/nativephp/desktop/resources/electron/build/notarize.js';
           const current = readFileSync(path, 'utf8');
           const normalized = current.replace(/\r\n/g, '\n');
-          const pattern = /^(\s*mac:\s*\{\n)([\s\S]*?)(^\s*\},\n)/m;
-          const match = normalized.match(pattern);
+          const pattern = /(\s+console\.error\(error\)\n)(\s+\})/;
 
-          if (! match) {
-            throw new Error('Unable to locate the NativePHP mac builder block.');
+          if (! pattern.test(normalized)) {
+            throw new Error('Unable to locate the NativePHP notarization error handler.');
           }
 
-          const macBlock = match[2];
+          const updated = normalized.replace(pattern, "$1        throw error\n$2");
 
-          if (! macBlock.includes("entitlementsInherit: 'build/entitlements.mac.plist'")) {
-            throw new Error('NativePHP mac builder block is missing entitlementsInherit.');
+          if (updated === normalized) {
+            throw new Error('Unable to harden the NativePHP notarization hook.');
           }
 
-          const adHocSettings = [
-            "        identity: '-',",
-            '        hardenedRuntime: false,',
-            '        notarize: false,',
-            '        gatekeeperAssess: false,',
-          ];
-
-          const updatedMacBlock = macBlock.includes("identity: '-'")
-            ? macBlock
-            : macBlock.replace(
-                /(^\s*entitlementsInherit:\s*'build\/entitlements\.mac\.plist',\n)/m,
-                `$1${adHocSettings.join('\n')}\n`,
-              );
-
-          if (updatedMacBlock === macBlock) {
-            throw new Error('Unable to apply preview macOS signing overrides.');
-          }
-
-          writeFileSync(path, normalized.replace(pattern, `$1${updatedMacBlock}$3`));
+          writeFileSync(path, updated);
           NODE
 
+          keychain_path="$RUNNER_TEMP/katra-signing.keychain-db"
+          certificate_path="$RUNNER_TEMP/katra-developer-id-application.p12"
+          keychain_password="$(openssl rand -hex 24)"
+
+          echo "KATRA_MACOS_CERTIFICATE_PATH=$certificate_path" >> "$GITHUB_ENV"
+
+          if ! printf '%s' "$KATRA_MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$certificate_path" 2>/dev/null; then
+            printf '%s' "$KATRA_MACOS_CERTIFICATE_P12_BASE64" | base64 -D > "$certificate_path"
+          fi
+
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" \
+            -k "$keychain_path" \
+            -P "$KATRA_MACOS_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security \
+            -T /usr/bin/productbuild \
+            -T /usr/bin/productsign
+
+          rm -f "$certificate_path"
+
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$keychain_password" \
+            "$keychain_path"
+
+          existing_keychains="$(security list-keychains -d user | tr -d '"' | tr '\n' ' ')"
+          security list-keychains -d user -s "$keychain_path" $existing_keychains
+          security default-keychain -d user -s "$keychain_path"
+
+          if ! security find-identity -v -p codesigning "$keychain_path" | grep -q "Developer ID Application"; then
+            echo "::error title=Missing Developer ID Application identity::The provided certificate archive did not import a usable macOS distribution identity." >&2
+            exit 1
+          fi
+
+          echo "KATRA_MACOS_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
+
       - name: Validate patched Electron builder config
-        run: node --check vendor/nativephp/desktop/resources/electron/electron-builder.mjs
+        run: |
+          node --check vendor/nativephp/desktop/resources/electron/electron-builder.mjs
+          node --check vendor/nativephp/desktop/resources/electron/build/notarize.js
 
       - name: Build macOS desktop artifact
         run: php artisan native:build mac ${{ matrix.architecture }} --no-interaction
 
-      - name: Stage architecture-specific release assets
+      - name: Locate macOS build outputs
+        run: |
+          set -euo pipefail
+
+          app_bundle_path=''
+          dmg_path=''
+
+          while IFS= read -r candidate; do
+            if [[ -n "$app_bundle_path" ]]; then
+              echo "Multiple .app bundles were generated unexpectedly." >&2
+              exit 1
+            fi
+
+            app_bundle_path="$candidate"
+          done < <(find nativephp/electron/dist -maxdepth 2 -type d -name '*.app' | sort)
+
+          while IFS= read -r candidate; do
+            if [[ -n "$dmg_path" ]]; then
+              echo "Multiple DMG files were generated unexpectedly." >&2
+              exit 1
+            fi
+
+            dmg_path="$candidate"
+          done < <(find nativephp/electron/dist -maxdepth 1 -type f -name '*.dmg' | sort)
+
+          if [[ -z "$app_bundle_path" ]]; then
+            echo "No macOS .app bundle was generated." >&2
+            exit 1
+          fi
+
+          if [[ -z "$dmg_path" ]]; then
+            echo "No macOS DMG artifact was generated." >&2
+            exit 1
+          fi
+
+          echo "KATRA_MACOS_APP_BUNDLE_PATH=$app_bundle_path" >> "$GITHUB_ENV"
+          echo "KATRA_MACOS_DMG_PATH=$dmg_path" >> "$GITHUB_ENV"
+
+      - name: Verify app code signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 "$KATRA_MACOS_APP_BUNDLE_PATH"
+          codesign --display --verbose=4 "$KATRA_MACOS_APP_BUNDLE_PATH"
+
+      - name: Staple notarized app bundle
+        run: |
+          xcrun stapler staple "$KATRA_MACOS_APP_BUNDLE_PATH"
+          xcrun stapler validate "$KATRA_MACOS_APP_BUNDLE_PATH"
+
+      - name: Notarize release disk image
+        run: |
+          xcrun notarytool submit "$KATRA_MACOS_DMG_PATH" \
+            --apple-id "$NATIVEPHP_APPLE_ID" \
+            --password "$NATIVEPHP_APPLE_ID_PASS" \
+            --team-id "$NATIVEPHP_APPLE_TEAM_ID" \
+            --wait
+
+      - name: Staple notarized disk image
+        run: |
+          xcrun stapler staple "$KATRA_MACOS_DMG_PATH"
+          xcrun stapler validate "$KATRA_MACOS_DMG_PATH"
+
+      - name: Stage trusted release assets
         run: |
           set -euo pipefail
 
           mkdir -p nativephp/electron/release-assets
-          shopt -s nullglob
 
-          staged_files=0
+          dmg_name="$(basename "$KATRA_MACOS_DMG_PATH")"
 
-          for candidate in nativephp/electron/dist/*; do
-            if [[ ! -f "$candidate" ]]; then
-              continue
-            fi
+          cp "$KATRA_MACOS_DMG_PATH" "nativephp/electron/release-assets/$dmg_name"
 
-            filename="$(basename "$candidate")"
-            staged_name="$filename"
-
-            if [[ "$filename" != *"-${{ matrix.architecture }}."* ]]; then
-              extension="${filename##*.}"
-              basename="${filename%.*}"
-
-              if [[ "$basename" == "$filename" ]]; then
-                staged_name="${filename}-${{ matrix.architecture }}"
-              else
-                staged_name="${basename}-${{ matrix.architecture }}.${extension}"
-              fi
-            fi
-
-            cp "$candidate" "nativephp/electron/release-assets/$staged_name"
-            staged_files=$((staged_files + 1))
-          done
-
-          if (( staged_files == 0 )); then
-            echo "No macOS release files were generated." >&2
-            exit 1
-          fi
+          (
+            cd nativephp/electron/release-assets
+            shasum -a 256 "$dmg_name" > "$dmg_name.sha256"
+          )
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -329,6 +431,17 @@ jobs:
 
           gh release upload "$RELEASE_TAG" "${release_files[@]}" --clobber
 
+      - name: Cleanup signing keychain
+        if: always()
+        run: |
+          if [[ -n "${KATRA_MACOS_SIGNING_KEYCHAIN:-}" ]]; then
+            security delete-keychain "$KATRA_MACOS_SIGNING_KEYCHAIN" || true
+          fi
+
+          if [[ -n "${KATRA_MACOS_CERTIFICATE_PATH:-}" ]]; then
+            rm -f "$KATRA_MACOS_CERTIFICATE_PATH" || true
+          fi
+
       - name: Summarize packaging status
         run: |
           {
@@ -339,6 +452,8 @@ jobs:
             echo "- Release tag: \`${{ needs.context.outputs.tag }}\`"
             echo "- Bundled Surreal runtime: \`${SURREAL_VERSION}\` (\`${{ matrix.surreal_asset_architecture }}\` asset)"
             echo
-            echo "- Preview builds are packaged with an explicit ad-hoc macOS signature for launch consistency."
-            echo "- Developer ID signing and notarization remain tracked separately before trusted distribution."
+            echo "- Release disk image: \`$(basename "$KATRA_MACOS_DMG_PATH")\`"
+            echo "- Developer ID signing: enabled"
+            echo "- Apple notarization: enabled"
+            echo "- Stapled artifacts: app bundle and release disk image"
           } >> "$GITHUB_STEP_SUMMARY"

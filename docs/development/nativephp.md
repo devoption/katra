@@ -69,7 +69,8 @@ If you want to try Katra without cloning the repository, use the desktop assets 
 - choose the asset that matches your Mac architecture when it is available: `x64` for Intel or `arm64` for Apple Silicon
 - release builds now bundle the Surreal runtime through NativePHP `extras`, so the desktop shell does not require a separate machine-local `surreal` CLI install
 - expect preview-quality behavior while the desktop shell and local runtime story are still being built out
-- expect Gatekeeper prompts until Developer ID signing and notarization are in place
+- recent tagged releases are intended to be signed, notarized, and stapled for normal macOS installation
+- older preview releases may still trigger Gatekeeper prompts because they were produced before trusted distribution was added
 
 ## Release Artifacts
 
@@ -82,14 +83,22 @@ The current workflow intentionally keeps this first packaging path small:
 - raw build output: generated under `nativephp/electron/dist`
 - workflow artifact: preserved from the staged `nativephp/electron/release-assets` directory
 - bundled local data runtime: the official SurrealDB macOS CLI is downloaded during release builds and packaged under NativePHP `extras`
-- release assets: uploaded to the matching GitHub Release with architecture-explicit filenames
+- release assets: a notarized architecture-specific DMG plus a matching `sha256` checksum file
 - current GitHub-hosted runners: `macos-15-intel` for Intel builds and `macos-15` for Apple Silicon builds
 
 ### Signing And Notarization
 
-Preview release builds currently force a consistent ad-hoc macOS signature during packaging and disable hardened runtime/notarization in that path so the generated Intel and Apple Silicon apps launch reliably after download.
+Tagged macOS releases now import a Developer ID Application certificate in CI, let NativePHP / Electron Builder sign the generated app bundle, notarize the app with Apple, notarize the packaged DMG, and staple the notarization ticket to both artifacts before upload.
 
-That keeps the release artifacts usable for early testing, but they are still not trusted macOS distributions. Gatekeeper prompts remain expected until dedicated Developer ID signing, notarization, and stapling land through the tracked distribution work.
+The workflow expects these GitHub repository secrets before a release-worthy merge can publish macOS artifacts:
+
+- `MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_P12_BASE64`
+- `MACOS_DEVELOPER_ID_APPLICATION_CERTIFICATE_PASSWORD`
+- `MACOS_NOTARY_APPLE_ID`
+- `MACOS_NOTARY_APP_SPECIFIC_PASSWORD`
+- `MACOS_NOTARY_TEAM_ID`
+
+If any of those values are missing, the `Tagged Release` workflow now fails immediately with a clear configuration error instead of silently falling back to an ad-hoc preview signature.
 
 ## Current Bootstrap Behavior
 
