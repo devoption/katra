@@ -158,7 +158,7 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
             return parent::repositoryExists();
         }
 
-        return $this->schemaManager()->hasTable($this->table);
+        return $this->schemaManager()->hasTable($this->normalizedTable());
     }
 
     public function deleteRepository()

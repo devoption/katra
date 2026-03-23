@@ -96,6 +96,8 @@ test('laravel can run and refresh the application migrations with surreal as the
     }
 
     $storagePath = storage_path('app/surrealdb/schema-driver-migrate-test-'.Str::uuid());
+    $originalDefaultConnection = config('database.default');
+    $originalMigrationConnection = config('database.migrations.connection');
 
     File::deleteDirectory($storagePath);
     File::ensureDirectoryExists(dirname($storagePath));
@@ -157,7 +159,12 @@ test('laravel can run and refresh the application migrations with surreal as the
             ->and($schema->hasTable('migrations'))->toBeTrue()
             ->and($repository->getRan())->toHaveCount(5);
     } finally {
+        config()->set('database.default', $originalDefaultConnection);
+        config()->set('database.migrations.connection', $originalMigrationConnection);
+
         DB::purge('surreal');
+        app()->forgetInstance('migration.repository');
+        app()->forgetInstance('migrator');
 
         if (isset($server['process'])) {
             $server['process']->stop(1);
