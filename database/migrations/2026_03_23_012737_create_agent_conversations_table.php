@@ -22,7 +22,7 @@ return new class extends AiMigration
 
         Schema::create('agent_conversation_messages', function (Blueprint $table) {
             $table->string('id', 36)->primary();
-            $table->string('conversation_id', 36)->index();
+            $table->string('conversation_id', 36);
             $table->foreignId('user_id')->nullable();
             $table->string('agent');
             $table->string('role', 25);
@@ -44,7 +44,7 @@ return new class extends AiMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agent_conversations');
         Schema::dropIfExists('agent_conversation_messages');
+        Schema::dropIfExists('agent_conversations');
     }
 };

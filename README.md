@@ -72,7 +72,8 @@ The Laravel AI SDK is installed and its conversation storage migrations are part
 
 - For hosted model access, set `OPENAI_API_KEY` and leave `AI_DEFAULT_PROVIDER=openai`.
 - For local model experiments, set `AI_DEFAULT_PROVIDER=ollama` and point `OLLAMA_BASE_URL` at your local Ollama instance.
-- Additional provider keys are available in [config/ai.php](config/ai.php) if you want to swap providers later.
+- Additional provider keys and per-capability defaults are available in [config/ai.php](config/ai.php) if you want to swap providers later.
+- Some capabilities still default to specific providers like Gemini or Cohere, so if you want everything to follow your primary provider you should update the operation-specific defaults in `config/ai.php` as well.
 
 The current AI foundation test uses agent fakes, so the repo test suite does not require live provider credentials just to verify the integration.
 

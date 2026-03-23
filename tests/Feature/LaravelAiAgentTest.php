@@ -50,6 +50,7 @@ test('workspace guide can fake and remember a conversation', function () {
     $messages = DB::table('agent_conversation_messages')
         ->where('conversation_id', $conversationId)
         ->orderBy('created_at')
+        ->orderBy('id')
         ->pluck('role')
         ->all();
 
