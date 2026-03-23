@@ -6,6 +6,7 @@ use App\Services\Surreal\Migrations\SurrealMigrationRepository;
 use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
+use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(SurrealConnection::class, fn (): SurrealConnection => SurrealConnection::fromConfig(config('surreal')));
+        $this->app->singleton(SurrealHttpClient::class);
         $this->app->singleton(SurrealRuntimeManager::class);
         $this->app->singleton(SurrealDocumentStore::class);
     }
@@ -25,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
             $migrations = $app['config']['database.migrations'];
             $table = is_array($migrations) ? ($migrations['table'] ?? 'migrations') : $migrations;
 
-            return new SurrealMigrationRepository($app['db'], $table);
+            return new SurrealMigrationRepository($app['db'], $table, $app->make(SurrealHttpClient::class));
         });
 
         $this->app->make(DatabaseManager::class)->extend('surreal', function (array $config, string $name): SurrealSchemaConnection {

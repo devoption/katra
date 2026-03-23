@@ -4,6 +4,7 @@ use App\Models\Workspace;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
+use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -143,6 +144,7 @@ test('the desktop preview workspace can be created through the surreal document 
  */
 function retryStartingWorkspaceServer(SurrealCliClient $client, string $storagePath, int $attempts = 3): array
 {
+    $httpClient = app(SurrealHttpClient::class);
     $lastException = null;
 
     for ($attempt = 1; $attempt <= $attempts; $attempt++) {
@@ -156,7 +158,7 @@ function retryStartingWorkspaceServer(SurrealCliClient $client, string $storageP
             storageEngine: 'surrealkv',
         );
 
-        if ($client->waitUntilReady($endpoint)) {
+        if ($httpClient->waitUntilReady($endpoint)) {
             return [
                 'endpoint' => $endpoint,
                 'port' => $port,

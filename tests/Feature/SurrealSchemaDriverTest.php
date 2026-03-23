@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\Surreal\SurrealCliClient;
+use App\Services\Surreal\SurrealHttpClient;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -171,6 +172,7 @@ test('laravel can run and refresh the application migrations with surreal as the
  */
 function retryStartingSurrealSchemaServer(SurrealCliClient $client, string $storagePath, int $attempts = 3): array
 {
+    $httpClient = app(SurrealHttpClient::class);
     $lastException = null;
 
     for ($attempt = 1; $attempt <= $attempts; $attempt++) {
@@ -184,7 +186,7 @@ function retryStartingSurrealSchemaServer(SurrealCliClient $client, string $stor
             storageEngine: 'surrealkv',
         );
 
-        if ($client->waitUntilReady($endpoint)) {
+        if ($httpClient->waitUntilReady($endpoint)) {
             return [
                 'endpoint' => $endpoint,
                 'port' => $port,

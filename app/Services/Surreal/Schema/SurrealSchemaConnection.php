@@ -4,8 +4,10 @@ namespace App\Services\Surreal\Schema;
 
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
+use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Database\Connection;
+use Illuminate\Http\Client\Factory;
 use PDO;
 
 class SurrealSchemaConnection extends Connection
@@ -35,13 +37,14 @@ class SurrealSchemaConnection extends Connection
             extrasPath: isset($config['extras_path']) ? (string) $config['extras_path'] : null,
             bundledBinaryRelativePath: isset($config['bundled_binary_relative_path']) ? (string) $config['bundled_binary_relative_path'] : null,
         );
+        $httpClient = new SurrealHttpClient(app(Factory::class));
 
         return tap(new self(
             $config,
             new SurrealSchemaManager(
-                $client,
+                $httpClient,
                 $surrealConnection,
-                new SurrealRuntimeManager($client, $surrealConnection),
+                new SurrealRuntimeManager($client, $httpClient, $surrealConnection),
             ),
             $name,
         ), function (self $connection): void {

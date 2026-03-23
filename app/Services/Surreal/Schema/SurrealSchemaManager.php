@@ -2,8 +2,8 @@
 
 namespace App\Services\Surreal\Schema;
 
-use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
+use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Support\Arr;
 use RuntimeException;
@@ -11,7 +11,7 @@ use RuntimeException;
 class SurrealSchemaManager
 {
     public function __construct(
-        private readonly SurrealCliClient $client,
+        private readonly SurrealHttpClient $client,
         private readonly SurrealConnection $connection,
         private readonly SurrealRuntimeManager $runtimeManager,
     ) {}

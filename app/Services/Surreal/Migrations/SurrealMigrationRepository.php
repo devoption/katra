@@ -4,7 +4,7 @@ namespace App\Services\Surreal\Migrations;
 
 use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use App\Services\Surreal\Schema\SurrealSchemaManager;
-use App\Services\Surreal\SurrealCliClient;
+use App\Services\Surreal\SurrealHttpClient;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Support\Arr;
@@ -12,7 +12,7 @@ use JsonException;
 
 class SurrealMigrationRepository extends DatabaseMigrationRepository
 {
-    public function __construct(Resolver $resolver, string $table)
+    public function __construct(Resolver $resolver, string $table, private readonly SurrealHttpClient $client)
     {
         parent::__construct($resolver, $table);
     }
@@ -193,7 +193,7 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
      */
     private function selectRows(string $query): array
     {
-        $result = Arr::get($this->query($query), '0.0', []);
+        $result = Arr::get($this->query($query), '0', []);
 
         if (! is_array($result)) {
             return [];
@@ -207,7 +207,7 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
 
     private function selectScalar(string $query, mixed $default = null): mixed
     {
-        $result = Arr::get($this->query($query), '0.0', []);
+        $result = Arr::get($this->query($query), '0', []);
 
         if (! is_array($result) || $result === []) {
             return $default;
@@ -221,7 +221,7 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
      */
     private function query(string $query): array
     {
-        return $this->surrealClient()->runQuery(
+        return $this->client->runQuery(
             endpoint: (string) $this->surrealConfig('endpoint'),
             namespace: (string) $this->surrealConfig('namespace'),
             database: (string) $this->surrealConfig('database'),
@@ -239,25 +239,9 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
         return $connection->schemaManager();
     }
 
-    private function surrealClient(): SurrealCliClient
-    {
-        return new SurrealCliClient(
-            configuredBinary: $this->stringConfig('binary'),
-            extrasPath: $this->stringConfig('extras_path'),
-            bundledBinaryRelativePath: $this->stringConfig('bundled_binary_relative_path'),
-        );
-    }
-
     private function surrealConfig(string $key): mixed
     {
         return $this->resolver->connection($this->connection ?? $this->resolver->getDefaultConnection())->getConfig($key);
-    }
-
-    private function stringConfig(string $key): ?string
-    {
-        $value = $this->surrealConfig($key);
-
-        return is_string($value) && $value !== '' ? $value : null;
     }
 
     private function normalizedTable(): string
