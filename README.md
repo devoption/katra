@@ -77,6 +77,15 @@ The Laravel AI SDK is installed and its conversation storage migrations are part
 
 The current AI foundation test uses agent fakes, so the repo test suite does not require live provider credentials just to verify the integration.
 
+### Surreal-Backed Migrations
+
+Katra now includes a first Laravel-compatible Surreal schema driver for migration work.
+
+- Use `Schema::connection('surreal')` inside migrations when you want to target Surreal-backed application data.
+- You can also set `DB_CONNECTION=surreal` and run Laravel migrations, migration status, and `migrate:fresh` directly against SurrealDB.
+- The current slice is intentionally narrow: table creation, field creation, field removal, and table removal are supported for common Katra field types.
+- This is still not full SQL-driver parity yet, but it is enough for Katra's current migration set and for Surreal-backed application schema work without relying on SQLite migration bookkeeping.
+
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)

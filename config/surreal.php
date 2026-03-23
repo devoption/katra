@@ -6,10 +6,10 @@ return [
     | SurrealDB Foundation Configuration
     |--------------------------------------------------------------------------
     |
-    | The first SurrealDB foundation for Katra uses the Surreal CLI as the
-    | runtime bridge. In local desktop development it can auto-start a local
-    | Surreal runtime when the CLI is available. Server deployments can point
-    | Laravel at an already-running SurrealDB endpoint instead.
+    | Katra talks to SurrealDB directly over HTTP for queries and schema work.
+    | In local desktop development it can still use the Surreal CLI to
+    | auto-start a local runtime when the CLI is available. Server
+    | deployments can point Laravel at an already-running SurrealDB endpoint.
     |
     */
 
