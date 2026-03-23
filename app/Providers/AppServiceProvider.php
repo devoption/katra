@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Services\Surreal\Migrations\SurrealMigrationRepository;
+use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealRuntimeManager;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +21,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        $this->app->extend('migration.repository', function ($repository, $app): SurrealMigrationRepository {
+            $migrations = $app['config']['database.migrations'];
+            $table = is_array($migrations) ? ($migrations['table'] ?? 'migrations') : $migrations;
+
+            return new SurrealMigrationRepository($app['db'], $table);
+        });
+
+        $this->app->make(DatabaseManager::class)->extend('surreal', function (array $config, string $name): SurrealSchemaConnection {
+            return SurrealSchemaConnection::fromConfig(
+                array_merge(config('surreal'), $config),
+                $name,
+            );
+        });
     }
 }
