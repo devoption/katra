@@ -6,6 +6,7 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
+use JsonException;
 use RuntimeException;
 use Throwable;
 
@@ -166,15 +167,22 @@ class SurrealHttpClient
             }
 
             if (($statement['status'] ?? null) !== 'OK') {
+                $codeName = Arr::get($statement, 'code');
                 $details = Arr::get($statement, 'detail')
                     ?? Arr::get($statement, 'result')
+                    ?? Arr::get($statement, 'information')
                     ?? 'unknown error';
 
-                throw new RuntimeException(sprintf(
-                    'The SurrealDB query statement at position %d failed (%s).',
-                    $index + 1,
-                    is_scalar($details) ? (string) $details : json_encode($details),
-                ));
+                throw new SurrealQueryException(
+                    message: sprintf(
+                        'The SurrealDB query statement at position %d failed (%s).',
+                        $index + 1,
+                        $this->stringifyDetails($details),
+                    ),
+                    codeName: is_string($codeName) ? $codeName : null,
+                    details: $details,
+                    statementIndex: $index + 1,
+                );
             }
         }
 
@@ -258,12 +266,18 @@ class SurrealHttpClient
     private function requestException(string $prefix, RequestException $exception): RuntimeException
     {
         $payload = $exception->response?->json();
+        $codeName = Arr::get($payload, 'code');
         $details = Arr::get($payload, 'information')
             ?? Arr::get($payload, 'details')
             ?? $exception->response?->body()
             ?? $exception->getMessage();
 
-        return new RuntimeException(sprintf('%s (%s).', $prefix, trim((string) $details)), previous: $exception);
+        return new SurrealQueryException(
+            message: sprintf('%s (%s).', $prefix, $this->stringifyDetails($details)),
+            codeName: is_string($codeName) ? $codeName : null,
+            details: $details,
+            previous: new RuntimeException($exception->getMessage(), previous: $exception),
+        );
     }
 
     /**
@@ -276,5 +290,20 @@ class SurrealHttpClient
         }
 
         return array_keys($value) !== range(0, count($value) - 1);
+    }
+
+    private function stringifyDetails(mixed $details): string
+    {
+        if (is_scalar($details) || $details === null) {
+            return trim((string) $details);
+        }
+
+        try {
+            $encoded = json_encode($details, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return 'unserializable error details';
+        }
+
+        return is_string($encoded) ? $encoded : 'unknown error';
     }
 }

@@ -10,7 +10,6 @@ use Closure;
 use Generator;
 use Illuminate\Database\Connection;
 use Illuminate\Http\Client\Factory;
-use PDO;
 use RuntimeException;
 
 class SurrealSchemaConnection extends Connection
@@ -20,12 +19,15 @@ class SurrealSchemaConnection extends Connection
     public function __construct(
         array $config,
         private readonly SurrealSchemaManager $manager,
+        private readonly SurrealRuntimeManager $runtimeManager,
         string $name,
     ) {
         $config['name'] = $name;
 
         parent::__construct(
-            new PDO('sqlite::memory:'),
+            function (): never {
+                throw new RuntimeException('SurrealSchemaConnection does not expose a PDO driver. Use the Surreal schema/document layers instead.');
+            },
             $config['database'] ?? '',
             $config['prefix'] ?? '',
             $config,
@@ -41,14 +43,16 @@ class SurrealSchemaConnection extends Connection
             bundledBinaryRelativePath: isset($config['bundled_binary_relative_path']) ? (string) $config['bundled_binary_relative_path'] : null,
         );
         $httpClient = new SurrealHttpClient(app(Factory::class));
+        $runtimeManager = new SurrealRuntimeManager($client, $httpClient, $surrealConnection);
 
         return tap(new self(
             $config,
             new SurrealSchemaManager(
                 $httpClient,
                 $surrealConnection,
-                new SurrealRuntimeManager($client, $httpClient, $surrealConnection),
+                $runtimeManager,
             ),
+            $runtimeManager,
             $name,
         ), function (self $connection): void {
             $connection->useDefaultSchemaGrammar();
@@ -127,6 +131,11 @@ class SurrealSchemaConnection extends Connection
     public function schemaManager(): SurrealSchemaManager
     {
         return $this->manager;
+    }
+
+    public function runtimeManager(): SurrealRuntimeManager
+    {
+        return $this->runtimeManager;
     }
 
     protected function getDefaultSchemaGrammar(): SurrealSchemaGrammar

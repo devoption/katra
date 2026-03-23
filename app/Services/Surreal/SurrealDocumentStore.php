@@ -20,7 +20,7 @@ class SurrealDocumentStore
     {
         try {
             return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->normalizeTable($table)))[0] ?? []);
-        } catch (RuntimeException $exception) {
+        } catch (SurrealQueryException $exception) {
             if ($this->tableMissing($exception, $table)) {
                 return [];
             }
@@ -36,7 +36,7 @@ class SurrealDocumentStore
     {
         try {
             return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->recordSelector($table, $id)))[0] ?? [])[0] ?? null;
-        } catch (RuntimeException $exception) {
+        } catch (SurrealQueryException $exception) {
             if ($this->tableMissing($exception, $table)) {
                 return null;
             }
@@ -217,8 +217,8 @@ class SurrealDocumentStore
         return array_keys($value) !== range(0, count($value) - 1);
     }
 
-    private function tableMissing(RuntimeException $exception, string $table): bool
+    private function tableMissing(SurrealQueryException $exception, string $table): bool
     {
-        return str_contains($exception->getMessage(), sprintf("table '%s' does not exist", $this->normalizeTable($table)));
+        return $exception->isTableMissing($this->normalizeTable($table));
     }
 }

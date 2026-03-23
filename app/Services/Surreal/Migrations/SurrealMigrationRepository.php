@@ -5,6 +5,7 @@ namespace App\Services\Surreal\Migrations;
 use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use App\Services\Surreal\Schema\SurrealSchemaManager;
 use App\Services\Surreal\SurrealHttpClient;
+use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Support\Arr;
@@ -221,6 +222,10 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
      */
     private function query(string $query): array
     {
+        if (! $this->runtimeManager()->ensureReady()) {
+            throw new \RuntimeException('The SurrealDB runtime is not available for migration repository operations.');
+        }
+
         return $this->client->runQuery(
             endpoint: (string) $this->surrealConfig('endpoint'),
             namespace: (string) $this->surrealConfig('namespace'),
@@ -237,6 +242,14 @@ class SurrealMigrationRepository extends DatabaseMigrationRepository
         $connection = $this->resolver->connection($this->connection ?? $this->resolver->getDefaultConnection());
 
         return $connection->schemaManager();
+    }
+
+    private function runtimeManager(): SurrealRuntimeManager
+    {
+        /** @var SurrealSchemaConnection $connection */
+        $connection = $this->resolver->connection($this->connection ?? $this->resolver->getDefaultConnection());
+
+        return $connection->runtimeManager();
     }
 
     private function surrealConfig(string $key): mixed
