@@ -3,8 +3,8 @@
 namespace App\Services\Surreal\Schema;
 
 use Illuminate\Database\Connection;
-use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Builder;
 
 class SurrealSchemaBuilder extends Builder
 {
