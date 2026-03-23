@@ -66,6 +66,16 @@ composer native:dev
 
 That path installs dependencies, prepares the Laravel app, bootstraps NativePHP, and starts the local desktop development loop.
 
+### Configure AI Providers
+
+The Laravel AI SDK is installed and its conversation storage migrations are part of the application now.
+
+- For hosted model access, set `OPENAI_API_KEY` and leave `AI_DEFAULT_PROVIDER=openai`.
+- For local model experiments, set `AI_DEFAULT_PROVIDER=ollama` and point `OLLAMA_BASE_URL` at your local Ollama instance.
+- Additional provider keys are available in [config/ai.php](config/ai.php) if you want to swap providers later.
+
+The current AI foundation test uses agent fakes, so the repo test suite does not require live provider credentials just to verify the integration.
+
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
