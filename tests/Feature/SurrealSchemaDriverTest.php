@@ -98,6 +98,7 @@ test('laravel can run and refresh the application migrations with surreal as the
     $storagePath = storage_path('app/surrealdb/schema-driver-migrate-test-'.Str::uuid());
     $originalDefaultConnection = config('database.default');
     $originalMigrationConnection = config('database.migrations.connection');
+    $expectedMigrationNames = expectedApplicationMigrationNames();
 
     File::deleteDirectory($storagePath);
     File::ensureDirectoryExists(dirname($storagePath));
@@ -140,7 +141,7 @@ test('laravel can run and refresh the application migrations with surreal as the
             ->and($schema->hasTable('features'))->toBeTrue()
             ->and($schema->hasTable('agent_conversations'))->toBeTrue()
             ->and($schema->hasTable('migrations'))->toBeTrue()
-            ->and($repository->getRan())->toHaveCount(5);
+            ->and($repository->getRan())->toEqualCanonicalizing($expectedMigrationNames);
 
         app()->forgetInstance('migration.repository');
         app()->forgetInstance('migrator');
@@ -157,7 +158,7 @@ test('laravel can run and refresh the application migrations with surreal as the
         expect($freshExitCode)->toBe(0)
             ->and($schema->hasTable('users'))->toBeTrue()
             ->and($schema->hasTable('migrations'))->toBeTrue()
-            ->and($repository->getRan())->toHaveCount(5);
+            ->and($repository->getRan())->toEqualCanonicalizing($expectedMigrationNames);
     } finally {
         config()->set('database.default', $originalDefaultConnection);
         config()->set('database.migrations.connection', $originalMigrationConnection);
@@ -183,7 +184,7 @@ function retryStartingSurrealSchemaServer(SurrealCliClient $client, string $stor
     $lastException = null;
 
     for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-        $port = reserveSurrealSchemaPort();
+        $port = random_int(10240, 65535);
         $endpoint = sprintf('ws://127.0.0.1:%d', $port);
         $process = $client->startLocalServer(
             bindAddress: sprintf('127.0.0.1:%d', $port),
@@ -208,27 +209,14 @@ function retryStartingSurrealSchemaServer(SurrealCliClient $client, string $stor
     throw $lastException ?? new RuntimeException('Unable to start the SurrealDB schema test runtime.');
 }
 
-function reserveSurrealSchemaPort(): int
+/**
+ * @return array<int, string>
+ */
+function expectedApplicationMigrationNames(): array
 {
-    $socket = stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
-
-    if ($socket === false) {
-        throw new RuntimeException(sprintf('Unable to reserve a free TCP port: %s (%d)', $errorMessage, $errorCode));
-    }
-
-    $address = stream_socket_get_name($socket, false);
-
-    fclose($socket);
-
-    if ($address === false) {
-        throw new RuntimeException('Unable to determine the reserved TCP port.');
-    }
-
-    $port = (int) ltrim((string) strrchr($address, ':'), ':');
-
-    if ($port <= 0) {
-        throw new RuntimeException(sprintf('Unable to parse the reserved TCP port from [%s].', $address));
-    }
-
-    return $port;
+    return collect(File::files(database_path('migrations')))
+        ->map(static fn (SplFileInfo $file): string => pathinfo($file->getFilename(), PATHINFO_FILENAME))
+        ->sort()
+        ->values()
+        ->all();
 }
