@@ -71,6 +71,9 @@ test('the database cache store works on the surreal connection', function () {
 
         expect($store->put('login:127.0.0.1', 'updated-hit', 60))->toBeTrue()
             ->and($store->get('login:127.0.0.1'))->toBe('updated-hit');
+
+        expect($store->flush())->toBeTrue()
+            ->and($store->get('login:127.0.0.1'))->toBeNull();
     } finally {
         config()->set('database.default', $originalDefaultConnection);
         config()->set('database.migrations.connection', $originalMigrationConnection);

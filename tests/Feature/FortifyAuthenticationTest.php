@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\FileStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -35,6 +36,15 @@ test('the fortify auth screens render', function () {
     $this->get(route('server.connect'))
         ->assertSuccessful()
         ->assertSee('Connect to a server');
+});
+
+test('the login rate limiter uses the file cache store', function () {
+    config([
+        'cache.default' => 'database',
+        'cache.limiter' => 'file',
+    ]);
+
+    expect(cache()->driver(config('cache.limiter'))->getStore())->toBeInstanceOf(FileStore::class);
 });
 
 test('a user can register for a katra account', function () {

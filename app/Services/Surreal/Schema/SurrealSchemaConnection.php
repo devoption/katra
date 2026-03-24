@@ -384,7 +384,13 @@ class SurrealSchemaConnection extends Connection
         $whereClause = $this->compileWhereClause($table, $wheres);
 
         if ($whereClause === null) {
-            throw new RuntimeException('Surreal deletes without a where clause are not supported by this driver yet.');
+            $query = sprintf(
+                'DELETE %s%s;',
+                $this->normalizeIdentifier($table),
+                $limit !== null ? ' LIMIT '.max(0, $limit) : '',
+            );
+
+            return count($this->normalizeRecordSet(Arr::get($this->runSurrealQuery($query), '0', []), $table));
         }
 
         $query = sprintf(
