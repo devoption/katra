@@ -66,7 +66,7 @@ test('standard eloquent user queries work on the surreal connection', function (
 
         expect(DB::connection('surreal')->table('sessions')->insert([
             'id' => 'session-with-slashes',
-            'user_id' => 0,
+            'user_id' => null,
             'ip_address' => '127.0.0.1',
             'user_agent' => 'Pest Browser',
             'payload' => $sessionPayload,
@@ -78,7 +78,8 @@ test('standard eloquent user queries work on the surreal connection', function (
             ->first();
 
         expect($storedSession)->not->toBeNull()
-            ->and($storedSession?->payload)->toBe($sessionPayload);
+            ->and($storedSession?->payload)->toBe($sessionPayload)
+            ->and(data_get($storedSession, 'user_id'))->toBeNull();
 
         $user = User::query()->create([
             'name' => 'Derek Bourgeois',

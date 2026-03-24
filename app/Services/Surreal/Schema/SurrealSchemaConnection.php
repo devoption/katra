@@ -661,6 +661,10 @@ class SurrealSchemaConnection extends Connection
 
     private function encodeLiteral(mixed $value): string
     {
+        if ($value === null) {
+            return 'NONE';
+        }
+
         if (is_array($value) && $this->isAssociative($value)) {
             return $this->encodeMap($value);
         }
