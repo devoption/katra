@@ -2,8 +2,7 @@
 
 @section('title', 'Reset your Katra password')
 @section('heading', 'Reset your password')
-@section('copy', 'Request a reset link for your local Katra account.')
-@section('panel_copy', 'We will send a password reset link to the email address tied to this local account.')
+@section('copy', 'Request a reset link for your Katra account.')
 
 @section('content')
     <form method="POST" action="{{ route('password.email') }}" class="space-y-5">

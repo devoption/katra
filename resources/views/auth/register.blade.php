@@ -2,24 +2,38 @@
 
 @section('title', 'Create your Katra account')
 @section('heading', 'Create your Katra account')
-@section('copy', 'Set up the local account that unlocks the Katra desktop workspace.')
-@section('panel_copy', 'This keeps the first auth step small and local while we prepare the broader connection and workspace model.')
+@section('copy', 'Create an account for this instance and keep moving into the Katra workspace.')
 
 @section('content')
     <form method="POST" action="{{ route('register') }}" class="space-y-5">
         @csrf
 
-        <div class="space-y-2">
-            <label for="name" class="shell-text-faint block font-mono text-[10px] uppercase tracking-[0.14em]">Name</label>
-            <input
-                id="name"
-                name="name"
-                type="text"
-                autocomplete="name"
-                required
-                value="{{ old('name') }}"
-                class="shell-panel shell-text h-12 w-full rounded-[18px] border border-transparent px-4 text-sm outline-none transition focus:border-[color:var(--shell-info)]"
-            />
+        <div class="grid gap-5 sm:grid-cols-2">
+            <div class="space-y-2">
+                <label for="first_name" class="shell-text-faint block font-mono text-[10px] uppercase tracking-[0.14em]">First name</label>
+                <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    autocomplete="given-name"
+                    required
+                    value="{{ old('first_name') }}"
+                    class="shell-panel shell-text h-12 w-full rounded-[18px] border border-transparent px-4 text-sm outline-none transition focus:border-[color:var(--shell-info)]"
+                />
+            </div>
+
+            <div class="space-y-2">
+                <label for="last_name" class="shell-text-faint block font-mono text-[10px] uppercase tracking-[0.14em]">Last name</label>
+                <input
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    autocomplete="family-name"
+                    required
+                    value="{{ old('last_name') }}"
+                    class="shell-panel shell-text h-12 w-full rounded-[18px] border border-transparent px-4 text-sm outline-none transition focus:border-[color:var(--shell-info)]"
+                />
+            </div>
         </div>
 
         <div class="space-y-2">

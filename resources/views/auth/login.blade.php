@@ -2,8 +2,17 @@
 
 @section('title', 'Sign in to Katra')
 @section('heading', 'Sign in to Katra')
-@section('copy', 'Use your local Katra account to open the desktop workspace.')
-@section('panel_copy', 'Sign in with the local account for this instance. Password reset stays available if you need to recover access.')
+@section('copy', 'Choose how you want to sign in and continue into Katra.')
+@section('account_selector')
+    <div class="shell-panel grid grid-cols-2 gap-2 rounded-[18px] p-1.5">
+        <a href="{{ route('login') }}" class="shell-accent-chip flex h-11 items-center justify-center rounded-[14px] text-sm font-semibold">
+            This instance
+        </a>
+        <a href="{{ route('server.connect') }}" class="shell-text-soft shell-hover-surface flex h-11 items-center justify-center rounded-[14px] text-sm font-medium transition-colors">
+            Server
+        </a>
+    </div>
+@endsection
 
 @section('content')
     <form method="POST" action="{{ route('login') }}" class="space-y-5">
@@ -49,7 +58,7 @@
     </form>
 
     <p class="shell-text-soft mt-6 text-sm">
-        Need a local account?
+        Need an account?
         <a href="{{ route('register') }}" class="shell-text-info font-medium hover:opacity-80">Create one now</a>
     </p>
 @endsection

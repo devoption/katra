@@ -6,6 +6,7 @@ use App\Features\Desktop\ConversationChannels;
 use App\Features\Desktop\MvpShell;
 use App\Features\Desktop\TaskSurfaces;
 use App\Features\Desktop\WorkspaceNavigation;
+use App\Models\User;
 use App\Support\Features\DesktopUi;
 use Laravel\Pennant\Attributes\Name;
 use Laravel\Pennant\Feature;
@@ -69,6 +70,14 @@ test('desktop ui surfaces can be staged on without changing the shell implementa
 
     Feature::for(DesktopUi::scope())->activate(WorkspaceNavigation::class);
 
+    $this->actingAs(User::factory()->make([
+        'id' => 1,
+        'first_name' => 'Derek',
+        'last_name' => 'Bourgeois',
+        'name' => 'Derek Bourgeois',
+        'email' => 'derek@katra.io',
+    ]));
+
     expect(DesktopUi::active(WorkspaceNavigation::class))->toBeTrue()
         ->and(DesktopUi::states()['ui.desktop.workspace-navigation'])->toBeTrue();
 
@@ -82,6 +91,14 @@ test('the desktop shell can be hidden behind the mvp flag', function () {
     config()->set('pennant.default', 'array');
 
     Feature::for(DesktopUi::scope())->deactivate(MvpShell::class);
+
+    $this->actingAs(User::factory()->make([
+        'id' => 1,
+        'first_name' => 'Derek',
+        'last_name' => 'Bourgeois',
+        'name' => 'Derek Bourgeois',
+        'email' => 'derek@katra.io',
+    ]));
 
     $this->get('/')
         ->assertSuccessful()

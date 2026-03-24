@@ -2,8 +2,7 @@
 
 @section('title', 'Choose a new Katra password')
 @section('heading', 'Choose a new password')
-@section('copy', 'Finish recovering your local Katra account.')
-@section('panel_copy', 'Set a new password for this account, then Fortify will send you straight back into Katra.')
+@section('copy', 'Finish recovering your Katra account.')
 
 @section('content')
     <form method="POST" action="{{ route('password.update') }}" class="space-y-5">

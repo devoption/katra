@@ -18,20 +18,29 @@ test('the fortify auth screens render', function () {
     $this->get(route('login'))
         ->assertSuccessful()
         ->assertSee('Sign in to Katra')
-        ->assertSee('Forgot password?');
+        ->assertSee('Forgot password?')
+        ->assertSee('This instance')
+        ->assertSee('Server');
 
     $this->get(route('register'))
         ->assertSuccessful()
-        ->assertSee('Create your Katra account');
+        ->assertSee('Create your Katra account')
+        ->assertSee('First name')
+        ->assertSee('Last name');
 
     $this->get(route('password.request'))
         ->assertSuccessful()
         ->assertSee('Reset your password');
+
+    $this->get(route('server.connect'))
+        ->assertSuccessful()
+        ->assertSee('Connect to a server');
 });
 
-test('a user can register for a local katra account', function () {
+test('a user can register for a katra account', function () {
     $this->post(route('register'), [
-        'name' => 'Derek Bourgeois',
+        'first_name' => 'Derek',
+        'last_name' => 'Bourgeois',
         'email' => 'derek@katra.io',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -39,7 +48,12 @@ test('a user can register for a local katra account', function () {
 
     $this->assertAuthenticated();
 
-    expect(User::query()->where('email', 'derek@katra.io')->exists())->toBeTrue();
+    $user = User::query()->where('email', 'derek@katra.io')->first();
+
+    expect($user)->not->toBeNull()
+        ->and($user?->first_name)->toBe('Derek')
+        ->and($user?->last_name)->toBe('Bourgeois')
+        ->and($user?->name)->toBe('Derek Bourgeois');
 });
 
 test('a user can sign in with valid credentials', function () {
