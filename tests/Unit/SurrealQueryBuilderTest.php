@@ -5,6 +5,7 @@ use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\Grammar;
+use Illuminate\Database\Query\Processors\Processor;
 
 test('single-row inserts can contain array values without being treated as bulk inserts', function () {
     $builder = (new ReflectionClass(SurrealQueryBuilder::class))->newInstanceWithoutConstructor();
@@ -84,4 +85,22 @@ test('surreal datetime encoding normalizes DateTimeInterface values to utc', fun
     );
 
     expect($encoded)->toBe("d'2026-03-24T13:15:00+00:00'");
+});
+
+test('upsert with no update columns behaves like insert or ignore', function () {
+    $connection = Mockery::mock(SurrealSchemaConnection::class);
+    $grammar = (new ReflectionClass(Grammar::class))->newInstanceWithoutConstructor();
+    $processor = new Processor;
+
+    $connection->shouldReceive('insertOrIgnoreRecord')
+        ->once()
+        ->with('features', ['name' => 'ui.desktop.mvp-shell'])
+        ->andReturnTrue();
+
+    $builder = new SurrealQueryBuilder($connection, $grammar, $processor);
+    $builder->from('features');
+
+    expect($builder->upsert([
+        'name' => 'ui.desktop.mvp-shell',
+    ], ['name'], []))->toBe(1);
 });

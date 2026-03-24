@@ -6,6 +6,8 @@ function desktopShellUser(): User
 {
     return User::factory()->make([
         'id' => 1,
+        'first_name' => 'Derek',
+        'last_name' => 'Bourgeois',
         'name' => 'Derek Bourgeois',
         'email' => 'derek@katra.io',
     ]);

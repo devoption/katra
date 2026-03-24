@@ -384,6 +384,21 @@ class SurrealSchemaConnection extends Connection
         $whereClause = $this->compileWhereClause($table, $wheres);
 
         if ($whereClause === null) {
+            if ($limit === null) {
+                $deletedRecords = $this->countRecords($table);
+
+                if ($deletedRecords === 0) {
+                    return 0;
+                }
+
+                $this->runSurrealQuery(sprintf(
+                    'DELETE %s RETURN NONE;',
+                    $this->normalizeIdentifier($table),
+                ));
+
+                return $deletedRecords;
+            }
+
             $query = sprintf(
                 'DELETE %s%s;',
                 $this->normalizeIdentifier($table),
@@ -401,6 +416,23 @@ class SurrealSchemaConnection extends Connection
         );
 
         return count($this->normalizeRecordSet(Arr::get($this->runSurrealQuery($query), '0', []), $table));
+    }
+
+    private function countRecords(string $table): int
+    {
+        $rows = $this->normalizeRecordSet(
+            Arr::get(
+                $this->runSurrealQuery(sprintf(
+                    'SELECT count() AS aggregate FROM %s GROUP ALL;',
+                    $this->normalizeIdentifier($table),
+                )),
+                '0',
+                [],
+            ),
+            columns: ['aggregate'],
+        );
+
+        return (int) ($rows[0]['aggregate'] ?? 0);
     }
 
     protected function getDefaultSchemaGrammar(): SurrealSchemaGrammar

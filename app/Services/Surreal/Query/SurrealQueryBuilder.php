@@ -123,7 +123,7 @@ class SurrealQueryBuilder extends Builder
         $uniqueColumns = array_values(Arr::wrap($uniqueBy));
 
         if ($update === []) {
-            return $this->insert($values) ? count($records) : 0;
+            return $this->insertOrIgnore($values);
         }
 
         $updateColumns = $update ?? array_keys($records[0]);
