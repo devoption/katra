@@ -56,6 +56,30 @@ test('standard eloquent user queries work on the surreal connection', function (
 
         expect($migrateExitCode)->toBe(0);
 
+        $sessionPayload = json_encode([
+            'url' => 'https://katra.test/?workspace=katra-local',
+            '_flash' => [
+                'old' => [],
+                'new' => ['status'],
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        expect(DB::connection('surreal')->table('sessions')->insert([
+            'id' => 'session-with-slashes',
+            'user_id' => 0,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'Pest Browser',
+            'payload' => $sessionPayload,
+            'last_activity' => now()->timestamp,
+        ]))->toBeTrue();
+
+        $storedSession = DB::connection('surreal')->table('sessions')
+            ->where('id', 'session-with-slashes')
+            ->first();
+
+        expect($storedSession)->not->toBeNull()
+            ->and($storedSession?->payload)->toBe($sessionPayload);
+
         $user = User::query()->create([
             'name' => 'Derek Bourgeois',
             'email' => 'derek@katra.io',

@@ -666,7 +666,7 @@ class SurrealSchemaConnection extends Connection
         }
 
         try {
-            $encoded = json_encode($value, JSON_THROW_ON_ERROR);
+            $encoded = json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         } catch (JsonException $exception) {
             throw new RuntimeException('Unable to encode the Surreal query payload.', previous: $exception);
         }
