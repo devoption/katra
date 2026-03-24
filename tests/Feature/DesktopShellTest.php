@@ -1,5 +1,18 @@
 <?php
 
+use App\Models\User;
+
+function desktopShellUser(): User
+{
+    return User::factory()->make([
+        'id' => 1,
+        'first_name' => 'Derek',
+        'last_name' => 'Bourgeois',
+        'name' => 'Derek Bourgeois',
+        'email' => 'derek@katra.io',
+    ]);
+}
+
 test('the desktop shell exposes the katra bootstrap screen', function () {
     config()->set('pennant.default', 'array');
     config()->set('surreal.autostart', false);
@@ -7,6 +20,8 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
     config()->set('surreal.port', 18999);
     config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
     config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
+
+    $this->actingAs(desktopShellUser());
 
     $this->get('/')
         ->assertSuccessful()
@@ -97,6 +112,8 @@ test('the desktop shell falls back to default feature flags before the Pennant t
     config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
     config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
 
+    $this->actingAs(desktopShellUser());
+
     $this->get('/')
         ->assertSuccessful()
         ->assertSee('Katra')
@@ -111,6 +128,8 @@ test('the desktop shell can switch the active mock workspace from the selector',
     config()->set('surreal.port', 18999);
     config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
     config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
+
+    $this->actingAs(desktopShellUser());
 
     $this->get('/?workspace=design-lab')
         ->assertSuccessful()

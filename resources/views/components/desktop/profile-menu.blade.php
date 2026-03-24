@@ -68,9 +68,13 @@
                 </div>
             </div>
 
-            <button type="button" class="shell-danger-button flex w-full items-center justify-center rounded-[18px] px-5 py-2.5 text-sm font-medium transition-colors">
-                <span>Log out</span>
-            </button>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+
+                <button type="submit" class="shell-danger-button flex w-full items-center justify-center rounded-[18px] px-5 py-2.5 text-sm font-medium transition-colors">
+                    <span>Log out</span>
+                </button>
+            </form>
         </div>
     </div>
 </details>

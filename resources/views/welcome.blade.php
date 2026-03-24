@@ -81,6 +81,16 @@
                     ];
                 @endphp
                 <div data-desktop-shell class="relative h-full overflow-hidden">
+                    @php
+                        $viewer = request()->user();
+                        $viewerName = $viewer?->name ?? 'Derek Bourgeois';
+                        $viewerEmail = $viewer?->email ?? 'derek@katra.io';
+                        $viewerInitials = collect(explode(' ', $viewerName))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn (string $segment): string => strtoupper(substr($segment, 0, 1)))
+                            ->implode('');
+                    @endphp
                     <div data-shell-grid class="grid h-full xl:grid-cols-[320px_minmax(0,1fr)]">
                     <aside data-sidebar class="shell-panel flex min-h-0 flex-col overflow-hidden px-4 py-3 transition-[opacity,transform] duration-200">
                         @php
@@ -159,7 +169,7 @@
                             </div>
                         </div>
 
-                        <x-desktop.profile-menu name="Derek Bourgeois" email="derek@katra.io" initials="DB" />
+                        <x-desktop.profile-menu :name="$viewerName" :email="$viewerEmail" :initials="$viewerInitials" />
                     </aside>
 
                     <section class="shell-panel flex min-h-0 flex-col">

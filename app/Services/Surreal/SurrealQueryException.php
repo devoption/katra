@@ -33,4 +33,20 @@ class SurrealQueryException extends RuntimeException
 
         return false;
     }
+
+    public function isDuplicateRecord(): bool
+    {
+        if (is_string($this->codeName) && strcasecmp($this->codeName, 'DUPLICATE') === 0) {
+            return true;
+        }
+
+        if (! is_string($this->details)) {
+            return false;
+        }
+
+        $normalizedDetails = strtolower($this->details);
+
+        return str_contains($normalizedDetails, 'already exists')
+            || str_contains($normalizedDetails, 'duplicate');
+    }
 }

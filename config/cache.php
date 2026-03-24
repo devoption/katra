@@ -19,6 +19,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Rate Limiter Store
+    |--------------------------------------------------------------------------
+    |
+    | Authentication and other throttle middleware should use a cache store
+    | that supports Laravel's atomic limiter operations. The database cache
+    | driver assumes SQL transaction semantics, so Katra defaults limiters to
+    | the file store even when the main cache store is database-backed.
+    |
+    */
+
+    'limiter' => env('CACHE_LIMITER', 'file'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |
