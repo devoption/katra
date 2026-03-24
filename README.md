@@ -76,7 +76,7 @@ Katra now uses Laravel Fortify for the first authentication foundation.
 - Make sure your local database migrations are current before you try the auth flow:
 
 ```bash
-php artisan migrate --force
+php artisan migrate
 ```
 
 - If you are testing password reset locally and want to inspect the reset link without sending mail, use a local-safe mailer such as `MAIL_MAILER=log`.
