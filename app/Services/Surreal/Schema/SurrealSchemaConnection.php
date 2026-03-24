@@ -765,7 +765,9 @@ class SurrealSchemaConnection extends Connection
     private function encodeValue(string|int $key, mixed $value): string
     {
         if ($value instanceof DateTimeInterface) {
-            return $this->encodeDateTimeLiteral($value->format(DATE_ATOM));
+            return $this->encodeDateTimeLiteral(
+                CarbonImmutable::instance($value)->utc()->format(DATE_ATOM),
+            );
         }
 
         if (is_string($value) && is_string($key) && $this->looksLikeDateTimeColumn($key)) {

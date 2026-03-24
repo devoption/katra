@@ -2,6 +2,9 @@
 
 use App\Services\Surreal\Query\SurrealQueryBuilder;
 use App\Services\Surreal\Schema\SurrealSchemaConnection;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Query\Grammars\Grammar;
 
 test('single-row inserts can contain array values without being treated as bulk inserts', function () {
     $builder = (new ReflectionClass(SurrealQueryBuilder::class))->newInstanceWithoutConstructor();
@@ -48,4 +51,37 @@ test('surreal select column lists are projected when specific columns are reques
 
     expect($compileSelectColumns->invoke($connection, ['id', 'email']))->toBe('id, email')
         ->and($compileSelectColumns->invoke($connection, ['*']))->toBe('*');
+});
+
+test('surreal query builder resolves expression columns with the active grammar', function () {
+    $builder = (new ReflectionClass(SurrealQueryBuilder::class))->newInstanceWithoutConstructor();
+    $resolveColumns = new ReflectionMethod(SurrealQueryBuilder::class, 'resolveColumns');
+
+    $resolveColumns->setAccessible(true);
+    $builder->grammar = (new ReflectionClass(Grammar::class))->newInstanceWithoutConstructor();
+
+    $columns = $resolveColumns->invoke($builder, [
+        new Expression('count(*) as aggregate'),
+        'email',
+    ]);
+
+    expect($columns)->toBe([
+        'count(*) as aggregate',
+        'email',
+    ]);
+});
+
+test('surreal datetime encoding normalizes DateTimeInterface values to utc', function () {
+    $connection = (new ReflectionClass(SurrealSchemaConnection::class))->newInstanceWithoutConstructor();
+    $encodeValue = new ReflectionMethod(SurrealSchemaConnection::class, 'encodeValue');
+
+    $encodeValue->setAccessible(true);
+
+    $encoded = $encodeValue->invoke(
+        $connection,
+        'created_at',
+        CarbonImmutable::parse('2026-03-24 09:15:00', 'America/New_York'),
+    );
+
+    expect($encoded)->toBe("d'2026-03-24T13:15:00+00:00'");
 });

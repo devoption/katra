@@ -24,10 +24,7 @@ class SurrealQueryBuilder extends Builder
 
         $rows = $this->surrealConnection()->selectRecords(
             table: (string) $this->from,
-            columns: array_values(array_map(
-                static fn (mixed $column): string => (string) $column,
-                $this->columns,
-            )),
+            columns: $this->resolveColumns($this->columns),
             wheres: $this->wheres ?? [],
             orders: $this->orders ?? [],
             limit: $this->limit,
@@ -133,6 +130,21 @@ class SurrealQueryBuilder extends Builder
 
         /** @var array<string, mixed> $values */
         return [$values];
+    }
+
+    /**
+     * @param  array<int, string|Expression>  $columns
+     * @return list<string>
+     */
+    private function resolveColumns(array $columns): array
+    {
+        return array_values(array_map(function (mixed $column): string {
+            if ($column instanceof Expression) {
+                return (string) $column->getValue($this->grammar);
+            }
+
+            return (string) $column;
+        }, $columns));
     }
 
     private function surrealConnection(): SurrealSchemaConnection
