@@ -451,6 +451,7 @@ class SurrealSchemaConnection extends Connection
     {
         return match ($where['type'] ?? null) {
             'Basic' => $this->compileBasicWhere($table, $where),
+            'Nested' => $this->compileNestedWhere($table, $where),
             'Null' => sprintf('%s = NONE', $this->normalizeColumn((string) $where['column'])),
             'NotNull' => sprintf('%s != NONE', $this->normalizeColumn((string) $where['column'])),
             'In' => $this->compileInWhere($table, $where, false),
@@ -476,6 +477,21 @@ class SurrealSchemaConnection extends Connection
             : $this->encodeLiteral($value);
 
         return sprintf('%s %s %s', $column, $operator, $encodedValue);
+    }
+
+    /**
+     * @param  array<string, mixed>  $where
+     */
+    private function compileNestedWhere(string $table, array $where): string
+    {
+        $nestedWheres = $where['query']->wheres ?? [];
+        $compiled = $this->compileWhereClause($table, $nestedWheres);
+
+        if ($compiled === null) {
+            return 'true';
+        }
+
+        return '('.$compiled.')';
     }
 
     /**

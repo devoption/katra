@@ -56,6 +56,14 @@ test('standard eloquent user queries work on the surreal connection', function (
 
         expect($migrateExitCode)->toBe(0);
 
+        $featureMigrateExitCode = Artisan::call('migrate', [
+            '--force' => true,
+            '--realpath' => true,
+            '--path' => database_path('migrations/2026_03_21_004800_create_features_table.php'),
+        ]);
+
+        expect($featureMigrateExitCode)->toBe(0);
+
         $sessionPayload = json_encode([
             'url' => 'https://katra.test/?workspace=katra-local',
             '_flash' => [
@@ -80,6 +88,37 @@ test('standard eloquent user queries work on the surreal connection', function (
         expect($storedSession)->not->toBeNull()
             ->and($storedSession?->payload)->toBe($sessionPayload)
             ->and(data_get($storedSession, 'user_id'))->toBeNull();
+
+        DB::connection('surreal')->table('features')->insert([
+            [
+                'id' => 1,
+                'name' => 'ui.desktop.mvp-shell',
+                'scope' => 'desktop-ui',
+                'value' => 'true',
+                'created_at' => now()->toISOString(),
+                'updated_at' => now()->toISOString(),
+            ],
+            [
+                'id' => 2,
+                'name' => 'ui.desktop.workspace-navigation',
+                'scope' => 'desktop-ui',
+                'value' => 'false',
+                'created_at' => now()->toISOString(),
+                'updated_at' => now()->toISOString(),
+            ],
+        ]);
+
+        $featureRecords = DB::connection('surreal')->table('features')
+            ->where(fn ($query) => $query->where('name', 'ui.desktop.mvp-shell')->where('scope', 'desktop-ui'))
+            ->orWhere(fn ($query) => $query->where('name', 'ui.desktop.workspace-navigation')->where('scope', 'desktop-ui'))
+            ->orderBy('id')
+            ->get();
+
+        expect($featureRecords)->toHaveCount(2)
+            ->and($featureRecords->pluck('name')->all())->toBe([
+                'ui.desktop.mvp-shell',
+                'ui.desktop.workspace-navigation',
+            ]);
 
         $user = User::query()->create([
             'name' => 'Derek Bourgeois',
