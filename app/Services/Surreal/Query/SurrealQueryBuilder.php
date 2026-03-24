@@ -117,9 +117,7 @@ class SurrealQueryBuilder extends Builder
             return [];
         }
 
-        $first = reset($values);
-
-        if ($first !== false && is_array($first)) {
+        if (array_is_list($values) && isset($values[0]) && is_array($values[0])) {
             return array_values(array_map(
                 static function (mixed $record): array {
                     if (! is_array($record)) {

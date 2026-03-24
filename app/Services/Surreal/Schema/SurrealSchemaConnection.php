@@ -20,6 +20,23 @@ use RuntimeException;
 
 class SurrealSchemaConnection extends Connection
 {
+    private const SEQUENCE_TABLE = '__katra_sequences';
+
+    /**
+     * @var list<string>
+     */
+    private const SUPPORTED_WHERE_OPERATORS = [
+        '=',
+        '!=',
+        '<>',
+        '<',
+        '>',
+        '<=',
+        '>=',
+        'LIKE',
+        'NOT LIKE',
+    ];
+
     private ?SurrealSchemaBuilder $schemaBuilder = null;
 
     public function __construct(
@@ -190,7 +207,11 @@ class SurrealSchemaConnection extends Connection
      */
     public function selectRecords(string $table, array $columns, array $wheres = [], array $orders = [], ?int $limit = null, ?int $offset = null): array
     {
-        $query = sprintf('SELECT * FROM %s', $this->normalizeIdentifier($table));
+        $query = sprintf(
+            'SELECT %s FROM %s',
+            $this->compileSelectColumns($columns),
+            $this->normalizeIdentifier($table),
+        );
         $whereClause = $this->compileWhereClause($table, $wheres);
 
         if ($whereClause !== null) {
@@ -467,7 +488,7 @@ class SurrealSchemaConnection extends Connection
     private function compileBasicWhere(string $table, array $where): string
     {
         $column = $this->normalizeColumn((string) $where['column']);
-        $operator = strtoupper((string) ($where['operator'] ?? '='));
+        $operator = $this->normalizeOperator((string) ($where['operator'] ?? '='));
         $value = $where['value'] ?? null;
 
         $encodedValue = $column === 'id'
@@ -475,6 +496,24 @@ class SurrealSchemaConnection extends Connection
             : $this->encodeLiteral($value);
 
         return sprintf('%s %s %s', $column, $operator, $encodedValue);
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function compileSelectColumns(array $columns): string
+    {
+        if ($columns === ['*']) {
+            return '*';
+        }
+
+        return implode(', ', array_map(function (string $column): string {
+            if ($column === '*') {
+                return '*';
+            }
+
+            return $this->normalizeColumn($column);
+        }, $columns));
     }
 
     /**
@@ -546,6 +585,20 @@ class SurrealSchemaConnection extends Connection
         return implode(', ', $segments);
     }
 
+    private function normalizeOperator(string $operator): string
+    {
+        $normalized = strtoupper(trim($operator));
+
+        if (! in_array($normalized, self::SUPPORTED_WHERE_OPERATORS, true)) {
+            throw new RuntimeException(sprintf(
+                'The current Surreal query driver does not support the [%s] operator.',
+                $operator,
+            ));
+        }
+
+        return $normalized;
+    }
+
     /**
      * @param  array<int, array<string, mixed>>  $wheres
      */
@@ -590,24 +643,19 @@ class SurrealSchemaConnection extends Connection
 
     private function nextKey(string $table): int
     {
-        $rows = $this->normalizeRecordSet(
-            Arr::get($this->runSurrealQuery(sprintf(
-                'SELECT * FROM %s ORDER BY id DESC LIMIT 1;',
-                $this->normalizeIdentifier($table),
-            )), '0', []),
-            $table,
-        );
+        $result = Arr::get($this->runSurrealQuery(sprintf(
+            'UPSERT ONLY %s SET value += 1 RETURN VALUE value;',
+            $this->recordSelector(self::SEQUENCE_TABLE, $table),
+        )), '0.0');
 
-        $current = $rows[0]['id'] ?? 0;
-
-        if (! is_int($current) && ! ctype_digit((string) $current)) {
+        if (! is_int($result) && ! ctype_digit((string) $result)) {
             throw new RuntimeException(sprintf(
-                'Unable to generate the next numeric id for table [%s] from the current Surreal records.',
+                'Unable to generate the next numeric id for table [%s].',
                 $table,
             ));
         }
 
-        return (int) $current + 1;
+        return (int) $result;
     }
 
     private function normalizeIdentifier(string $identifier): string

@@ -124,8 +124,15 @@ test('standard eloquent user queries work on the surreal connection', function (
             'password' => 'password',
         ]);
 
+        $secondUser = User::query()->create([
+            'name' => 'Taylor Otwell',
+            'email' => 'taylor@katra.io',
+            'password' => 'password',
+        ]);
+
         expect($user->id)->toBe(1)
-            ->and($user->exists)->toBeTrue();
+            ->and($user->exists)->toBeTrue()
+            ->and($secondUser->id)->toBe(2);
 
         $queriedUser = User::query()->where('email', 'derek@katra.io')->first();
 
@@ -145,11 +152,12 @@ test('standard eloquent user queries work on the surreal connection', function (
 
         expect($rememberedUser)->not->toBeNull()
             ->and($rememberedUser?->id)->toBe(1)
-            ->and(User::query()->count())->toBe(1)
+            ->and(User::query()->count())->toBe(2)
             ->and(User::query()->where('email', 'derek@katra.io')->exists())->toBeTrue();
 
         expect($user->delete())->toBeTrue()
-            ->and(User::query()->find(1))->toBeNull();
+            ->and(User::query()->find(1))->toBeNull()
+            ->and(User::query()->find(2))->not->toBeNull();
     } finally {
         config()->set('database.default', $originalDefaultConnection);
         config()->set('database.migrations.connection', $originalMigrationConnection);
