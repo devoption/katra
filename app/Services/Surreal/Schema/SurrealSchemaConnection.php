@@ -6,6 +6,7 @@ use App\Services\Surreal\Query\SurrealQueryBuilder;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealHttpClient;
+use App\Services\Surreal\SurrealQueryException;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -247,7 +248,7 @@ class SurrealSchemaConnection extends Connection
      */
     public function insertRecord(string $table, array $values): array
     {
-        $key = $values['id'] ?? $this->nextKey($table);
+        $key = $this->keyForInsert($table, $values);
 
         return $this->createRecord(
             table: $table,
@@ -258,7 +259,7 @@ class SurrealSchemaConnection extends Connection
 
     public function insertRecordAndReturnId(string $table, array $values, string $keyName = 'id'): int|string
     {
-        $key = $values[$keyName] ?? $this->nextKey($table);
+        $key = $values[$keyName] ?? $this->keyForInsert($table, $values);
 
         $this->createRecord(
             table: $table,
@@ -267,6 +268,65 @@ class SurrealSchemaConnection extends Connection
         );
 
         return $key;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    public function insertOrIgnoreRecord(string $table, array $values): bool
+    {
+        try {
+            $this->insertRecord($table, $values);
+
+            return true;
+        } catch (SurrealQueryException $exception) {
+            if ($exception->isDuplicateRecord()) {
+                return false;
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @param  list<string>  $uniqueBy
+     * @param  list<string>  $updateColumns
+     */
+    public function upsertRecord(string $table, array $values, array $uniqueBy, array $updateColumns): bool
+    {
+        $match = Arr::only($values, $uniqueBy);
+
+        if (count($match) !== count($uniqueBy)) {
+            throw new RuntimeException(sprintf(
+                'Unable to upsert into [%s] because one or more unique columns are missing from the payload.',
+                $table,
+            ));
+        }
+
+        $existingRecordId = $this->firstMatchingRecordId($table, $match);
+
+        if ($existingRecordId === null) {
+            $this->insertRecord($table, $values);
+
+            return true;
+        }
+
+        $updatePayload = Arr::only($values, $updateColumns);
+
+        if ($updatePayload === []) {
+            return true;
+        }
+
+        $this->updateRecords($table, $updatePayload, [[
+            'type' => 'Basic',
+            'column' => 'id',
+            'operator' => '=',
+            'value' => $existingRecordId,
+            'boolean' => 'and',
+        ]]);
+
+        return true;
     }
 
     /**
@@ -658,6 +718,53 @@ class SurrealSchemaConnection extends Connection
         return (int) $result;
     }
 
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    private function keyForInsert(string $table, array $values): int|string
+    {
+        if (array_key_exists('id', $values)) {
+            return $values['id'];
+        }
+
+        if (array_key_exists('key', $values) && is_scalar($values['key'])) {
+            return (string) $values['key'];
+        }
+
+        return $this->nextKey($table);
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     */
+    private function firstMatchingRecordId(string $table, array $values): int|string|null
+    {
+        $wheres = array_map(
+            static fn (string $column, mixed $value): array => [
+                'type' => 'Basic',
+                'column' => $column,
+                'operator' => '=',
+                'value' => $value,
+                'boolean' => 'and',
+            ],
+            array_keys($values),
+            array_values($values),
+        );
+
+        $record = $this->selectRecords(
+            table: $table,
+            columns: ['id'],
+            wheres: $wheres,
+            limit: 1,
+        )[0] ?? null;
+
+        if (! is_array($record) || ! array_key_exists('id', $record)) {
+            return null;
+        }
+
+        return $record['id'];
+    }
+
     private function normalizeIdentifier(string $identifier): string
     {
         if (! preg_match('/^[A-Za-z0-9_]+$/', $identifier)) {
@@ -680,7 +787,7 @@ class SurrealSchemaConnection extends Connection
             return $value;
         }
 
-        if (is_string($value) && preg_match('/^[A-Za-z0-9_-]+$/', $value)) {
+        if (is_string($value) && $value !== '') {
             return sprintf('%s:%s', $table, $value);
         }
 

@@ -15,7 +15,7 @@
 @endsection
 
 @section('content')
-    <div class="space-y-5">
+    <div class="space-y-6">
         <div class="space-y-2">
             <label for="server_url" class="shell-text-faint block font-mono text-[10px] uppercase tracking-[0.14em]">Server URL</label>
             <input
@@ -50,11 +50,11 @@
             />
         </div>
 
-        <button type="button" class="shell-accent-chip flex h-12 w-full items-center justify-center rounded-[18px] text-sm font-semibold opacity-80">
+        <button type="button" class="shell-accent-chip mt-2 flex h-12 w-full items-center justify-center rounded-[18px] text-sm font-semibold opacity-80">
             Continue
         </button>
 
-        <p class="shell-text-soft text-sm leading-6">
+        <p class="shell-text-soft mt-8 text-sm leading-6">
             Remote connection profiles are next. This view keeps the account choice visible now so the shared auth experience does not overfit the desktop-only path.
         </p>
     </div>

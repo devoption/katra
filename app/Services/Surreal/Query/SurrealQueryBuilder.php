@@ -7,6 +7,7 @@ use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use RuntimeException;
 use stdClass;
 
@@ -53,6 +54,21 @@ class SurrealQueryBuilder extends Builder
         return true;
     }
 
+    public function insertOrIgnore(array $values): int
+    {
+        $records = $this->prepareInsertValues($values);
+        $inserted = 0;
+
+        foreach ($records as $record) {
+            $inserted += $this->surrealConnection()->insertOrIgnoreRecord(
+                table: (string) $this->from,
+                values: $record,
+            ) ? 1 : 0;
+        }
+
+        return $inserted;
+    }
+
     public function insertGetId(array $values, $sequence = null): int|string
     {
         return $this->surrealConnection()->insertRecordAndReturnId(
@@ -90,6 +106,39 @@ class SurrealQueryBuilder extends Builder
             wheres: $query->wheres ?? [],
             limit: $query->limit,
         );
+    }
+
+    public function upsert(array $values, array|string $uniqueBy, ?array $update = null): int
+    {
+        if ($uniqueBy === [] || $uniqueBy === '') {
+            throw new InvalidArgumentException('The unique columns must not be empty.');
+        }
+
+        $records = $this->prepareInsertValues($values);
+
+        if ($records === []) {
+            return 0;
+        }
+
+        $uniqueColumns = array_values(Arr::wrap($uniqueBy));
+
+        if ($update === []) {
+            return $this->insert($values) ? count($records) : 0;
+        }
+
+        $updateColumns = $update ?? array_keys($records[0]);
+        $affected = 0;
+
+        foreach ($records as $record) {
+            $affected += $this->surrealConnection()->upsertRecord(
+                table: (string) $this->from,
+                values: $record,
+                uniqueBy: $uniqueColumns,
+                updateColumns: array_values($updateColumns),
+            ) ? 1 : 0;
+        }
+
+        return $affected;
     }
 
     public function exists(): bool

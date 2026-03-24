@@ -5,7 +5,7 @@
 @section('copy', 'Finish recovering your Katra account.')
 
 @section('content')
-    <form method="POST" action="{{ route('password.update') }}" class="space-y-5">
+    <form method="POST" action="{{ route('password.update') }}" class="space-y-6">
         @csrf
 
         <input type="hidden" name="token" value="{{ $request->route('token') }}" />
@@ -47,12 +47,12 @@
             />
         </div>
 
-        <button type="submit" class="shell-accent-chip flex h-12 w-full items-center justify-center rounded-[18px] text-sm font-semibold transition hover:opacity-90">
+        <button type="submit" class="shell-accent-chip mt-2 flex h-12 w-full items-center justify-center rounded-[18px] text-sm font-semibold transition hover:opacity-90">
             Reset password
         </button>
     </form>
 
-    <p class="shell-text-soft mt-6 text-sm">
+    <p class="shell-text-soft mt-8 text-sm">
         Want to try signing in again?
         <a href="{{ route('login') }}" class="shell-text-info font-medium hover:opacity-80">Back to sign in</a>
     </p>

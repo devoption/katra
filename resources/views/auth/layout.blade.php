@@ -15,15 +15,15 @@
     </head>
     <body class="shell-app min-h-screen antialiased">
         <main class="flex min-h-screen items-center justify-center px-5 py-8 sm:px-8">
-            <section class="w-full max-w-lg space-y-5">
-                <div class="space-y-4">
-                    <img src="{{ asset('katra-logo.svg') }}" alt="Katra" class="shell-logo-dark h-8 w-auto" />
-                    <img src="{{ asset('katra-logo-light.svg') }}" alt="Katra" class="shell-logo-light h-8 w-auto" />
+            <section class="w-full max-w-lg space-y-7">
+                <div class="flex justify-center">
+                    <img src="{{ asset('katra-logo.svg') }}" alt="Katra" class="shell-logo-dark h-12 w-auto" />
+                    <img src="{{ asset('katra-logo-light.svg') }}" alt="Katra" class="shell-logo-light h-12 w-auto" />
                 </div>
 
-                <div class="shell-surface rounded-[32px] p-6 shadow-[var(--shell-shadow)] sm:p-8">
+                <div class="shell-surface rounded-[32px] p-7 shadow-[var(--shell-shadow)] sm:p-9">
                     @hasSection('account_selector')
-                        <div class="mb-6">
+                        <div class="mb-8">
                             @yield('account_selector')
                         </div>
                     @endif
@@ -44,7 +44,7 @@
                         </div>
                     @endif
 
-                    <div class="mb-6 space-y-3">
+                    <div class="mb-8 space-y-4">
                         <p class="shell-text-info font-mono text-[10px] uppercase tracking-[0.14em]">@yield('eyebrow', 'Authentication')</p>
                         <h1 class="shell-text text-3xl font-semibold tracking-[-0.04em]">@yield('heading')</h1>
                         <p class="shell-text-soft text-sm leading-6">@yield('copy')</p>
