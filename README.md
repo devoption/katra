@@ -66,6 +66,21 @@ composer native:dev
 
 That path installs dependencies, prepares the Laravel app, bootstraps NativePHP, and starts the local desktop development loop.
 
+### Local Authentication
+
+Katra now uses Laravel Fortify for the first local authentication foundation.
+
+- Create a local account at `/register`, then sign in at `/login`.
+- The desktop shell route at `/` is now authentication-protected.
+- Password recovery is available through `/forgot-password`.
+- Make sure your local database migrations are current before you try the auth flow:
+
+```bash
+php artisan migrate --force
+```
+
+- If you are testing password reset locally and want to inspect the reset link without sending mail, use a local-safe mailer such as `MAIL_MAILER=log`.
+
 ### Configure AI Providers
 
 The Laravel AI SDK is installed and its conversation storage migrations are part of the application now.
