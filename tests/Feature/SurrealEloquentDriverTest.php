@@ -91,7 +91,6 @@ test('standard eloquent user queries work on the surreal connection', function (
 
         DB::connection('surreal')->table('features')->insert([
             [
-                'id' => 1,
                 'name' => 'ui.desktop.mvp-shell',
                 'scope' => 'desktop-ui',
                 'value' => 'true',
@@ -99,7 +98,6 @@ test('standard eloquent user queries work on the surreal connection', function (
                 'updated_at' => now()->toISOString(),
             ],
             [
-                'id' => 2,
                 'name' => 'ui.desktop.workspace-navigation',
                 'scope' => 'desktop-ui',
                 'value' => 'false',
@@ -111,7 +109,7 @@ test('standard eloquent user queries work on the surreal connection', function (
         $featureRecords = DB::connection('surreal')->table('features')
             ->where(fn ($query) => $query->where('name', 'ui.desktop.mvp-shell')->where('scope', 'desktop-ui'))
             ->orWhere(fn ($query) => $query->where('name', 'ui.desktop.workspace-navigation')->where('scope', 'desktop-ui'))
-            ->orderBy('id')
+            ->orderBy('name')
             ->get();
 
         expect($featureRecords)->toHaveCount(2)

@@ -226,13 +226,11 @@ class SurrealSchemaConnection extends Connection
      */
     public function insertRecord(string $table, array $values): array
     {
-        if (! array_key_exists('id', $values) || $values['id'] === null || $values['id'] === '') {
-            throw new RuntimeException(sprintf('Surreal record inserts for [%s] require an explicit id value.', $table));
-        }
+        $key = $values['id'] ?? $this->nextKey($table);
 
         return $this->createRecord(
             table: $table,
-            key: $values['id'],
+            key: $key,
             values: Arr::except($values, ['id']),
         );
     }
