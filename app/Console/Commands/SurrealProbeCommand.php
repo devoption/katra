@@ -84,8 +84,7 @@ class SurrealProbeCommand extends Command
             );
 
             $createdRecord = is_array($results[0] ?? null) ? (($results[0] ?? [])[0] ?? null) : null;
-            $selectedRecords = is_array($results[1] ?? null) ? (($results[1] ?? [])[0] ?? null) : null;
-            $selectedRecord = is_array($selectedRecords) ? ($selectedRecords[0] ?? null) : null;
+            $selectedRecord = is_array($results[1] ?? null) ? (($results[1] ?? [])[0] ?? null) : null;
 
             if (! is_array($createdRecord) || ! is_array($selectedRecord) || ($selectedRecord['id'] ?? null) !== $recordId) {
                 throw new RuntimeException('The SurrealDB probe did not return the expected write/read payload.');
