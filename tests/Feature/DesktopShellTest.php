@@ -166,5 +166,6 @@ test('the desktop shell can render a saved server connection as the active conne
         ->assertSee('Ops Agent')
         ->assertSee('Routing Agent')
         ->assertSee('Relay Operator')
-        ->assertSee('ops@relay.devoption.test');
+        ->assertSee('ops@relay.devoption.test')
+        ->assertSee('Signed in as ops@relay.devoption.test.');
 });

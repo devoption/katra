@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
 
             if ($driver === 'surreal') {
-                $table->unsignedBigInteger('user_id')->index();
+                $table->unsignedBigInteger('user_id');
             } else {
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             }
@@ -30,7 +30,9 @@ return new class extends Migration
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['user_id', 'kind', 'base_url'], 'instance_connections_user_kind_url_unique');
+            if ($driver !== 'surreal') {
+                $table->unique(['user_id', 'kind', 'base_url'], 'instance_connections_user_kind_url_unique');
+            }
         });
     }
 

@@ -210,17 +210,23 @@ class HomeController extends Controller
     private function connectionLinks(EloquentCollection $connections, InstanceConnection $activeConnection): array
     {
         return $connections
-            ->map(fn (InstanceConnection $connection): array => [
-                'id' => (int) $connection->getKey(),
-                'label' => $connection->name,
-                'meta' => $this->connectionMeta($connection),
-                'active' => (int) $connection->getKey() === (int) $activeConnection->getKey(),
-                'prefix' => $this->connectionPrefix($connection),
-                'baseUrl' => $connection->base_url,
-                'authenticated' => $connection->is_authenticated,
-                'accountEmail' => $connection->user?->email,
-                'isCurrentInstance' => $connection->is_current_instance,
-            ])
+            ->map(function (InstanceConnection $connection) use ($activeConnection): array {
+                $remoteEmail = $connection->kind === InstanceConnection::KIND_SERVER
+                    ? data_get($connection->session_context, 'user.email') ?? data_get($connection->session_context, 'email')
+                    : null;
+
+                return [
+                    'id' => (int) $connection->getKey(),
+                    'label' => $connection->name,
+                    'meta' => $this->connectionMeta($connection),
+                    'active' => (int) $connection->getKey() === (int) $activeConnection->getKey(),
+                    'prefix' => $this->connectionPrefix($connection),
+                    'baseUrl' => $connection->base_url,
+                    'authenticated' => $connection->is_authenticated,
+                    'accountEmail' => is_string($remoteEmail) && $remoteEmail !== '' ? $remoteEmail : $connection->user?->email,
+                    'isCurrentInstance' => $connection->is_current_instance,
+                ];
+            })
             ->values()
             ->all();
     }
@@ -481,7 +487,7 @@ class HomeController extends Controller
             return to_route('connections.connect', $activeConnection);
         }
 
-        $connections = $connectionManager->connectionsFor($request->user(), $request->root());
+        $connections = $connectionManager->connectionsFor($request->user());
         $activeWorkspace = $this->activeWorkspaceState($activeConnection, $localReady);
 
         return view('welcome', [

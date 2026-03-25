@@ -92,7 +92,7 @@ test('active connection resolution creates a current instance connection when no
 
     $manager = app(InstanceConnectionManager::class);
     $activeConnection = $manager->activeConnectionFor($user, 'https://katra.test', app('session.store'));
-    $connections = $manager->connectionsFor($user, 'https://katra.test');
+    $connections = $manager->connectionsFor($user);
 
     expect($activeConnection->kind)->toBe(InstanceConnection::KIND_CURRENT_INSTANCE)
         ->and($connections->firstWhere('kind', InstanceConnection::KIND_CURRENT_INSTANCE))->not()->toBeNull()
@@ -122,6 +122,23 @@ test('an authenticated user can rename their current instance connection', funct
     ])->assertRedirect(route('home'));
 
     expect($connection->fresh()->name)->toBe('Studio');
+});
+
+test('a blank current instance connection name resets to the app name', function () {
+    config()->set('app.name', 'Katra');
+
+    $user = User::factory()->create();
+    $connection = InstanceConnection::factory()->for($user)->currentInstance()->create([
+        'name' => 'Studio',
+    ]);
+
+    actingAs($user);
+
+    patch(route('connections.update', $connection), [
+        'name' => '',
+    ])->assertRedirect(route('home'));
+
+    expect($connection->fresh()->name)->toBe('Katra');
 });
 
 test('an authenticated user can update a saved server connection profile', function () {

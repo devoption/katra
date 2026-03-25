@@ -31,9 +31,11 @@ class InstanceConnectionController extends Controller
         ]);
     }
 
-    public function prepareServerLogin(ConnectServerRequest $request): RedirectResponse
-    {
-        $serverUrl = $this->normalizeUrl($request->validated('server_url'));
+    public function prepareServerLogin(
+        ConnectServerRequest $request,
+        InstanceConnectionManager $connectionManager,
+    ): RedirectResponse {
+        $serverUrl = $connectionManager->normalizeUrl($request->validated('server_url'));
 
         $request->session()->put(self::PENDING_SERVER_URL_SESSION_KEY, $serverUrl);
         $request->session()->put(self::PENDING_SERVER_NAME_SESSION_KEY, $this->connectionNameFromUrl($serverUrl));
@@ -218,28 +220,6 @@ class InstanceConnectionController extends Controller
             'name' => $user->name,
             'email' => $user->email,
         ]);
-    }
-
-    private function normalizeUrl(string $url): string
-    {
-        $normalized = parse_url(trim($url));
-
-        if (! is_array($normalized) || ! isset($normalized['scheme'], $normalized['host'])) {
-            return rtrim(trim($url), '/');
-        }
-
-        $scheme = strtolower($normalized['scheme']);
-        $host = strtolower($normalized['host']);
-        $port = isset($normalized['port']) ? ':'.$normalized['port'] : '';
-        $path = trim((string) ($normalized['path'] ?? ''), '/');
-
-        return sprintf(
-            '%s://%s%s%s',
-            $scheme,
-            $host,
-            $port,
-            $path !== '' ? '/'.$path : '',
-        );
     }
 
     private function connectionNameFromUrl(string $url): string

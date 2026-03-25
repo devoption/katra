@@ -14,7 +14,7 @@ class InstanceConnectionManager
     /**
      * @return Collection<int, InstanceConnection>
      */
-    public function connectionsFor(User $user, string $currentInstanceUrl): Collection
+    public function connectionsFor(User $user): Collection
     {
         return $user->instanceConnections()
             ->orderByDesc('last_used_at')
@@ -25,7 +25,7 @@ class InstanceConnectionManager
 
     public function activeConnectionFor(User $user, string $currentInstanceUrl, Session $session): InstanceConnection
     {
-        $connections = $this->connectionsFor($user, $currentInstanceUrl);
+        $connections = $this->connectionsFor($user);
         $activeConnectionId = $session->get(self::ACTIVE_CONNECTION_SESSION_KEY);
         $activeConnection = $connections->firstWhere('id', $activeConnectionId);
 
@@ -84,10 +84,10 @@ class InstanceConnectionManager
         return $connection;
     }
 
-    public function updateCurrentInstanceConnection(InstanceConnection $connection, string $name): InstanceConnection
+    public function updateCurrentInstanceConnection(InstanceConnection $connection, ?string $name): InstanceConnection
     {
         $connection->forceFill([
-            'name' => trim($name) !== '' ? trim($name) : $this->applicationConnectionName(),
+            'name' => trim((string) $name) !== '' ? trim((string) $name) : $this->applicationConnectionName(),
         ])->save();
 
         return $connection;
@@ -148,7 +148,7 @@ class InstanceConnectionManager
         $session->forget(self::ACTIVE_CONNECTION_SESSION_KEY);
     }
 
-    private function normalizeUrl(string $url): string
+    public function normalizeUrl(string $url): string
     {
         $normalized = parse_url(trim($url));
 

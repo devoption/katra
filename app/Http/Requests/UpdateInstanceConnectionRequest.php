@@ -22,7 +22,7 @@ class UpdateInstanceConnectionRequest extends FormRequest
 
         if ($instanceConnection instanceof InstanceConnection && $instanceConnection->is_current_instance) {
             return [
-                'name' => ['required', 'string', 'max:255'],
+                'name' => ['nullable', 'string', 'max:255'],
             ];
         }
 

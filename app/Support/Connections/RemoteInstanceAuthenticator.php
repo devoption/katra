@@ -3,6 +3,7 @@
 namespace App\Support\Connections;
 
 use App\Models\InstanceConnection;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -30,7 +31,7 @@ class RemoteInstanceAuthenticator
         $homeUrl = rtrim($connection->base_url, '/').'/';
         $profileUrl = rtrim($connection->base_url, '/').'/_katra/profile';
 
-        $loginPageResponse = Http::accept('text/html,application/xhtml+xml')
+        $loginPageResponse = $this->request()->accept('text/html,application/xhtml+xml')
             ->withoutRedirecting()
             ->get($loginUrl);
 
@@ -50,7 +51,7 @@ class RemoteInstanceAuthenticator
 
         $cookies = $this->mergeCookies([], $loginPageResponse);
 
-        $loginResponse = Http::accept('text/html,application/xhtml+xml')
+        $loginResponse = $this->request()->accept('text/html,application/xhtml+xml')
             ->withoutRedirecting()
             ->withHeaders([
                 'Cookie' => $this->cookieHeader($cookies),
@@ -71,7 +72,7 @@ class RemoteInstanceAuthenticator
             ]);
         }
 
-        $verificationResponse = Http::accept('text/html,application/xhtml+xml')
+        $verificationResponse = $this->request()->accept('text/html,application/xhtml+xml')
             ->withoutRedirecting()
             ->withHeaders([
                 'Cookie' => $this->cookieHeader($cookies),
@@ -84,7 +85,7 @@ class RemoteInstanceAuthenticator
             ]);
         }
 
-        $profileResponse = Http::acceptJson()
+        $profileResponse = $this->request()->acceptJson()
             ->withoutRedirecting()
             ->withHeaders([
                 'Cookie' => $this->cookieHeader($cookies),
@@ -97,6 +98,11 @@ class RemoteInstanceAuthenticator
             'user' => $this->extractUserProfile($profileResponse),
             'cookies' => $cookies,
         ];
+    }
+
+    private function request(): PendingRequest
+    {
+        return Http::connectTimeout(5)->timeout(15);
     }
 
     /**

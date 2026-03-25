@@ -606,6 +606,7 @@
 
                     <div class="space-y-2">
                         <p class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Add a server</p>
+                        <label for="connection-name" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Connection name</label>
                         <input
                             id="connection-name"
                             name="name"
@@ -617,6 +618,7 @@
                     </div>
 
                     <div class="space-y-2">
+                        <label for="connection-base-url" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Server URL</label>
                         <input
                             id="connection-base-url"
                             name="base_url"
