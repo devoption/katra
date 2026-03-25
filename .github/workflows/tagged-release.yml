@@ -148,6 +148,7 @@ jobs:
       NATIVEPHP_UPDATER_ENABLED: false
       SURREAL_VERSION: v3.0.4
       CSC_IDENTITY_AUTO_DISCOVERY: 'true'
+      KATRA_SKIP_NATIVEPHP_AFTERSIGN_NOTARIZE: 'true'
       NATIVEPHP_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
       NATIVEPHP_APPLE_ID_PASS: ${{ secrets.MACOS_NOTARY_APP_SPECIFIC_PASSWORD }}
       NATIVEPHP_APPLE_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
@@ -263,16 +264,21 @@ jobs:
           const path = 'vendor/nativephp/desktop/resources/electron/build/notarize.js';
           const current = readFileSync(path, 'utf8');
           const normalized = current.replace(/\r\n/g, '\n');
-          const pattern = /(\s+console\.error\(error\)\n)(\s+\})/;
+          const marker = /(\s+console\.log\(['"]aftersign hook triggered, start to notarize app\.['"]\)\s*\n)/;
+          const snippet = "    if (process.env.KATRA_SKIP_NATIVEPHP_AFTERSIGN_NOTARIZE === 'true') {\n        console.log('skipping NativePHP afterSign notarization because the workflow notarizes artifacts explicitly.')\n        return\n    }\n\n";
 
-          if (! pattern.test(normalized)) {
-            throw new Error('Unable to locate the NativePHP notarization error handler.');
+          if (normalized.includes('KATRA_SKIP_NATIVEPHP_AFTERSIGN_NOTARIZE')) {
+            process.exit(0);
           }
 
-          const updated = normalized.replace(pattern, "$1        throw error\n$2");
+          if (! marker.test(normalized)) {
+            throw new Error('Unable to locate the NativePHP afterSign hook marker.');
+          }
+
+          const updated = normalized.replace(marker, `$1${snippet}`);
 
           if (updated === normalized) {
-            throw new Error('Unable to harden the NativePHP notarization hook.');
+            throw new Error('Unable to patch the NativePHP afterSign notarization hook.');
           }
 
           writeFileSync(path, updated);
@@ -349,7 +355,16 @@ jobs:
             fi
 
             dmg_path="$candidate"
-          done < <(find nativephp/electron/dist -maxdepth 1 -type f -name '*.dmg' | sort)
+          done < <(find nativephp/electron/dist -maxdepth 2 -type f -name '*.dmg' | sort)
+
+          if [[ -z "$app_bundle_path" || -z "$dmg_path" ]]; then
+            if [[ -d nativephp/electron/dist ]]; then
+              echo "Discovered files under nativephp/electron/dist:" >&2
+              find nativephp/electron/dist -maxdepth 3 -print | sort >&2 || true
+            else
+              echo "Directory nativephp/electron/dist does not exist." >&2
+            fi
+          fi
 
           if [[ -z "$app_bundle_path" ]]; then
             echo "No macOS .app bundle was generated." >&2
@@ -368,6 +383,27 @@ jobs:
         run: |
           codesign --verify --deep --strict --verbose=2 "$KATRA_MACOS_APP_BUNDLE_PATH"
           codesign --display --verbose=4 "$KATRA_MACOS_APP_BUNDLE_PATH"
+
+      - name: Create app notarization archive
+        run: |
+          set -euo pipefail
+
+          app_archive_path="$RUNNER_TEMP/$(basename "$KATRA_MACOS_APP_BUNDLE_PATH").zip"
+          rm -f "$app_archive_path"
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$KATRA_MACOS_APP_BUNDLE_PATH" \
+            "$app_archive_path"
+
+          echo "KATRA_MACOS_APP_ARCHIVE_PATH=$app_archive_path" >> "$GITHUB_ENV"
+
+      - name: Notarize app bundle
+        run: |
+          xcrun notarytool submit "$KATRA_MACOS_APP_ARCHIVE_PATH" \
+            --apple-id "$NATIVEPHP_APPLE_ID" \
+            --password "$NATIVEPHP_APPLE_ID_PASS" \
+            --team-id "$NATIVEPHP_APPLE_TEAM_ID" \
+            --wait
 
       - name: Staple notarized app bundle
         run: |
