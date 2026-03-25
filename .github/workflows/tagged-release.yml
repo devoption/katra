@@ -264,18 +264,18 @@ jobs:
           const path = 'vendor/nativephp/desktop/resources/electron/build/notarize.js';
           const current = readFileSync(path, 'utf8');
           const normalized = current.replace(/\r\n/g, '\n');
-          const marker = "    console.log('aftersign hook triggered, start to notarize app.')\n";
+          const marker = /(\s+console\.log\(['"]aftersign hook triggered, start to notarize app\.['"]\)\s*\n)/;
           const snippet = "    if (process.env.KATRA_SKIP_NATIVEPHP_AFTERSIGN_NOTARIZE === 'true') {\n        console.log('skipping NativePHP afterSign notarization because the workflow notarizes artifacts explicitly.')\n        return\n    }\n\n";
 
           if (normalized.includes('KATRA_SKIP_NATIVEPHP_AFTERSIGN_NOTARIZE')) {
             process.exit(0);
           }
 
-          if (! normalized.includes(marker)) {
+          if (! marker.test(normalized)) {
             throw new Error('Unable to locate the NativePHP afterSign hook marker.');
           }
 
-          const updated = normalized.replace(marker, marker + snippet);
+          const updated = normalized.replace(marker, `$1${snippet}`);
 
           if (updated === normalized) {
             throw new Error('Unable to patch the NativePHP afterSign notarization hook.');
@@ -358,8 +358,12 @@ jobs:
           done < <(find nativephp/electron/dist -maxdepth 2 -type f -name '*.dmg' | sort)
 
           if [[ -z "$app_bundle_path" || -z "$dmg_path" ]]; then
-            echo "Discovered files under nativephp/electron/dist:" >&2
-            find nativephp/electron/dist -maxdepth 3 -print | sort >&2
+            if [[ -d nativephp/electron/dist ]]; then
+              echo "Discovered files under nativephp/electron/dist:" >&2
+              find nativephp/electron/dist -maxdepth 3 -print | sort >&2 || true
+            else
+              echo "Directory nativephp/electron/dist does not exist." >&2
+            fi
           fi
 
           if [[ -z "$app_bundle_path" ]]; then
