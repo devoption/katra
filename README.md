@@ -118,6 +118,21 @@ php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000
 - Core cache operations like `get`, `put`, `add`, `many`, `forever`, `forget`, and `flush` are covered in the test suite against a real Surreal runtime.
 - SQL-transaction-dependent limiter semantics are still treated as unsupported on Surreal-backed cache storage, so Katra keeps `CACHE_LIMITER=file` by default for Fortify throttling and other limiter middleware.
 
+### Surreal-Backed Sessions
+
+Katra now also exposes a dedicated `surreal` Laravel session driver backed by the framework's database session handler on the Surreal connection.
+
+- Set `SESSION_DRIVER=surreal` to store Laravel sessions in SurrealDB.
+- The driver defaults to the `surreal` connection, but you can still override the table and connection with `SESSION_CONNECTION` and `SESSION_TABLE` if needed.
+- Make sure the sessions table exists on the Surreal connection before relying on this driver. Katra's current auth/session migration also creates the `users` and `password_reset_tokens` tables alongside `sessions`:
+
+```bash
+php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000000_create_users_table.php
+```
+
+- Session read, write, update, and expiry behavior are covered in the test suite against a real Surreal runtime.
+- This driver intentionally follows Laravel's normal database-session lifecycle, so expiry cleanup still relies on Laravel's standard session lottery / pruning behavior instead of Surreal-native TTL features.
+
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
