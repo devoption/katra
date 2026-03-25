@@ -203,6 +203,16 @@ html[data-shell-theme='light'] {
     background: var(--shell-elevated);
 }
 
+.shell-connection-trigger {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.shell-connection-trigger:hover {
+    background: var(--shell-elevated);
+    box-shadow: inset 0 0 0 1px var(--shell-border);
+    transform: translateY(-1px);
+}
+
 .shell-danger-button {
     background: var(--shell-danger-soft);
     color: var(--shell-danger-text);

@@ -8,8 +8,11 @@ use App\Features\Desktop\TaskSurfaces;
 use App\Features\Desktop\WorkspaceNavigation;
 use App\Models\User;
 use App\Support\Features\DesktopUi;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Pennant\Attributes\Name;
 use Laravel\Pennant\Feature;
+
+uses(RefreshDatabase::class);
 
 test('desktop ui rollout uses the desktop pennant scope and feature naming convention', function () {
     config()->set('pennant.default', 'array');
@@ -70,7 +73,7 @@ test('desktop ui surfaces can be staged on without changing the shell implementa
 
     Feature::for(DesktopUi::scope())->activate(WorkspaceNavigation::class);
 
-    $this->actingAs(User::factory()->make([
+    $this->actingAs(User::factory()->create([
         'id' => 1,
         'first_name' => 'Derek',
         'last_name' => 'Bourgeois',
@@ -92,7 +95,7 @@ test('the desktop shell can be hidden behind the mvp flag', function () {
 
     Feature::for(DesktopUi::scope())->deactivate(MvpShell::class);
 
-    $this->actingAs(User::factory()->make([
+    $this->actingAs(User::factory()->create([
         'id' => 1,
         'first_name' => 'Derek',
         'last_name' => 'Bourgeois',

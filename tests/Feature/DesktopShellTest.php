@@ -1,11 +1,28 @@
 <?php
 
+use App\Models\InstanceConnection;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
+
+uses(RefreshDatabase::class);
+
+function configureDesktopShell(): void
+{
+    config()->set('app.name', 'Katra');
+    config()->set('pennant.default', 'array');
+    config()->set('surreal.autostart', false);
+    config()->set('surreal.host', '127.0.0.1');
+    config()->set('surreal.port', 18999);
+    config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
+    config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
+}
 
 function desktopShellUser(): User
 {
-    return User::factory()->make([
-        'id' => 1,
+    return User::factory()->create([
         'first_name' => 'Derek',
         'last_name' => 'Bourgeois',
         'name' => 'Derek Bourgeois',
@@ -13,20 +30,24 @@ function desktopShellUser(): User
     ]);
 }
 
-test('the desktop shell exposes the katra bootstrap screen', function () {
-    config()->set('pennant.default', 'array');
-    config()->set('surreal.autostart', false);
-    config()->set('surreal.host', '127.0.0.1');
-    config()->set('surreal.port', 18999);
-    config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
-    config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
+test('the desktop shell exposes the connection-aware workspace shell', function () {
+    configureDesktopShell();
 
-    $this->actingAs(desktopShellUser());
+    $user = desktopShellUser();
 
-    $this->get('/')
+    InstanceConnection::factory()->for($user)->create([
+        'name' => 'Relay Cloud',
+        'kind' => InstanceConnection::KIND_SERVER,
+        'base_url' => 'https://relay.devoption.test',
+        'last_authenticated_at' => now(),
+        'last_used_at' => now()->subMinute(),
+    ]);
+
+    actingAs($user);
+
+    get('/')
         ->assertSuccessful()
         ->assertSee('Katra')
-        ->assertSee('Workspaces')
         ->assertSee('Favorites')
         ->assertSee('Rooms')
         ->assertSee('Chats')
@@ -35,21 +56,14 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
         ->assertSee('Planner Agent')
         ->assertSee('Research Model')
         ->assertSee('# design-room')
-        ->assertSee('Create workspace')
-        ->assertSee('Workspace name')
-        ->assertSee('Create room')
-        ->assertSee('Room name')
-        ->assertSee('Create chat')
-        ->assertSee('Start conversation')
-        ->assertSee('Contacts')
-        ->assertSee('Search people, agents, and models')
-        ->assertSee('Selected')
-        ->assertSee('Available contacts')
-        ->assertSee('No contacts selected yet.')
-        ->assertSee('Server')
-        ->assertSee('Katra Local')
+        ->assertSee('Connections')
+        ->assertSee('Add a server')
+        ->assertSee('Connection name')
+        ->assertSee('Add connection')
+        ->assertSee('Katra')
         ->assertSee('Relay Cloud')
-        ->assertSee('Research Model')
+        ->assertSee('Edit connection')
+        ->assertSee('relay.devoption.test')
         ->assertSee('Collapse sidebar')
         ->assertSee('Expand sidebar')
         ->assertSee('Search conversations, people, and nodes')
@@ -78,11 +92,13 @@ test('the desktop shell exposes the katra bootstrap screen', function () {
         ->assertSee('Profile settings')
         ->assertSee('Workspace settings')
         ->assertSee('Administration')
-        ->assertSee('Manage connections')
         ->assertSee('Light')
         ->assertSee('Dark')
         ->assertSee('System')
         ->assertSee('Log out')
+        ->assertDontSee('Create workspace')
+        ->assertDontSee('Workspace name')
+        ->assertDontSee('Workspaces')
         ->assertDontSee('desktop mvp preview')
         ->assertDontSee('composer native:dev')
         ->assertDontSee('Surreal Foundation')
@@ -112,30 +128,43 @@ test('the desktop shell falls back to default feature flags before the Pennant t
     config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
     config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
 
-    $this->actingAs(desktopShellUser());
+    actingAs(desktopShellUser());
 
-    $this->get('/')
+    get('/')
         ->assertSuccessful()
         ->assertSee('Katra')
         ->assertSee('# design-room')
         ->assertDontSee('Workspace navigation');
 });
 
-test('the desktop shell can switch the active mock workspace from the selector', function () {
-    config()->set('pennant.default', 'array');
-    config()->set('surreal.autostart', false);
-    config()->set('surreal.host', '127.0.0.1');
-    config()->set('surreal.port', 18999);
-    config()->set('surreal.endpoint', 'ws://127.0.0.1:18999');
-    config()->set('surreal.binary', 'surreal-missing-binary-for-desktop-shell-test');
+test('the desktop shell can render a saved server connection as the active connection', function () {
+    configureDesktopShell();
 
-    $this->actingAs(desktopShellUser());
+    $user = desktopShellUser();
+    $connection = InstanceConnection::factory()->for($user)->create([
+        'name' => 'Relay Cloud',
+        'kind' => InstanceConnection::KIND_SERVER,
+        'base_url' => 'https://relay.devoption.test',
+        'last_authenticated_at' => now(),
+        'last_used_at' => now(),
+        'session_context' => [
+            'user' => [
+                'name' => 'Relay Operator',
+                'email' => 'ops@relay.devoption.test',
+            ],
+        ],
+    ]);
 
-    $this->get('/?workspace=design-lab')
+    actingAs($user)
+        ->withSession(['instance_connection.active_id' => $connection->getKey()]);
+
+    get('/')
         ->assertSuccessful()
-        ->assertSee('Design Lab')
-        ->assertSee('# shell-studies')
-        ->assertSee('Shared room for people, models, and agents working inside Design Lab.')
-        ->assertSee('Visual Agent')
-        ->assertSee('Critique Agent');
+        ->assertSee('Relay Cloud')
+        ->assertSee('Connections')
+        ->assertSee('# relay-ops')
+        ->assertSee('Ops Agent')
+        ->assertSee('Routing Agent')
+        ->assertSee('Relay Operator')
+        ->assertSee('ops@relay.devoption.test');
 });

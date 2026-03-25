@@ -30,7 +30,7 @@
                         [
                             'label' => 'Conversations',
                             'items' => [
-                                ['title' => '# design-room', 'meta' => 'Room', 'summary' => 'Current active room in Katra Local.'],
+                                ['title' => '# design-room', 'meta' => 'Room', 'summary' => 'Current active room in '.$activeWorkspace['label'].'.'],
                                 ['title' => '# shell-studies', 'meta' => 'Room', 'summary' => 'Design-focused room for layout and navigation work.'],
                             ],
                         ],
@@ -81,23 +81,8 @@
                     ];
                 @endphp
                 <div data-desktop-shell class="relative h-full overflow-hidden">
-                    @php
-                        $viewer = request()->user();
-                        $viewerName = $viewer?->name ?? 'Derek Bourgeois';
-                        $viewerEmail = $viewer?->email ?? 'derek@katra.io';
-                        $viewerInitials = collect(explode(' ', $viewerName))
-                            ->filter()
-                            ->take(2)
-                            ->map(fn (string $segment): string => strtoupper(substr($segment, 0, 1)))
-                            ->implode('');
-                    @endphp
                     <div data-shell-grid class="grid h-full xl:grid-cols-[320px_minmax(0,1fr)]">
                     <aside data-sidebar class="shell-panel flex min-h-0 flex-col overflow-hidden px-4 py-3 transition-[opacity,transform] duration-200">
-                        @php
-                            $activeWorkspaceLink = collect($workspaceLinks)->firstWhere('active', true) ?? $workspaceLinks[0] ?? null;
-                            $inactiveWorkspaceLinks = collect($workspaceLinks)->filter(fn (array $item): bool => ! ($item['active'] ?? false))->values();
-                        @endphp
-
                         <div class="flex items-center justify-between gap-3 py-1">
                             <div class="py-2">
                                 <img src="{{ asset('katra-logo.svg') }}" alt="Katra" class="shell-logo-dark h-7 w-auto" />
@@ -118,37 +103,6 @@
 
                         <div class="mt-4 min-h-0 flex-1 overflow-y-auto">
                             <div class="space-y-4 pr-1">
-                                <div class="space-y-3">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <p class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.14em]">Workspaces</p>
-                                        <x-desktop.icon-button label="Create workspace" dialog-id="workspace-creator-modal" />
-                                    </div>
-
-                                    @if ($activeWorkspaceLink)
-                                        <details class="group">
-                                            <summary class="shell-active-row flex cursor-pointer list-none items-center gap-3 rounded-2xl px-3 py-2 marker:hidden">
-                                                <span class="shell-accent-chip flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs uppercase">
-                                                    {{ $activeWorkspaceLink['prefix'] }}
-                                                </span>
-                                                <div class="min-w-0 flex-1">
-                                                    <p class="text-sm font-medium">{{ $activeWorkspaceLink['label'] }}</p>
-                                                </div>
-                                                <svg class="shell-text-info-strong h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-open:rotate-180" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                                    <path d="M5 8 10 13 15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </summary>
-
-                                            @if ($inactiveWorkspaceLinks->isNotEmpty())
-                                                <div class="mt-2 space-y-2">
-                                                    @foreach ($inactiveWorkspaceLinks as $item)
-                                                        <x-desktop.nav-item :label="$item['label']" :prefix="$item['prefix']" :meta="$item['meta'] ?? null" :muted="$item['muted'] ?? false" :href="$item['href'] ?? null" />
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </details>
-                                    @endif
-                                </div>
-
                                 <x-desktop.nav-section label="Favorites" collapsible open>
                                     @foreach ($favoriteLinks as $item)
                                         <x-desktop.nav-item :label="$item['label']" :prefix="$item['prefix']" :tone="$item['tone']" :active="$item['active'] ?? false" :muted="$item['muted'] ?? false" />
@@ -167,6 +121,25 @@
                                     @endforeach
                                 </x-desktop.nav-section>
                             </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button
+                                type="button"
+                                data-dialog-target="connection-creator-modal"
+                                class="shell-surface shell-connection-trigger flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left"
+                            >
+                                <span class="shell-accent-chip flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold uppercase tracking-[0.02em]">
+                                    {{ $activeConnection->is_current_instance ? 'K' : strtoupper(substr($activeConnection->name, 0, 1)) }}
+                                </span>
+
+                                <span class="min-w-0 flex-1">
+                                    <span class="shell-text-faint block font-mono text-[10px] uppercase tracking-[0.12em]">Connections</span>
+                                    <span class="shell-text mt-1 block truncate text-sm font-semibold">{{ $activeConnection->name }}</span>
+                                </span>
+
+                                <span class="shell-text-info-strong shrink-0 font-mono text-[10px] uppercase tracking-[0.12em]">Current</span>
+                            </button>
                         </div>
 
                         <x-desktop.profile-menu :name="$viewerName" :email="$viewerEmail" :initials="$viewerInitials" />
@@ -585,40 +558,176 @@
             @endif
         </main>
 
-        <x-desktop.modal id="workspace-creator-modal" title="Create workspace" description="Mock up a new workspace to see how the shell handles additional spaces. This is demo-only for now.">
-            <form method="dialog" class="space-y-4">
+        <x-desktop.modal id="connection-creator-modal" title="Connections" description="Switch between this instance and your saved Katra servers.">
+            <div class="space-y-5">
                 <div class="space-y-2">
-                    <label for="workspace-name" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Workspace name</label>
-                    <input id="workspace-name" type="text" value="Strategy Lab" class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]" placeholder="New workspace" />
+                    @foreach ($connectionLinks as $item)
+                        <div class="shell-surface flex items-center gap-3 rounded-[20px] px-4 py-3">
+                            <span class="shell-accent-chip flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold uppercase tracking-[0.02em]">
+                                {{ $item['prefix'] }}
+                            </span>
+
+                            <div class="min-w-0 flex-1">
+                                <p class="shell-text truncate text-sm font-semibold">{{ $item['label'] }}</p>
+                                <p class="shell-text-subtle mt-1 truncate text-sm">
+                                    {{ $item['baseUrl'] ?: 'This instance' }}
+                                </p>
+                            </div>
+
+                            <div class="flex shrink-0 items-center gap-2">
+                                @if ($item['active'])
+                                    <p class="shell-text-info-strong text-sm font-medium">Current</p>
+                                @else
+                                    <form method="POST" action="{{ route('connections.activate', $item['id']) }}">
+                                        @csrf
+
+                                        <button type="submit" class="shell-icon-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors">
+                                            <x-mdi-swap-horizontal class="h-4 w-4" />
+                                            <span>{{ $item['authenticated'] ? 'Use' : 'Sign in' }}</span>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <button
+                                    type="button"
+                                    data-dialog-target="connection-editor-modal-{{ $item['id'] }}"
+                                    class="shell-icon-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+                                >
+                                    <x-mdi-pencil class="h-4 w-4" />
+                                    <span>Edit</span>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
 
-                <div class="space-y-2">
-                    <label for="workspace-target" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Server</label>
-                    <select id="workspace-target" class="shell-input shell-text w-full appearance-none rounded-[18px] px-4 py-3 text-sm outline-none">
-                        @foreach ($workspaceTargets as $target)
-                            <option value="{{ $target['value'] }}">{{ $target['label'] }}</option>
-                        @endforeach
-                    </select>
-                    <p class="shell-text-faint text-sm leading-6">
-                        Local is always available. Connected servers only appear here when this user can create workspaces on them.
-                    </p>
-                </div>
+                <form method="POST" action="{{ route('connections.store') }}" class="space-y-4 border-t pt-5 shell-border">
+                    @csrf
 
-                <div class="space-y-2">
-                    <label for="workspace-summary" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Summary</label>
-                    <textarea id="workspace-summary" rows="4" class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm leading-6 outline-none placeholder:text-[color:var(--shell-text-faint)]" placeholder="What is this workspace for?">A workspace for shaping the first multi-room collaboration flows.</textarea>
-                </div>
+                    <div class="space-y-2">
+                        <p class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Add a server</p>
+                        <input
+                            id="connection-name"
+                            name="name"
+                            type="text"
+                            value="{{ old('name') }}"
+                            class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                            placeholder="Connection name (optional)"
+                        />
+                    </div>
 
-                <div class="flex items-center justify-end gap-3 pt-1">
-                    <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
-                        Create workspace
-                    </button>
-                </div>
-            </form>
+                    <div class="space-y-2">
+                        <input
+                            id="connection-base-url"
+                            name="base_url"
+                            type="url"
+                            value="{{ old('base_url') }}"
+                            class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                            placeholder="https://katra.example.com"
+                            required
+                        />
+                        <p class="shell-text-faint text-sm leading-6">
+                            Add a remote Katra server, then sign in only when you want to use it.
+                        </p>
+                    </div>
+
+                    @if ($errors->has('name') || $errors->has('base_url'))
+                        <div class="shell-danger-button rounded-[18px] px-4 py-3 text-sm">
+                            <p>{{ $errors->first('name') ?: $errors->first('base_url') }}</p>
+                        </div>
+                    @endif
+
+                    <div class="flex items-center justify-end gap-3 pt-1">
+                        <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
+                            Close
+                        </button>
+                        <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
+                            Add connection
+                        </button>
+                    </div>
+                </form>
+            </div>
         </x-desktop.modal>
+
+        @foreach ($connectionLinks as $item)
+            <x-desktop.modal
+                id="connection-editor-modal-{{ $item['id'] }}"
+                :title="$item['isCurrentInstance'] ? 'Rename connection' : 'Edit connection'"
+                :description="$item['isCurrentInstance']
+                    ? 'Update the name shown for this instance on this device.'
+                    : 'Update the name or server URL for this saved Katra connection.'"
+            >
+                <div class="space-y-5">
+                    <form method="POST" action="{{ route('connections.update', $item['id']) }}" class="space-y-4">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="space-y-2">
+                            <label for="connection-edit-name-{{ $item['id'] }}" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Connection name</label>
+                            <input
+                                id="connection-edit-name-{{ $item['id'] }}"
+                                name="name"
+                                type="text"
+                                value="{{ old('name', $item['label']) }}"
+                                class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                                placeholder="Connection name"
+                            />
+                        </div>
+
+                        @unless ($item['isCurrentInstance'])
+                            <div class="space-y-2">
+                                <label for="connection-edit-base-url-{{ $item['id'] }}" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Server URL</label>
+                                <input
+                                    id="connection-edit-base-url-{{ $item['id'] }}"
+                                    name="base_url"
+                                    type="url"
+                                    value="{{ old('base_url', $item['baseUrl']) }}"
+                                    class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                                    placeholder="https://katra.example.com"
+                                    required
+                                />
+                            </div>
+                        @endunless
+
+                        @if ($item['accountEmail'])
+                            <p class="shell-text-faint text-sm leading-6">
+                                Signed in as {{ $item['accountEmail'] }}.
+                            </p>
+                        @endif
+
+                        <div class="flex items-center justify-end gap-3 pt-1">
+                            <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
+                                Save changes
+                            </button>
+                        </div>
+                    </form>
+
+                    @unless ($item['isCurrentInstance'])
+                        <form method="POST" action="{{ route('connections.destroy', $item['id']) }}" class="border-t pt-5 shell-border">
+                            @csrf
+                            @method('DELETE')
+
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <p class="shell-text text-sm font-medium">Remove connection</p>
+                                    <p class="shell-text-faint mt-1 text-sm leading-6">
+                                        Delete this saved server from the device. You can add it again later.
+                                    </p>
+                                </div>
+
+                                <button type="submit" class="shell-danger-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors">
+                                    <x-mdi-trash-can class="h-4 w-4" />
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </form>
+                    @endunless
+                </div>
+            </x-desktop.modal>
+        @endforeach
 
         <x-desktop.modal id="room-creator-modal" title="Create room" description="Draft a new shared room for the current workspace. This is demo-only for now.">
             <form method="dialog" class="space-y-4">

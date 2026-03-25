@@ -4,8 +4,8 @@
     'initials',
 ])
 
-<details data-profile-menu class="group relative mt-4 border-t pt-4 shell-border">
-    <summary class="shell-surface flex cursor-pointer list-none items-center gap-3 rounded-[20px] px-3 py-3 marker:hidden">
+<details data-profile-menu class="group relative mt-3">
+    <summary class="shell-surface shell-connection-trigger flex cursor-pointer list-none items-center gap-3 rounded-[20px] px-3 py-3 marker:hidden">
         <span class="shell-accent-chip flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold tracking-[0.02em]">
             {{ $initials }}
         </span>
@@ -43,9 +43,6 @@
                 </button>
                 <button type="button" class="shell-text shell-hover-surface flex w-full items-center rounded-[18px] px-4 py-2.5 text-left text-sm transition-colors">
                     <span>Administration</span>
-                </button>
-                <button type="button" class="shell-text shell-hover-surface flex w-full items-center rounded-[18px] px-4 py-2.5 text-left text-sm transition-colors">
-                    <span>Manage connections</span>
                 </button>
                 <button type="button" class="shell-text shell-hover-surface flex w-full items-center rounded-[18px] px-4 py-2.5 text-left text-sm transition-colors">
                     <span>Notifications</span>
