@@ -61,6 +61,14 @@ return [
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
+        'surreal' => [
+            'driver' => 'database',
+            'connection' => env('SURREAL_CACHE_CONNECTION', 'surreal'),
+            'table' => env('SURREAL_CACHE_TABLE', env('DB_CACHE_TABLE', 'cache')),
+            'lock_connection' => env('SURREAL_CACHE_LOCK_CONNECTION', env('DB_CACHE_LOCK_CONNECTION')),
+            'lock_table' => env('SURREAL_CACHE_LOCK_TABLE', env('DB_CACHE_LOCK_TABLE')),
+        ],
+
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),

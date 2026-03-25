@@ -24,6 +24,8 @@ test('the database cache store works on the surreal connection', function () {
     $originalCacheStore = config('cache.default');
     $originalCacheDatabaseConnection = config('cache.stores.database.connection');
     $originalCacheLockConnection = config('cache.stores.database.lock_connection');
+    $originalSurrealCacheConnection = config('cache.stores.surreal.connection');
+    $originalSurrealCacheLockConnection = config('cache.stores.surreal.lock_connection');
 
     File::deleteDirectory($storagePath);
     File::ensureDirectoryExists(dirname($storagePath));
@@ -44,14 +46,17 @@ test('the database cache store works on the surreal connection', function () {
         config()->set('surreal.storage_path', $storagePath);
         config()->set('surreal.runtime', 'local');
         config()->set('surreal.autostart', false);
-        config()->set('cache.default', 'database');
+        config()->set('cache.default', 'surreal');
         config()->set('cache.stores.database.connection', 'surreal');
         config()->set('cache.stores.database.lock_connection', 'surreal');
+        config()->set('cache.stores.surreal.connection', 'surreal');
+        config()->set('cache.stores.surreal.lock_connection', 'surreal');
 
         app()->forgetInstance(SurrealConnection::class);
         app()->forgetInstance(SurrealRuntimeManager::class);
         DB::purge('surreal');
         Cache::forgetDriver('database');
+        Cache::forgetDriver('surreal');
         app()->forgetInstance('cache');
         app()->forgetInstance('cache.store');
         app()->forgetInstance('migration.repository');
@@ -63,7 +68,7 @@ test('the database cache store works on the surreal connection', function () {
             '--path' => database_path('migrations/0001_01_01_000001_create_cache_table.php'),
         ]))->toBe(0);
 
-        $store = Cache::store('database');
+        $store = Cache::store('surreal');
 
         expect($store->add('login:127.0.0.1', 'first-hit', 60))->toBeTrue()
             ->and($store->add('login:127.0.0.1', 'second-hit', 60))->toBeFalse()
@@ -71,6 +76,18 @@ test('the database cache store works on the surreal connection', function () {
 
         expect($store->put('login:127.0.0.1', 'updated-hit', 60))->toBeTrue()
             ->and($store->get('login:127.0.0.1'))->toBe('updated-hit');
+
+        expect($store->put('recent-workspace', 'katra-local', 60))->toBeTrue()
+            ->and($store->many(['login:127.0.0.1', 'recent-workspace']))->toBe([
+                'login:127.0.0.1' => 'updated-hit',
+                'recent-workspace' => 'katra-local',
+            ]);
+
+        expect($store->forever('feature-flag:desktop-ui', true))->toBeTrue()
+            ->and($store->get('feature-flag:desktop-ui'))->toBeTrue();
+
+        expect($store->forget('recent-workspace'))->toBeTrue()
+            ->and($store->get('recent-workspace'))->toBeNull();
 
         expect($store->flush())->toBeTrue()
             ->and($store->get('login:127.0.0.1'))->toBeNull();
@@ -80,11 +97,14 @@ test('the database cache store works on the surreal connection', function () {
         config()->set('cache.default', $originalCacheStore);
         config()->set('cache.stores.database.connection', $originalCacheDatabaseConnection);
         config()->set('cache.stores.database.lock_connection', $originalCacheLockConnection);
+        config()->set('cache.stores.surreal.connection', $originalSurrealCacheConnection);
+        config()->set('cache.stores.surreal.lock_connection', $originalSurrealCacheLockConnection);
 
         app()->forgetInstance(SurrealConnection::class);
         app()->forgetInstance(SurrealRuntimeManager::class);
         DB::purge('surreal');
         Cache::forgetDriver('database');
+        Cache::forgetDriver('surreal');
         app()->forgetInstance('cache');
         app()->forgetInstance('cache.store');
         app()->forgetInstance('migration.repository');

@@ -102,6 +102,22 @@ Katra now includes a first Laravel-compatible Surreal schema driver for migratio
 - The current slice is intentionally narrow: table creation, field creation, field removal, and table removal are supported for common Katra field types.
 - This is still not full SQL-driver parity yet, but it is enough for Katra's current migration set and for Surreal-backed application schema work without relying on SQLite migration bookkeeping.
 
+### Surreal-Backed Cache
+
+Katra also supports Laravel's cache abstraction against SurrealDB by pointing the database cache store at the `surreal` connection.
+
+- Set `CACHE_STORE=surreal` when you want the main cache store to live in SurrealDB.
+- The dedicated `surreal` cache store alias uses Laravel's built-in `database` cache driver with the `surreal` connection, so application code can keep using normal `Cache` APIs.
+- Override the table and connection names with `SURREAL_CACHE_CONNECTION`, `SURREAL_CACHE_TABLE`, `SURREAL_CACHE_LOCK_CONNECTION`, and `SURREAL_CACHE_LOCK_TABLE` if you need something other than the defaults.
+- Make sure the cache tables are migrated on the Surreal connection before you rely on the store:
+
+```bash
+php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000001_create_cache_table.php
+```
+
+- Core cache operations like `get`, `put`, `add`, `many`, `forever`, `forget`, and `flush` are covered in the test suite against a real Surreal runtime.
+- SQL-transaction-dependent limiter semantics are still treated as unsupported on Surreal-backed cache storage, so Katra keeps `CACHE_LIMITER=file` by default for Fortify throttling and other limiter middleware.
+
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
