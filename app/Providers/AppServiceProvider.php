@@ -9,6 +9,7 @@ use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Session\DatabaseSessionHandler;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +35,19 @@ class AppServiceProvider extends ServiceProvider
             return SurrealSchemaConnection::fromConfig(
                 array_merge(config('surreal'), $config),
                 $name,
+            );
+        });
+
+        $this->app->make('session')->extend('surreal', function ($app): DatabaseSessionHandler {
+            $connection = config('session.connection') ?: 'surreal';
+            $table = config('session.table');
+            $lifetime = (int) config('session.lifetime');
+
+            return new DatabaseSessionHandler(
+                $app['db']->connection($connection),
+                $table,
+                $lifetime,
+                $app,
             );
         });
     }
