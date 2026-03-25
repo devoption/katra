@@ -23,6 +23,7 @@
 /public/build
 /public/hot
 /public/storage
+/nativephp/electron/dist
 /storage/*.key
 /storage/pail
 /history.txt

@@ -10,3 +10,266 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
+
+:root {
+    color-scheme: dark;
+    --shell-base: #2e3440;
+    --shell-panel: #3b4252;
+    --shell-surface: #434c5e;
+    --shell-elevated: #4c566a;
+    --shell-context: #353d4d;
+    --shell-input: #2e3440;
+    --shell-border: rgb(76 86 106 / 72%);
+    --shell-overlay: rgb(46 52 64 / 62%);
+    --shell-search-overlay: rgb(46 52 64 / 76%);
+    --shell-text: #eceff4;
+    --shell-text-muted: #d8dee9;
+    --shell-text-soft: rgb(216 222 233 / 72%);
+    --shell-text-faint: rgb(216 222 233 / 52%);
+    --shell-text-subtle: rgb(216 222 233 / 62%);
+    --shell-accent: #b48ead;
+    --shell-accent-hover: #c2a0ba;
+    --shell-accent-text: #2e3440;
+    --shell-accent-soft: rgb(180 142 173 / 18%);
+    --shell-bot: #81a1c1;
+    --shell-bot-text: #2e3440;
+    --shell-bot-soft: rgb(129 161 193 / 18%);
+    --shell-room: #88c0d0;
+    --shell-room-text: #2e3440;
+    --shell-room-soft: rgb(136 192 208 / 16%);
+    --shell-info: #88c0d0;
+    --shell-info-strong: #81a1c1;
+    --shell-info-soft: rgb(129 161 193 / 16%);
+    --shell-danger-soft: rgb(191 97 106 / 14%);
+    --shell-danger-hover: rgb(191 97 106 / 22%);
+    --shell-danger-text: #ebcb8b;
+    --shell-shadow: 0 28px 64px rgb(15 23 42 / 35%);
+}
+
+html[data-shell-theme='light'] {
+    color-scheme: light;
+    --shell-base: #d6deea;
+    --shell-panel: #cad4e4;
+    --shell-surface: #bfcbde;
+    --shell-elevated: #b3c1d7;
+    --shell-context: #c2cde0;
+    --shell-input: #d0d9e7;
+    --shell-border: rgb(129 161 193 / 28%);
+    --shell-overlay: rgb(76 86 106 / 24%);
+    --shell-search-overlay: rgb(76 86 106 / 36%);
+    --shell-text: #3b4252;
+    --shell-text-muted: #4c566a;
+    --shell-text-soft: rgb(76 86 106 / 72%);
+    --shell-text-faint: rgb(76 86 106 / 54%);
+    --shell-text-subtle: rgb(76 86 106 / 62%);
+    --shell-accent: #b48ead;
+    --shell-accent-hover: #c2a0ba;
+    --shell-accent-text: #2e3440;
+    --shell-accent-soft: rgb(180 142 173 / 16%);
+    --shell-bot: #81a1c1;
+    --shell-bot-text: #2e3440;
+    --shell-bot-soft: rgb(129 161 193 / 16%);
+    --shell-room: #88c0d0;
+    --shell-room-text: #2e3440;
+    --shell-room-soft: rgb(136 192 208 / 14%);
+    --shell-info: #5e81ac;
+    --shell-info-strong: #5e81ac;
+    --shell-info-soft: rgb(94 129 172 / 16%);
+    --shell-danger-soft: rgb(191 97 106 / 10%);
+    --shell-danger-hover: rgb(191 97 106 / 18%);
+    --shell-danger-text: #bf616a;
+    --shell-shadow: 0 24px 56px rgb(76 86 106 / 18%);
+}
+
+.shell-app {
+    background: var(--shell-base);
+    color: var(--shell-text);
+}
+
+.shell-panel {
+    background: var(--shell-panel);
+}
+
+.shell-surface {
+    background: var(--shell-surface);
+}
+
+.shell-elevated {
+    background: var(--shell-elevated);
+}
+
+.shell-input {
+    background: var(--shell-input);
+}
+
+.shell-context-panel {
+    background: var(--shell-context);
+}
+
+.shell-border {
+    border-color: var(--shell-border);
+}
+
+.shell-text {
+    color: var(--shell-text);
+}
+
+.shell-text-muted {
+    color: var(--shell-text-muted);
+}
+
+.shell-text-soft {
+    color: var(--shell-text-soft);
+}
+
+.shell-text-faint {
+    color: var(--shell-text-faint);
+}
+
+.shell-text-subtle {
+    color: var(--shell-text-subtle);
+}
+
+.shell-text-info {
+    color: var(--shell-info);
+}
+
+.shell-text-info-strong {
+    color: var(--shell-info-strong);
+}
+
+.shell-icon-button {
+    background: var(--shell-surface);
+    color: var(--shell-text);
+}
+
+.shell-icon-button:hover {
+    background: var(--shell-elevated);
+}
+
+.shell-active-row {
+    background: var(--shell-elevated);
+    color: var(--shell-text);
+}
+
+.shell-accent-chip {
+    background: var(--shell-accent);
+    color: var(--shell-accent-text);
+}
+
+.shell-accent-soft {
+    background: var(--shell-accent-soft);
+    color: var(--shell-text);
+}
+
+.shell-human-chip {
+    background: var(--shell-accent);
+    color: var(--shell-accent-text);
+}
+
+.shell-bot-chip {
+    background: var(--shell-bot);
+    color: var(--shell-bot-text);
+}
+
+.shell-room-chip {
+    background: var(--shell-room-soft);
+    color: var(--shell-info-strong);
+}
+
+.shell-theme-track {
+    background: var(--shell-elevated);
+}
+
+.shell-theme-option {
+    color: var(--shell-text-subtle);
+}
+
+.shell-theme-option:hover {
+    background: var(--shell-panel);
+    color: var(--shell-text);
+}
+
+.shell-theme-option[data-theme-active='true'] {
+    background: var(--shell-accent);
+    color: var(--shell-accent-text);
+}
+
+.shell-hover-surface:hover {
+    background: var(--shell-surface);
+}
+
+.shell-hover-elevated:hover {
+    background: var(--shell-elevated);
+}
+
+.shell-connection-trigger {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.shell-connection-trigger:hover {
+    background: var(--shell-elevated);
+    box-shadow: inset 0 0 0 1px var(--shell-border);
+    transform: translateY(-1px);
+}
+
+.shell-danger-button {
+    background: var(--shell-danger-soft);
+    color: var(--shell-danger-text);
+}
+
+.shell-danger-button:hover {
+    background: var(--shell-danger-hover);
+}
+
+.shell-overlay {
+    background: var(--shell-overlay);
+}
+
+.shell-search-backdrop {
+    background: var(--shell-search-overlay);
+}
+
+.shell-shadow {
+    box-shadow: var(--shell-shadow);
+}
+
+.shell-logo-light {
+    display: none;
+}
+
+html[data-shell-theme='light'] .shell-logo-dark {
+    display: none;
+}
+
+html[data-shell-theme='light'] .shell-logo-light {
+    display: block;
+}
+
+* {
+    scrollbar-color: var(--shell-accent) var(--shell-base);
+    scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--shell-base);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--shell-accent);
+    border: 2px solid var(--shell-base);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--shell-accent-hover);
+}
+
+dialog::backdrop {
+    background: var(--shell-overlay);
+}

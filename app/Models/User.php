@@ -6,11 +6,13 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['first_name', 'last_name', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -28,5 +30,27 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value, array $attributes): string {
+                $name = trim(implode(' ', array_filter([
+                    $attributes['first_name'] ?? null,
+                    $attributes['last_name'] ?? null,
+                ])));
+
+                return $name !== '' ? $name : ($value ?? '');
+            },
+        );
+    }
+
+    /**
+     * @return HasMany<InstanceConnection, $this>
+     */
+    public function instanceConnections(): HasMany
+    {
+        return $this->hasMany(InstanceConnection::class);
     }
 }

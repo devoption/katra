@@ -11,20 +11,21 @@ class SurrealRuntimeManager
 {
     public function __construct(
         private readonly SurrealCliClient $client,
+        private readonly SurrealHttpClient $httpClient,
         private readonly SurrealConnection $connection,
     ) {}
 
     public function ensureReady(): bool
     {
-        if (! $this->client->isAvailable()) {
-            return false;
-        }
-
-        if ($this->client->isReady($this->connection->endpoint)) {
+        if ($this->httpClient->isReady($this->connection->endpoint)) {
             return true;
         }
 
         if (! $this->connection->usesLocalRuntime() || ! $this->connection->autostart) {
+            return false;
+        }
+
+        if (! $this->client->isAvailable()) {
             return false;
         }
 
@@ -44,7 +45,7 @@ class SurrealRuntimeManager
                 throw new RuntimeException(sprintf('Unable to lock the SurrealDB runtime lock file at [%s].', $lockPath));
             }
 
-            if ($this->client->isReady($this->connection->endpoint)) {
+            if ($this->httpClient->isReady($this->connection->endpoint)) {
                 return true;
             }
 
@@ -59,7 +60,7 @@ class SurrealRuntimeManager
 
             File::put($this->connection->runtimePidPath, (string) $pid);
 
-            return $this->client->waitUntilReady($this->connection->endpoint, attempts: 30, sleepMilliseconds: 250);
+            return $this->httpClient->waitUntilReady($this->connection->endpoint, attempts: 30, sleepMilliseconds: 250);
         } finally {
             flock($lockHandle, LOCK_UN);
             fclose($lockHandle);

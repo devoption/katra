@@ -4,11 +4,21 @@
 
 Katra v2 is an in-progress rewrite of the original proof of concept. The rewrite is happening in the open through small pull requests and linked GitHub issues, and preview macOS desktop artifacts now ship through GitHub Releases as the shell evolves.
 
+The current desktop app now proves runtime, packaging, and embedded-data milestones, but the next phase of work is focused on replacing the developer-oriented landing page with the first real branded workspace shell.
+
 ## Product Direction
 
 Katra is being reimagined as a local-first, graph-native AI workspace built on Laravel. While NativePHP is the first-class local shell, the application is intended to support multiple runtime targets, including standard server deployments, containers, and Kubernetes environments.
 
 The product direction is broader than an AI workflow engine. Katra v2 aims to treat conversations, tasks, decisions, artifacts, and related context as durable graph objects that can support collaborative knowledge work over time.
+
+The emerging desktop UX direction is:
+
+- desktop-first and branded
+- closer to the OpenAI Codex desktop app in tone and focus, without developer-only features
+- closer to Slack, Teams, or WebEx in conversation navigation than to disposable AI transcript apps
+- oriented around persistent graph-native spaces rather than one-thread-per-context-window behavior
+- built around durable workspace-scoped conversations that may include people, models, and agents as first-class participants
 
 The deeper product and architecture principles now live in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md).
 
@@ -45,3 +55,7 @@ The deeper integration strategy lives in [SurrealDB Laravel Integration Strategy
 ## Next Step
 
 The deeper product and architecture direction is documented in [Katra v2 Product and Architecture Principles](architecture/v2-product-and-architecture.md) and tracked in [issue #13](https://github.com/devoption/katra/issues/13).
+
+The current desktop shell and navigation definition work is tracked in [issue #100](https://github.com/devoption/katra/issues/100).
+
+The conversation and channel model definition work is tracked in [issue #102](https://github.com/devoption/katra/issues/102).

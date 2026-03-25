@@ -10,9 +10,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "laravel/ai": "^0.3.2",
+        "laravel/fortify": "^1.36",
         "laravel/framework": "^13.0",
+        "laravel/pennant": "^1.0",
         "laravel/tinker": "^3.0",
-        "nativephp/desktop": "dev-l13-compatibility"
+        "nativephp/desktop": "dev-l13-compatibility",
+        "postare/blade-mdi": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

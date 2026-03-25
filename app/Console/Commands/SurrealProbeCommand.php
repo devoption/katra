@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Surreal\SurrealCliClient;
+use App\Services\Surreal\SurrealHttpClient;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,14 +16,15 @@ use RuntimeException;
 class SurrealProbeCommand extends Command
 {
     public function __construct(
-        private readonly SurrealCliClient $client,
+        private readonly SurrealCliClient $cliClient,
+        private readonly SurrealHttpClient $httpClient,
     ) {
         parent::__construct();
     }
 
     public function handle(): int
     {
-        if (! $this->client->isAvailable()) {
+        if (! $this->cliClient->isAvailable()) {
             $this->components->error('Unable to find the `surreal` CLI. Install it first or set SURREAL_BINARY to the executable path.');
 
             return self::FAILURE;
@@ -55,7 +57,7 @@ class SurrealProbeCommand extends Command
 
         File::ensureDirectoryExists(dirname($storagePath));
 
-        $server = $this->client->startLocalServer(
+        $server = $this->cliClient->startLocalServer(
             bindAddress: $bindAddress,
             datastorePath: $storagePath,
             username: $username,
@@ -64,11 +66,11 @@ class SurrealProbeCommand extends Command
         );
 
         try {
-            if (! $this->client->waitUntilReady($endpoint)) {
+            if (! $this->httpClient->waitUntilReady($endpoint)) {
                 throw new RuntimeException(sprintf('SurrealDB did not become ready on %s.', $endpoint));
             }
 
-            $results = $this->client->runQuery(
+            $results = $this->httpClient->runQuery(
                 endpoint: $endpoint,
                 namespace: $namespace,
                 database: $database,
@@ -82,8 +84,7 @@ class SurrealProbeCommand extends Command
             );
 
             $createdRecord = is_array($results[0] ?? null) ? (($results[0] ?? [])[0] ?? null) : null;
-            $selectedRecords = is_array($results[1] ?? null) ? (($results[1] ?? [])[0] ?? null) : null;
-            $selectedRecord = is_array($selectedRecords) ? ($selectedRecords[0] ?? null) : null;
+            $selectedRecord = is_array($results[1] ?? null) ? (($results[1] ?? [])[0] ?? null) : null;
 
             if (! is_array($createdRecord) || ! is_array($selectedRecord) || ($selectedRecord['id'] ?? null) !== $recordId) {
                 throw new RuntimeException('The SurrealDB probe did not return the expected write/read payload.');

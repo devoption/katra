@@ -8,7 +8,7 @@ use RuntimeException;
 class SurrealDocumentStore
 {
     public function __construct(
-        private readonly SurrealCliClient $client,
+        private readonly SurrealHttpClient $client,
         private readonly SurrealConnection $connection,
         private readonly SurrealRuntimeManager $runtimeManager,
     ) {}
@@ -18,7 +18,15 @@ class SurrealDocumentStore
      */
     public function all(string $table): array
     {
-        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->normalizeTable($table)))[0] ?? []);
+        try {
+            return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->normalizeTable($table)))[0] ?? []);
+        } catch (SurrealQueryException $exception) {
+            if ($this->tableMissing($exception, $table)) {
+                return [];
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -26,7 +34,15 @@ class SurrealDocumentStore
      */
     public function find(string $table, string $id): ?array
     {
-        return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->recordSelector($table, $id)))[0] ?? [])[0] ?? null;
+        try {
+            return $this->normalizeRecordSet($this->run(sprintf('SELECT * FROM %s;', $this->recordSelector($table, $id)))[0] ?? [])[0] ?? null;
+        } catch (SurrealQueryException $exception) {
+            if ($this->tableMissing($exception, $table)) {
+                return null;
+            }
+
+            throw $exception;
+        }
     }
 
     /**
@@ -68,7 +84,7 @@ class SurrealDocumentStore
     private function run(string $query): array
     {
         if (! $this->runtimeManager->ensureReady()) {
-            throw new RuntimeException('The SurrealDB runtime is not available for the current CLI-backed driver. Install the `surreal` CLI and provide a reachable runtime, or switch to a future non-CLI driver.');
+            throw new RuntimeException('The SurrealDB runtime is not available for the current connection.');
         }
 
         return $this->client->runQuery(
@@ -199,5 +215,10 @@ class SurrealDocumentStore
         }
 
         return array_keys($value) !== range(0, count($value) - 1);
+    }
+
+    private function tableMissing(SurrealQueryException $exception, string $table): bool
+    {
+        return $exception->isTableMissing($this->normalizeTable($table));
     }
 }

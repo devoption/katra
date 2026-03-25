@@ -38,6 +38,14 @@ The long-term direction is a graph-native system where conversations, tasks, dec
 
 Katra v2 is an active rewrite. The repository is being rebuilt in small, reviewable pull requests, and preview macOS desktop artifacts are now attached to GitHub Releases as the shell evolves. The proof of concept is preserved at [`v1.0.0`](https://github.com/devoption/katra/tree/v1.0.0) for historical reference and is not being actively developed.
 
+## Desktop Preview
+
+The current desktop shell is now installable as a real macOS app preview. It is still early, but the downloadable build already shows the direction clearly: durable rooms, a conversation-first center pane, a contextual right rail, and a local-first desktop shell that can grow into local and remote workflows.
+
+| Dark Theme | Light Theme |
+| --- | --- |
+| ![Katra desktop shell in dark mode](docs/images/readme/katra-dark.png) | ![Katra desktop shell in light mode](docs/images/readme/katra-light.png) |
+
 ## Try Katra
 
 There are two practical ways to try Katra today.
@@ -58,6 +66,41 @@ composer native:dev
 ```
 
 That path installs dependencies, prepares the Laravel app, bootstraps NativePHP, and starts the local desktop development loop.
+
+### Authentication
+
+Katra now uses Laravel Fortify for the first authentication foundation.
+
+- Create an account at `/register`, then sign in at `/login`.
+- The desktop shell route at `/` is now authentication-protected.
+- Password recovery is available through `/forgot-password`.
+- Make sure your local database migrations are current before you try the auth flow:
+
+```bash
+php artisan migrate
+```
+
+- If you are testing password reset locally and want to inspect the reset link without sending mail, use a local-safe mailer such as `MAIL_MAILER=log`.
+
+### Configure AI Providers
+
+The Laravel AI SDK is installed and its conversation storage migrations are part of the application now.
+
+- For hosted model access, set `OPENAI_API_KEY` and leave `AI_DEFAULT_PROVIDER=openai`.
+- For local model experiments, set `AI_DEFAULT_PROVIDER=ollama` and point `OLLAMA_BASE_URL` at your local Ollama instance.
+- Additional provider keys and per-capability defaults are available in [config/ai.php](config/ai.php) if you want to swap providers later.
+- Some capabilities still default to specific providers like Gemini or Cohere, so if you want everything to follow your primary provider you should update the operation-specific defaults in `config/ai.php` as well.
+
+The current AI foundation test uses agent fakes, so the repo test suite does not require live provider credentials just to verify the integration.
+
+### Surreal-Backed Migrations
+
+Katra now includes a first Laravel-compatible Surreal schema driver for migration work.
+
+- Use `Schema::connection('surreal')` inside migrations when you want to target Surreal-backed application data.
+- You can also set `DB_CONNECTION=surreal` and run Laravel migrations, migration status, and `migrate:fresh` directly against SurrealDB.
+- The current slice is intentionally narrow: table creation, field creation, field removal, and table removal are supported for common Katra field types.
+- This is still not full SQL-driver parity yet, but it is enough for Katra's current migration set and for Surreal-backed application schema work without relying on SQLite migration bookkeeping.
 
 ## Planning Docs
 
