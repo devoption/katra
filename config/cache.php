@@ -65,7 +65,7 @@ return [
             'driver' => 'database',
             'connection' => env('SURREAL_CACHE_CONNECTION', 'surreal'),
             'table' => env('SURREAL_CACHE_TABLE', env('DB_CACHE_TABLE', 'cache')),
-            'lock_connection' => env('SURREAL_CACHE_LOCK_CONNECTION', env('DB_CACHE_LOCK_CONNECTION', 'surreal')),
+            'lock_connection' => env('SURREAL_CACHE_LOCK_CONNECTION', env('DB_CACHE_LOCK_CONNECTION')),
             'lock_table' => env('SURREAL_CACHE_LOCK_TABLE', env('DB_CACHE_LOCK_TABLE')),
         ],
 

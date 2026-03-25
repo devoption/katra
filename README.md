@@ -112,7 +112,7 @@ Katra also supports Laravel's cache abstraction against SurrealDB by pointing th
 - Make sure the cache tables are migrated on the Surreal connection before you rely on the store:
 
 ```bash
-php artisan migrate --path=database/migrations/0001_01_01_000001_create_cache_table.php
+php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000001_create_cache_table.php
 ```
 
 - Core cache operations like `get`, `put`, `add`, `many`, `forever`, `forget`, and `flush` are covered in the test suite against a real Surreal runtime.
