@@ -1,10 +1,13 @@
 <?php
 
+use App\Models\InstanceConnection;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\FileStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 
@@ -35,7 +38,130 @@ test('the fortify auth screens render', function () {
 
     $this->get(route('server.connect'))
         ->assertSuccessful()
-        ->assertSee('Connect to a server');
+        ->assertSee('Connect to a server')
+        ->assertSee('Continue to server');
+});
+
+test('a guest can continue from the server connect screen into the in-app server credential step', function () {
+    $this->post(route('server.connect.prepare'), [
+        'server_url' => 'https://katra-server.test/',
+    ])
+        ->assertRedirect(route('server.connect'));
+
+    $this->get(route('server.connect'))
+        ->assertSuccessful()
+        ->assertSee('katra-server.test')
+        ->assertSee('Email')
+        ->assertSee('Password')
+        ->assertSee('Connect to server');
+});
+
+test('a guest can sign into a remote katra server without leaving the client', function () {
+    Http::fake([
+        'https://katra-server.test/login' => Http::sequence()
+            ->push(
+                '<form method="POST"><input type="hidden" name="_token" value="csrf-token-123" /></form>',
+                200,
+                ['Set-Cookie' => ['katra_server_session=bootstrap-session; path=/; httponly']],
+            )
+            ->push(
+                '',
+                302,
+                [
+                    'Location' => 'https://katra-server.test/',
+                    'Set-Cookie' => ['katra_server_session=authenticated-session; path=/; httponly'],
+                ],
+            ),
+        'https://katra-server.test/' => Http::response('<html>Relay Cloud</html>', 200),
+        'https://katra-server.test/_katra/profile' => Http::response([
+            'first_name' => 'Ops',
+            'last_name' => 'Bourgeois',
+            'name' => 'Ops Bourgeois',
+            'email' => 'ops@relay.devoption.test',
+        ], 200),
+    ]);
+
+    $this->post(route('server.connect.prepare'), [
+        'server_url' => 'https://katra-server.test/',
+    ])->assertRedirect(route('server.connect'));
+
+    $this->post(route('server.connect.authenticate'), [
+        'email' => 'ops@relay.devoption.test',
+        'password' => 'password',
+    ])->assertRedirect(route('home'));
+
+    $user = User::query()->where('email', 'ops@relay.devoption.test')->first();
+    $savedConnection = InstanceConnection::query()
+        ->where('user_id', $user?->getKey())
+        ->where('base_url', 'https://katra-server.test')
+        ->first();
+
+    $this->assertAuthenticated();
+
+    expect($user)->not()->toBeNull()
+        ->and($user?->first_name)->toBe('Ops')
+        ->and($user?->last_name)->toBe('Bourgeois')
+        ->and($savedConnection)->not()->toBeNull()
+        ->and($savedConnection?->last_authenticated_at)->not()->toBeNull()
+        ->and(data_get($savedConnection?->session_context, 'user.name'))->toBe('Ops Bourgeois')
+        ->and(data_get($savedConnection?->session_context, 'cookies.katra_server_session'))->toBe('authenticated-session');
+
+    Http::assertSent(function (HttpRequest $request): bool {
+        if ($request->url() !== 'https://katra-server.test/login' || $request->method() !== 'POST') {
+            return false;
+        }
+
+        return str_contains($request->body(), 'email=ops%40relay.devoption.test')
+            && str_contains($request->body(), 'password=password')
+            && $request->hasHeader('Cookie', 'katra_server_session=bootstrap-session');
+    });
+});
+
+test('a guest remote sign-in updates an existing placeholder local user with the server profile', function () {
+    $localUser = User::factory()->create([
+        'first_name' => 'Derek',
+        'last_name' => 'User',
+        'name' => 'Derek User',
+        'email' => 'derek@devoption.io',
+    ]);
+
+    Http::fake([
+        'https://katra-server.test/login' => Http::sequence()
+            ->push(
+                '<form method="POST"><input type="hidden" name="_token" value="csrf-token-123" /></form>',
+                200,
+                ['Set-Cookie' => ['katra_server_session=bootstrap-session; path=/; httponly']],
+            )
+            ->push(
+                '',
+                302,
+                [
+                    'Location' => 'https://katra-server.test/',
+                    'Set-Cookie' => ['katra_server_session=authenticated-session; path=/; httponly'],
+                ],
+            ),
+        'https://katra-server.test/' => Http::response('<html>Relay Cloud</html>', 200),
+        'https://katra-server.test/_katra/profile' => Http::response([
+            'first_name' => 'Derek',
+            'last_name' => 'Bourgeois',
+            'name' => 'Derek Bourgeois',
+            'email' => 'derek@devoption.io',
+        ], 200),
+    ]);
+
+    $this->post(route('server.connect.prepare'), [
+        'server_url' => 'https://katra-server.test/',
+    ])->assertRedirect(route('server.connect'));
+
+    $this->post(route('server.connect.authenticate'), [
+        'email' => 'derek@devoption.io',
+        'password' => 'password',
+    ])->assertRedirect(route('home'));
+
+    expect($localUser->fresh())->not()->toBeNull()
+        ->and($localUser->fresh()?->first_name)->toBe('Derek')
+        ->and($localUser->fresh()?->last_name)->toBe('Bourgeois')
+        ->and($localUser->fresh()?->name)->toBe('Derek Bourgeois');
 });
 
 test('the login rate limiter uses the file cache store', function () {
