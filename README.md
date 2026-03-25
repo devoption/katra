@@ -124,7 +124,7 @@ Katra now also exposes a dedicated `surreal` Laravel session driver backed by th
 
 - Set `SESSION_DRIVER=surreal` to store Laravel sessions in SurrealDB.
 - The driver defaults to the `surreal` connection, but you can still override the table and connection with `SESSION_CONNECTION` and `SESSION_TABLE` if needed.
-- Make sure the sessions table exists on the Surreal connection before relying on this driver:
+- Make sure the sessions table exists on the Surreal connection before relying on this driver. Katra's current auth/session migration also creates the `users` and `password_reset_tokens` tables alongside `sessions`:
 
 ```bash
 php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000000_create_users_table.php
