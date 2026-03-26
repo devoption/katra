@@ -35,11 +35,38 @@ class FoundationPreview extends Component
         $this->surfaceIndex = ($this->surfaceIndex + 1) % count($this->surfaces);
     }
 
+    public function updatingSurfaceIndex(mixed $value): void
+    {
+        $this->surfaceIndex = $this->normalizeSurfaceIndex((int) $value);
+    }
+
+    public function hydrate(): void
+    {
+        $this->surfaceIndex = $this->normalizeSurfaceIndex($this->surfaceIndex);
+    }
+
     public function render(): View
     {
+        $this->surfaceIndex = $this->normalizeSurfaceIndex($this->surfaceIndex);
+
         return view('livewire.foundation-preview', [
             'surfaces' => $this->surfaces,
             'activeSurface' => $this->surfaces[$this->surfaceIndex],
         ]);
+    }
+
+    protected function normalizeSurfaceIndex(int $index): int
+    {
+        $maxIndex = count($this->surfaces) - 1;
+
+        if ($maxIndex < 0 || $index < 0) {
+            return 0;
+        }
+
+        if ($index > $maxIndex) {
+            return $maxIndex;
+        }
+
+        return $index;
     }
 }
