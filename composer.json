@@ -13,6 +13,7 @@
         "laravel/ai": "^0.3.2",
         "laravel/fortify": "^1.36",
         "laravel/framework": "^13.0",
+        "laravel/mcp": "^0.6.3",
         "laravel/pennant": "^1.0",
         "laravel/tinker": "^3.0",
         "nativephp/desktop": "dev-l13-compatibility",
