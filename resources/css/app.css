@@ -9,40 +9,57 @@
     --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --color-nord0: #2e3440;
+    --color-nord1: #3b4252;
+    --color-nord2: #434c5e;
+    --color-nord3: #4c566a;
+    --color-nord4: #d8dee9;
+    --color-nord5: #e5e9f0;
+    --color-nord6: #eceff4;
+    --color-nord7: #8fbcbb;
+    --color-nord8: #88c0d0;
+    --color-nord9: #81a1c1;
+    --color-nord10: #5e81ac;
+    --color-nord11: #bf616a;
+    --color-nord12: #d08770;
+    --color-nord13: #ebcb8b;
+    --color-nord14: #a3be8c;
+    --color-nord15: #b48ead;
+    --color-katra-accent: var(--color-nord15);
 }
 
 :root {
     color-scheme: dark;
-    --shell-base: #2e3440;
-    --shell-panel: #3b4252;
-    --shell-surface: #434c5e;
-    --shell-elevated: #4c566a;
+    --shell-base: var(--color-nord0);
+    --shell-panel: var(--color-nord1);
+    --shell-surface: var(--color-nord2);
+    --shell-elevated: var(--color-nord3);
     --shell-context: #353d4d;
-    --shell-input: #2e3440;
+    --shell-input: var(--color-nord0);
     --shell-border: rgb(76 86 106 / 72%);
     --shell-overlay: rgb(46 52 64 / 62%);
     --shell-search-overlay: rgb(46 52 64 / 76%);
-    --shell-text: #eceff4;
-    --shell-text-muted: #d8dee9;
+    --shell-text: var(--color-nord6);
+    --shell-text-muted: var(--color-nord4);
     --shell-text-soft: rgb(216 222 233 / 72%);
     --shell-text-faint: rgb(216 222 233 / 52%);
     --shell-text-subtle: rgb(216 222 233 / 62%);
-    --shell-accent: #b48ead;
+    --shell-accent: var(--color-nord15);
     --shell-accent-hover: #c2a0ba;
-    --shell-accent-text: #2e3440;
+    --shell-accent-text: var(--color-nord0);
     --shell-accent-soft: rgb(180 142 173 / 18%);
-    --shell-bot: #81a1c1;
-    --shell-bot-text: #2e3440;
+    --shell-bot: var(--color-nord9);
+    --shell-bot-text: var(--color-nord0);
     --shell-bot-soft: rgb(129 161 193 / 18%);
-    --shell-room: #88c0d0;
-    --shell-room-text: #2e3440;
+    --shell-room: var(--color-nord8);
+    --shell-room-text: var(--color-nord0);
     --shell-room-soft: rgb(136 192 208 / 16%);
-    --shell-info: #88c0d0;
-    --shell-info-strong: #81a1c1;
+    --shell-info: var(--color-nord8);
+    --shell-info-strong: var(--color-nord9);
     --shell-info-soft: rgb(129 161 193 / 16%);
     --shell-danger-soft: rgb(191 97 106 / 14%);
     --shell-danger-hover: rgb(191 97 106 / 22%);
-    --shell-danger-text: #ebcb8b;
+    --shell-danger-text: var(--color-nord13);
     --shell-shadow: 0 28px 64px rgb(15 23 42 / 35%);
 }
 

@@ -16,6 +16,7 @@
         "laravel/mcp": "^0.6.3",
         "laravel/pennant": "^1.0",
         "laravel/tinker": "^3.0",
+        "livewire/livewire": "^4.2",
         "nativephp/desktop": "dev-l13-compatibility",
         "postare/blade-mdi": "^1.0"
     },
