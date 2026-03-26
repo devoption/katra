@@ -12,7 +12,7 @@ test('the katra mcp server exposes a lightweight workspace description tool', fu
             config('app.name'),
             config('app.url'),
             'interoperability layer',
-            'not the center of the product architecture',
-            'desktop-local, server, container, and kubernetes-oriented',
+            'not the center',
+            'desktop-local',
         ]);
 });

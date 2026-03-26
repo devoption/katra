@@ -16,9 +16,11 @@ return [
     */
 
     'redirect_domains' => [
-        '*',
         // 'https://example.com',
-        // 'http://localhost',
+        'http://localhost',
+        'http://127.0.0.1',
+        'https://localhost',
+        'https://127.0.0.1',
     ],
 
 ];

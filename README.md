@@ -101,12 +101,7 @@ Katra now includes Laravel MCP as an explicit application dependency.
 - Katra registers a local MCP handle named `katra` that points at `App\Mcp\Servers\KatraServer`.
 - The current example tool, `App\Mcp\Tools\DescribeWorkspace`, is intentionally small and read-only. It exists as a smoke-tested interoperability example, not as a parallel product surface.
 - MCP matters for interoperability, tool exposure, and external integrations, but it should not become the center of Katra's architecture.
-- Start the local MCP server with:
-
-```bash
-php artisan mcp:start katra
-```
-
+- Start the local MCP server with `php artisan mcp:start katra`.
 - The current smoke coverage lives in `tests/Feature/McpSmokeTest.php`.
 
 ### Surreal-Backed Migrations
