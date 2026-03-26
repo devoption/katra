@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Services\Surreal\Migrations\SurrealMigrationRepository;
+use App\Services\Surreal\Queue\SurrealQueueConnector;
 use App\Services\Surreal\Schema\SurrealSchemaConnection;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Queue\QueueManager;
 use Illuminate\Session\DatabaseSessionHandler;
 use Illuminate\Support\ServiceProvider;
 
@@ -49,6 +51,12 @@ class AppServiceProvider extends ServiceProvider
                 $lifetime,
                 $app,
             );
+        });
+
+        $this->app->afterResolving('queue', function (QueueManager $manager): void {
+            $manager->addConnector('surreal', function (): SurrealQueueConnector {
+                return new SurrealQueueConnector($this->app['db']);
+            });
         });
     }
 }
