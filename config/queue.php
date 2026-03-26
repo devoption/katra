@@ -24,7 +24,7 @@ return [
     | used by your application. An example configuration is provided for
     | each backend supported by Laravel. You're also free to add more.
     |
-    | Drivers: "sync", "database", "beanstalkd", "sqs", "redis",
+    | Drivers: "sync", "database", "surreal", "beanstalkd", "sqs", "redis",
     |          "deferred", "background", "failover", "null"
     |
     */
@@ -41,6 +41,15 @@ return [
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            'after_commit' => false,
+        ],
+
+        'surreal' => [
+            'driver' => 'surreal',
+            'connection' => env('SURREAL_QUEUE_CONNECTION', 'surreal'),
+            'table' => env('SURREAL_QUEUE_TABLE', env('DB_QUEUE_TABLE', 'jobs')),
+            'queue' => env('SURREAL_QUEUE', env('DB_QUEUE', 'default')),
+            'retry_after' => (int) env('SURREAL_QUEUE_RETRY_AFTER', env('DB_QUEUE_RETRY_AFTER', 90)),
             'after_commit' => false,
         ],
 
@@ -122,7 +131,7 @@ return [
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION', 'sqlite'),
+        'database' => env('QUEUE_FAILED_DATABASE', env('DB_CONNECTION', 'sqlite')),
         'table' => 'failed_jobs',
     ],
 

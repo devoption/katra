@@ -133,6 +133,24 @@ php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000
 - Session read, write, update, and expiry behavior are covered in the test suite against a real Surreal runtime.
 - This driver intentionally follows Laravel's normal database-session lifecycle, so expiry cleanup still relies on Laravel's standard session lottery / pruning behavior instead of Surreal-native TTL features.
 
+### Surreal-Backed Queues
+
+Katra now also exposes a first-class `surreal` Laravel queue connection for teams that want jobs to live in SurrealDB alongside the rest of the application state.
+
+- Set `QUEUE_CONNECTION=surreal` to use the Surreal-backed queue connector.
+- The connector defaults to the `surreal` database connection, but you can override the queue connection, table, queue name, and retry window with `SURREAL_QUEUE_CONNECTION`, `SURREAL_QUEUE_TABLE`, `SURREAL_QUEUE`, and `SURREAL_QUEUE_RETRY_AFTER`.
+- If you also want failed job records in SurrealDB, set `QUEUE_FAILED_DRIVER=database-uuids` and `QUEUE_FAILED_DATABASE=surreal`.
+- Make sure the queue tables exist on the Surreal connection before you start a worker. Katra's queue migration also creates `job_batches` and `failed_jobs` alongside `jobs`:
+
+```bash
+php artisan migrate --database=surreal --path=database/migrations/0001_01_01_000002_create_jobs_table.php
+```
+
+- Start a worker against the Surreal connection with `php artisan queue:work surreal`.
+- Queue enqueue, reserve, complete, retry, and failed-job behavior are covered in the test suite against a real Surreal runtime.
+- This connector currently uses optimistic job reservation instead of SQL row locks and database transactions, so it is best suited to Katra's current low-contention worker model rather than high-volume multi-worker contention scenarios.
+- `after_commit` is not supported on the Surreal queue connection because the Surreal database connection does not expose SQL transaction semantics.
+
 ## Planning Docs
 
 - [Katra v2 Overview](docs/v2-overview.md)
