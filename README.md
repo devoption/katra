@@ -93,6 +93,17 @@ The Laravel AI SDK is installed and its conversation storage migrations are part
 
 The current AI foundation test uses agent fakes, so the repo test suite does not require live provider credentials just to verify the integration.
 
+### Laravel MCP Foundation
+
+Katra now includes Laravel MCP as an explicit application dependency.
+
+- The application publishes `config/mcp.php` and `routes/ai.php` so MCP setup lives in the same Laravel configuration surface as the rest of the app.
+- Katra registers a local MCP handle named `katra` that points at `App\Mcp\Servers\KatraServer`.
+- The current example tool, `App\Mcp\Tools\DescribeWorkspace`, is intentionally small and read-only. It exists as a smoke-tested interoperability example, not as a parallel product surface.
+- MCP matters for interoperability, tool exposure, and external integrations, but it should not become the center of Katra's architecture.
+- Start the local MCP server with `php artisan mcp:start katra`.
+- The current smoke coverage lives in `tests/Feature/McpSmokeTest.php`.
+
 ### Surreal-Backed Migrations
 
 Katra now includes a first Laravel-compatible Surreal schema driver for migration work.
