@@ -78,7 +78,7 @@ class SurrealQueue extends DatabaseQueue
     {
         $reservedAt = $this->currentTime();
         $attempts = $job->attempts + 1;
-        $existingReservedAt = property_exists($job, 'reserved_at') ? $job->reserved_at : null;
+        $existingReservedAt = $job->reserved_at ?? null;
 
         $query = $this->database->table($this->table)
             ->where('id', $job->id);

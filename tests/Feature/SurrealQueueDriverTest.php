@@ -116,6 +116,28 @@ test('the surreal queue driver supports the queue lifecycle', function () {
         expect(File::get($retryMarker))->toBe('retried')
             ->and(DB::connection('surreal')->table('jobs')->count())->toBe(0);
 
+        $queue->push(new SurrealQueueCompletingTestJob($retryMarker, 'expired-reservation'));
+
+        $expiredReservationJob = $queue->pop();
+
+        expect($expiredReservationJob)->not->toBeNull();
+
+        expect(DB::connection('surreal')->table('jobs')->where('id', $expiredReservationJob->getJobId())->update([
+            'reserved_at' => now()->subMinutes(5)->timestamp,
+        ]))->toBe(1);
+
+        $expiredReservationRetry = $queue->pop();
+
+        expect($expiredReservationRetry)->not->toBeNull()
+            ->and($expiredReservationRetry->getJobId())->toBe($expiredReservationJob->getJobId())
+            ->and($expiredReservationRetry->attempts())->toBe(2);
+
+        $expiredReservationRetry->fire();
+        $expiredReservationRetry->delete();
+
+        expect(File::get($retryMarker))->toBe('expired-reservation')
+            ->and(DB::connection('surreal')->table('jobs')->count())->toBe(0);
+
         $queue->push(new SurrealQueueFailingTestJob);
 
         Artisan::call('queue:work', [
