@@ -9,6 +9,7 @@ use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
+use App\Support\Native\NativeRuntimePersistence;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Session\DatabaseSessionHandler;
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->app->make(NativeRuntimePersistence::class)->configure();
+
         $this->app->extend('migration.repository', function ($repository, $app): SurrealMigrationRepository {
             $migrations = $app['config']['database.migrations'];
             $table = is_array($migrations) ? ($migrations['table'] ?? 'migrations') : $migrations;
