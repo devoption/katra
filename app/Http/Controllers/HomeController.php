@@ -6,6 +6,7 @@ use App\Features\Desktop\MvpShell;
 use App\Models\InstanceConnection;
 use App\Models\SurrealWorkspace;
 use App\Models\Workspace;
+use App\Models\WorkspaceAgent;
 use App\Models\WorkspaceChat;
 use App\Models\WorkspaceChatMessage;
 use App\Models\WorkspaceChatParticipant;
@@ -17,6 +18,7 @@ use App\Support\Features\DesktopUi;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
 use Throwable;
@@ -310,18 +312,27 @@ class HomeController extends Controller
 
     /**
      * @param  EloquentCollection<int, WorkspaceChat>  $chats
-     * @return array<int, array{label: string, active?: bool, prefix: string, tone: string, action?: string|null}>
+     * @return array<int, array{label: string, active?: bool, prefix: string, tone: string, meta?: string|null, action?: string|null}>
      */
     private function chatLinks(EloquentCollection $chats, WorkspaceChat $activeChat): array
     {
         return $chats
-            ->map(fn (WorkspaceChat $chat): array => [
-                'label' => $chat->name,
-                'active' => (int) $chat->getKey() === (int) $activeChat->getKey(),
-                'prefix' => $chat->kind === WorkspaceChat::KIND_DIRECT ? '@' : strtoupper(substr($chat->name, 0, 1)),
-                'tone' => $chat->kind === WorkspaceChat::KIND_DIRECT ? 'human' : 'room',
-                'action' => (int) $chat->getKey() === (int) $activeChat->getKey() ? null : route('chats.activate', $chat),
-            ])
+            ->map(function (WorkspaceChat $chat) use ($activeChat): array {
+                $hasAgentParticipant = (bool) $chat->has_agent_participant;
+
+                return [
+                    'label' => $chat->name,
+                    'active' => (int) $chat->getKey() === (int) $activeChat->getKey(),
+                    'prefix' => $hasAgentParticipant
+                        ? 'AI'
+                        : ($chat->kind === WorkspaceChat::KIND_DIRECT ? '@' : strtoupper(substr($chat->name, 0, 1))),
+                    'tone' => $hasAgentParticipant
+                        ? 'bot'
+                        : ($chat->kind === WorkspaceChat::KIND_DIRECT ? 'human' : 'room'),
+                    'meta' => $hasAgentParticipant ? 'Agent' : null,
+                    'action' => (int) $chat->getKey() === (int) $activeChat->getKey() ? null : route('chats.activate', $chat),
+                ];
+            })
             ->values()
             ->all();
     }
@@ -516,11 +527,15 @@ class HomeController extends Controller
         $connections = $connectionManager->connectionsFor($request->user());
         $workspaces = $connectionManager->workspacesFor($activeConnection);
         $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
+        $availableAgents = $activeWorkspaceModel->agents;
         $activeWorkspace = $this->activeWorkspaceState($activeConnection, $activeWorkspaceModel, $localReady);
         $activeChatModel = $chatManager->activeChatFor($activeWorkspaceModel, $request->user(), $viewerIdentity);
         $chats = $chatManager->chatsFor($activeWorkspaceModel);
         $participants = $this->chatParticipants($activeChatModel);
         $messages = $this->chatMessages($activeChatModel);
+        $chatSubmissionToken = (string) Str::uuid();
+
+        $request->session()->put('chat.create_token', $chatSubmissionToken);
 
         return view('welcome', [
             'mvpShellEnabled' => $mvpShellEnabled,
@@ -536,6 +551,11 @@ class HomeController extends Controller
             'conversationNodeTabs' => $this->conversationNodeTabs($activeWorkspace),
             'messages' => $messages,
             'participants' => $participants,
+            'chatSubmissionToken' => $chatSubmissionToken,
+            'availableAgents' => $availableAgents->map(fn (WorkspaceAgent $workspaceAgent): array => [
+                'id' => (int) $workspaceAgent->getKey(),
+                'name' => $workspaceAgent->name,
+            ])->values()->all(),
             'viewerName' => $viewerIdentity['name'],
             'viewerEmail' => $viewerIdentity['email'],
             'viewerInitials' => $viewerIdentity['initials'],

@@ -40,4 +40,12 @@ class Workspace extends Model
     {
         return $this->hasMany(WorkspaceChat::class);
     }
+
+    /**
+     * @return HasMany<WorkspaceAgent, $this>
+     */
+    public function agents(): HasMany
+    {
+        return $this->hasMany(WorkspaceAgent::class);
+    }
 }

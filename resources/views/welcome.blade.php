@@ -114,6 +114,7 @@
                                             :tone="$item['tone']"
                                             :active="$item['active'] ?? false"
                                             :muted="$item['muted'] ?? false"
+                                            :meta="$item['meta'] ?? null"
                                             :action="$item['action'] ?? null"
                                         />
                                     @endforeach
@@ -376,7 +377,10 @@
                                             <span class="{{ $participantTone }} flex h-7 w-7 items-center justify-center rounded-full font-mono text-xs uppercase">
                                                 {{ $participantPrefix }}
                                             </span>
-                                            <span class="shell-text text-sm font-medium">{{ $participant['label'] }}</span>
+                                            <span class="flex items-center gap-2">
+                                                <span class="shell-text text-sm font-medium">{{ $participant['label'] }}</span>
+                                                <span class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">{{ $participant['meta'] }}</span>
+                                            </span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -767,8 +771,9 @@
         </x-desktop.modal>
 
         <x-desktop.modal id="chat-creator-modal" title="Create chat" description="Start a private direct or group chat inside this workspace.">
-            <form method="POST" action="{{ route('chats.store') }}" class="space-y-4">
+            <form method="POST" action="{{ route('chats.store') }}" class="space-y-4" data-submit-once>
                 @csrf
+                <input type="hidden" name="chat_submission_token" value="{{ $chatSubmissionToken }}" />
 
                 <div class="space-y-2">
                     <label for="chat-name" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Chat name</label>
@@ -777,6 +782,7 @@
                         name="chat_name"
                         type="text"
                         value="{{ old('chat_name') }}"
+                        required
                         class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
                         placeholder="Design review"
                     />
@@ -799,6 +805,25 @@
                         <p class="text-sm text-[color:var(--shell-accent)]">{{ $message }}</p>
                     @enderror
                 </div>
+
+                @if (count($availableAgents) > 0)
+                    <div class="space-y-2">
+                        <label for="workspace-agent" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Agent participant</label>
+                        <select
+                            id="workspace-agent"
+                            name="workspace_agent_id"
+                            class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none"
+                        >
+                            <option value="">None</option>
+                            @foreach ($availableAgents as $agent)
+                                <option value="{{ $agent['id'] }}" @selected((string) old('workspace_agent_id') === (string) $agent['id'])>{{ $agent['name'] }}</option>
+                            @endforeach
+                        </select>
+                        @error('workspace_agent_id')
+                            <p class="text-sm text-[color:var(--shell-accent)]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
 
                 <p class="shell-text-soft text-sm leading-6">Chats stay private to this workspace and are kept out of the shared workspace graph.</p>
 
@@ -839,6 +864,7 @@
                 const rightRailCloseButtons = shell.querySelectorAll('[data-right-rail-close]');
                 const rightRailPinButtons = shell.querySelectorAll('[data-right-rail-pin]');
                 const rightRailResizeHandle = shell.querySelector('[data-right-rail-resize-handle]');
+                const singleSubmitForms = document.querySelectorAll('[data-submit-once]');
                 const modals = document.querySelectorAll('[data-shell-modal]');
                 const dialogButtons = document.querySelectorAll('[data-dialog-target]');
                 const dialogCloseButtons = document.querySelectorAll('[data-dialog-close]');
@@ -900,6 +926,17 @@
                     messageInput.style.height = '0px';
                     messageInput.style.height = `${Math.min(messageInput.scrollHeight, 160)}px`;
                 };
+
+                singleSubmitForms.forEach((form) => {
+                    form.addEventListener('submit', () => {
+                        const submitButtons = form.querySelectorAll('button[type="submit"]');
+
+                        submitButtons.forEach((button) => {
+                            button.disabled = true;
+                            button.classList.add('opacity-60', 'pointer-events-none');
+                        });
+                    });
+                });
 
                 const openSearchOverlay = () => {
                     searchOverlay?.classList.remove('hidden');

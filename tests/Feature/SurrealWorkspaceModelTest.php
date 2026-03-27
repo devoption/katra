@@ -2,11 +2,15 @@
 
 use App\Models\SurrealWorkspace;
 use App\Models\Workspace;
+use App\Models\WorkspaceAgent;
+use App\Models\WorkspaceChat;
+use App\Models\WorkspaceChatParticipant;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
+use App\Support\Chats\WorkspaceAgentManager;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -236,6 +240,245 @@ test('the workspace repair migration syncs the surreal sequence after backfill',
 
         expect((int) $workspace->getKey())->toBe(3)
             ->and($workspaceIds)->toBe([1, 2, 3]);
+    } finally {
+        config()->set('database.default', $originalDefaultConnection);
+
+        DB::purge('surreal');
+
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
+        File::deleteDirectory($storagePath);
+    }
+});
+
+test('workspace agent repair drops the legacy key field before seeding defaults', function () {
+    $client = app(SurrealCliClient::class);
+
+    if (! $client->isAvailable()) {
+        $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
+    }
+
+    $storagePath = storage_path('app/surrealdb/workspace-agents-repair-test-'.Str::uuid());
+    $originalDefaultConnection = config('database.default');
+
+    File::deleteDirectory($storagePath);
+    File::ensureDirectoryExists(dirname($storagePath));
+
+    try {
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('database.default', 'surreal');
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_agents_repair_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        DB::purge('surreal');
+
+        $schema = Schema::connection('surreal');
+
+        $schema->create('connection_workspaces', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('workspace_agents', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('workspace_id');
+            $table->string('key');
+            $table->string('name');
+            $table->string('agent_class');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $workspace = Workspace::create([
+            'instance_connection_id' => 42,
+            'name' => 'Atlas',
+            'slug' => 'atlas',
+            'summary' => 'Workspace ready for agent repair testing.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $renameMigration = require database_path('migrations/2026_03_27_155657_repair_workspace_agents_agent_key_column.php');
+        $renameMigration->up();
+
+        $dropLegacyMigration = require database_path('migrations/2026_03_27_160806_drop_legacy_key_column_from_workspace_agents_table.php');
+        $dropLegacyMigration->up();
+
+        $agents = app(WorkspaceAgentManager::class)->ensureDefaults($workspace->fresh());
+
+        expect($schema->hasColumn('workspace_agents', 'agent_key'))->toBeTrue()
+            ->and($schema->hasColumn('workspace_agents', 'key'))->toBeFalse()
+            ->and($agents)->toHaveCount(1)
+            ->and($agents->first()?->agent_key)->toBe(WorkspaceAgent::KEY_WORKSPACE_GUIDE)
+            ->and($agents->first()?->name)->toBe('Workspace Guide');
+    } finally {
+        config()->set('database.default', $originalDefaultConnection);
+
+        DB::purge('surreal');
+
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
+        File::deleteDirectory($storagePath);
+    }
+});
+
+test('workspace agent repair preserves chat participants when duplicate defaults exist on surreal', function () {
+    $client = app(SurrealCliClient::class);
+
+    if (! $client->isAvailable()) {
+        $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
+    }
+
+    $storagePath = storage_path('app/surrealdb/workspace-agent-duplicate-repair-test-'.Str::uuid());
+    $originalDefaultConnection = config('database.default');
+
+    File::deleteDirectory($storagePath);
+    File::ensureDirectoryExists(dirname($storagePath));
+
+    try {
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('database.default', 'surreal');
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_agent_duplicate_repair_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        DB::purge('surreal');
+
+        $schema = Schema::connection('surreal');
+
+        $schema->create('connection_workspaces', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('workspace_agents', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('workspace_id');
+            $table->string('agent_key');
+            $table->string('name');
+            $table->string('agent_class');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('workspace_chats', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('workspace_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->string('kind');
+            $table->string('visibility');
+            $table->text('summary')->nullable();
+            $table->boolean('has_agent_participant')->default(false);
+            $table->timestamps();
+        });
+
+        $schema->create('workspace_chat_participants', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('chat_id');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('workspace_agent_id')->nullable();
+            $table->string('participant_type');
+            $table->string('participant_key');
+            $table->string('display_name');
+            $table->timestamps();
+        });
+
+        $workspace = Workspace::create([
+            'instance_connection_id' => 42,
+            'name' => 'Atlas',
+            'slug' => 'atlas',
+            'summary' => 'Workspace ready for duplicate agent repair testing.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $survivingAgent = WorkspaceAgent::create([
+            'workspace_id' => $workspace->getKey(),
+            'agent_key' => WorkspaceAgent::KEY_WORKSPACE_GUIDE,
+            'name' => 'Workspace Guide',
+            'agent_class' => WorkspaceAgent::CLASS_WORKSPACE_GUIDE,
+            'summary' => 'Outdated summary',
+            'created_at' => now()->subMinute(),
+            'updated_at' => now()->subMinute(),
+        ]);
+
+        $duplicateAgent = WorkspaceAgent::create([
+            'workspace_id' => $workspace->getKey(),
+            'agent_key' => WorkspaceAgent::KEY_WORKSPACE_GUIDE,
+            'name' => 'Workspace Guide Copy',
+            'agent_class' => WorkspaceAgent::CLASS_WORKSPACE_GUIDE,
+            'summary' => 'Duplicate summary',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $chat = WorkspaceChat::create([
+            'workspace_id' => $workspace->getKey(),
+            'name' => 'Workspace Guide',
+            'slug' => 'workspace-guide',
+            'kind' => WorkspaceChat::KIND_DIRECT,
+            'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
+            'summary' => 'Duplicate agent preservation test.',
+            'has_agent_participant' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        WorkspaceChatParticipant::create([
+            'chat_id' => $chat->getKey(),
+            'workspace_agent_id' => $duplicateAgent->getKey(),
+            'participant_type' => WorkspaceChatParticipant::TYPE_AGENT,
+            'participant_key' => 'agent:'.WorkspaceAgent::KEY_WORKSPACE_GUIDE,
+            'display_name' => 'Workspace Guide Copy',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $agents = app(WorkspaceAgentManager::class)->ensureDefaults($workspace->fresh());
+        $participant = WorkspaceChatParticipant::query()->first();
+
+        expect($agents)->toHaveCount(1)
+            ->and($agents->first()?->getKey())->toBe($survivingAgent->getKey())
+            ->and($agents->first()?->summary)->toBe('Helps shape durable, graph-native collaboration inside this workspace.')
+            ->and($participant)->not()->toBeNull()
+            ->and($participant?->workspace_agent_id)->toBe($survivingAgent->getKey())
+            ->and($participant?->display_name)->toBe('Workspace Guide');
     } finally {
         config()->set('database.default', $originalDefaultConnection);
 

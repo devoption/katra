@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['workspace_id', 'name', 'slug', 'kind', 'visibility', 'summary'])]
+#[Fillable(['workspace_id', 'name', 'slug', 'kind', 'visibility', 'summary', 'has_agent_participant'])]
 class WorkspaceChat extends Model
 {
     public const KIND_DIRECT = 'direct';
@@ -20,6 +20,16 @@ class WorkspaceChat extends Model
 
     /** @use HasFactory<WorkspaceChatFactory> */
     use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'has_agent_participant' => 'boolean',
+        ];
+    }
 
     /**
      * @return BelongsTo<Workspace, $this>
