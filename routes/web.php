@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InstanceConnectionController;
 use App\Http\Controllers\WorkspaceController;
@@ -23,4 +25,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/connections/{instanceConnection}/connect', [InstanceConnectionController::class, 'authenticate'])->name('connections.authenticate');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     Route::post('/workspaces/{workspace}/activate', [WorkspaceController::class, 'activate'])->name('workspaces.activate');
+    Route::post('/chats', [ChatController::class, 'store'])->name('chats.store');
+    Route::post('/chats/{workspaceChat}/activate', [ChatController::class, 'activate'])->name('chats.activate');
+    Route::post('/chats/{workspaceChat}/messages', [ChatMessageController::class, 'store'])->name('chats.messages.store');
 });

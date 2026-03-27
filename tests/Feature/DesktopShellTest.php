@@ -3,6 +3,9 @@
 use App\Models\InstanceConnection;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Models\WorkspaceChat;
+use App\Models\WorkspaceChatMessage;
+use App\Models\WorkspaceChatParticipant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -50,9 +53,47 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         'name' => 'General',
         'slug' => 'general',
     ]);
+    $activeChat = WorkspaceChat::factory()->for($activeWorkspace, 'workspace')->create([
+        'name' => 'Design Review',
+        'slug' => 'design-review',
+        'kind' => WorkspaceChat::KIND_GROUP,
+        'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
+    ]);
+    WorkspaceChat::factory()->for($activeWorkspace, 'workspace')->direct()->create([
+        'name' => 'Founder Sync',
+        'slug' => 'founder-sync',
+        'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
+    ]);
+    WorkspaceChatParticipant::factory()->for($activeChat, 'chat')->create([
+        'user_id' => $user->getKey(),
+        'participant_type' => WorkspaceChatParticipant::TYPE_HUMAN,
+        'participant_key' => 'human:derek@katra.io',
+        'display_name' => 'Derek Bourgeois',
+    ]);
+    WorkspaceChatParticipant::factory()->for($activeChat, 'chat')->create([
+        'user_id' => null,
+        'participant_type' => WorkspaceChatParticipant::TYPE_HUMAN,
+        'participant_key' => 'human:morgan@katra.io',
+        'display_name' => 'Morgan Hale',
+    ]);
+    WorkspaceChatMessage::factory()->for($activeChat, 'chat')->create([
+        'sender_type' => WorkspaceChatMessage::SENDER_HUMAN,
+        'sender_key' => 'human:derek@katra.io',
+        'sender_name' => 'Derek Bourgeois',
+        'body' => 'Lock the private chat layer before we wire agents into it.',
+    ]);
+    WorkspaceChatMessage::factory()->for($activeChat, 'chat')->create([
+        'sender_type' => WorkspaceChatMessage::SENDER_HUMAN,
+        'sender_key' => 'human:morgan@katra.io',
+        'sender_name' => 'Morgan Hale',
+        'body' => 'Agreed. The workspace should own chats, not the other way around.',
+    ]);
 
     $currentConnection->forceFill([
         'active_workspace_id' => $activeWorkspace->getKey(),
+    ])->save();
+    $activeWorkspace->forceFill([
+        'active_chat_id' => $activeChat->getKey(),
     ])->save();
 
     InstanceConnection::factory()->for($user)->create([
@@ -76,8 +117,9 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertSee('Create chat')
         ->assertSee('Product Atlas')
         ->assertSee('General')
-        ->assertSee('Planner Agent')
-        ->assertSee('Research Model')
+        ->assertSee('Design Review')
+        ->assertSee('Founder Sync')
+        ->assertSee('Morgan Hale')
         ->assertSee('# general')
         ->assertSee('Connections')
         ->assertSee('Add a server')
@@ -101,15 +143,10 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertSee('Open')
         ->assertSee('Closed')
         ->assertSee('In review')
-        ->assertSee('Assign to agent')
-        ->assertSee('Assign')
-        ->assertSee('Choose an agent')
-        ->assertSee('Context Agent')
-        ->assertSee('Attach file')
-        ->assertSee('Toggle voice mode')
         ->assertSee('Send message')
-        ->assertSee('Message Product Atlas')
-        ->assertSee('Voice mode selected')
+        ->assertSee('Message Design Review')
+        ->assertSee('Lock the private chat layer before we wire agents into it.')
+        ->assertSee('Agreed. The workspace should own chats, not the other way around.')
         ->assertSee('Product Atlas is a workspace on this instance for conversations, tasks, and linked work.')
         ->assertSee('Derek Bourgeois')
         ->assertSee('derek@katra.io')
@@ -181,9 +218,30 @@ test('the desktop shell can render a saved server connection as the active conne
         'slug' => 'relay-launch',
         'summary' => 'Relay Launch is the active workspace on Relay Cloud for shared orchestration, worker presence, and linked team context.',
     ]);
+    $activeChat = WorkspaceChat::factory()->for($workspace, 'workspace')->create([
+        'name' => 'Ops Briefing',
+        'slug' => 'ops-briefing',
+        'kind' => WorkspaceChat::KIND_GROUP,
+        'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
+    ]);
+    WorkspaceChatParticipant::factory()->for($activeChat, 'chat')->create([
+        'user_id' => null,
+        'participant_type' => WorkspaceChatParticipant::TYPE_HUMAN,
+        'participant_key' => 'human:ops@relay.devoption.test',
+        'display_name' => 'Relay Operator',
+    ]);
+    WorkspaceChatMessage::factory()->for($activeChat, 'chat')->create([
+        'sender_type' => WorkspaceChatMessage::SENDER_HUMAN,
+        'sender_key' => 'human:ops@relay.devoption.test',
+        'sender_name' => 'Relay Operator',
+        'body' => 'Remote conversations stay private to this workspace and do not enter the shared graph.',
+    ]);
 
     $connection->forceFill([
         'active_workspace_id' => $workspace->getKey(),
+    ])->save();
+    $workspace->forceFill([
+        'active_chat_id' => $activeChat->getKey(),
     ])->save();
 
     actingAs($user)
@@ -194,10 +252,10 @@ test('the desktop shell can render a saved server connection as the active conne
         ->assertSee('Relay Cloud')
         ->assertSee('Connections')
         ->assertSee('Relay Launch')
+        ->assertSee('Ops Briefing')
         ->assertSee('# general')
-        ->assertSee('Ops Agent')
-        ->assertSee('Routing Agent')
         ->assertSee('Relay Operator')
         ->assertSee('ops@relay.devoption.test')
+        ->assertSee('Remote conversations stay private to this workspace and do not enter the shared graph.')
         ->assertSee('Signed in as ops@relay.devoption.test.');
 });

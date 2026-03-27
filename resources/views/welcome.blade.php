@@ -35,10 +35,16 @@
                             ],
                         ],
                         [
+                            'label' => 'Chats',
+                            'items' => [
+                                ['title' => $activeChat->name, 'meta' => 'Private chat', 'summary' => $activeChat->summary ?: 'The active private conversation for this workspace.'],
+                            ],
+                        ],
+                        [
                             'label' => 'People and agents',
                             'items' => [
                                 ['title' => $viewerName, 'meta' => 'Human', 'summary' => 'Direct conversation and workspace owner context.'],
-                                ['title' => 'Planner Agent', 'meta' => 'Worker', 'summary' => 'Planning and structuring support for the active room.'],
+                                ['title' => $participants[0]['label'] ?? $viewerName, 'meta' => $participants[0]['meta'] ?? 'Human', 'summary' => 'Participant in the active private chat.'],
                             ],
                         ],
                         [
@@ -50,35 +56,6 @@
                         ],
                     ];
 
-                    $conversationSeedMessages = collect($messages)
-                        ->values()
-                        ->map(fn (array $message, int $index): array => [
-                            'id' => 'seed-'.$index,
-                            'sender' => $message['speaker'],
-                            'role' => $message['role'],
-                            'meta' => $message['meta'],
-                            'body' => $message['body'],
-                            'direction' => $message['speaker'] === 'You' ? 'outgoing' : 'incoming',
-                            'attachments' => [],
-                        ])
-                        ->all();
-
-                    $conversationResponders = collect($participants)
-                        ->filter(fn (array $participant): bool => $participant['meta'] !== 'Human')
-                        ->values()
-                        ->map(fn (array $participant): array => [
-                            'label' => $participant['label'],
-                            'role' => $participant['meta'],
-                        ])
-                        ->all();
-
-                    $conversationMockReplies = [
-                        'I can break this into a couple of linked nodes without changing the flow of the room.',
-                        'That looks good. I would tighten the interaction first, then let the linked work follow behind it.',
-                        'We can keep the room focused and still attach the next task, artifact, or decision from the context rail.',
-                        'This conversation feels clearer when the structure stays quiet and the actions stay close to the composer.',
-                        'I can take the next pass on this and keep the changes scoped to the active conversation.',
-                    ];
                 @endphp
                 <div data-desktop-shell class="relative h-full overflow-hidden">
                     <div data-shell-grid class="grid h-full xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -131,7 +108,14 @@
 
                                 <x-desktop.nav-section label="Chats" collapsible open action-label="Create chat" action-dialog-id="chat-creator-modal">
                                     @foreach ($chatLinks as $item)
-                                        <x-desktop.nav-item :label="$item['label']" :prefix="$item['prefix']" :tone="$item['tone']" :active="$item['active'] ?? false" :muted="$item['muted'] ?? false" />
+                                        <x-desktop.nav-item
+                                            :label="$item['label']"
+                                            :prefix="$item['prefix']"
+                                            :tone="$item['tone']"
+                                            :active="$item['active'] ?? false"
+                                            :muted="$item['muted'] ?? false"
+                                            :action="$item['action'] ?? null"
+                                        />
                                     @endforeach
                                 </x-desktop.nav-section>
                             </div>
@@ -238,6 +222,10 @@
                                 <p class="shell-text-soft mt-2 max-w-2xl text-sm leading-6">
                                     {{ $activeWorkspace['summary'] }}
                                 </p>
+                                <div class="mt-3 inline-flex items-center gap-2 rounded-full shell-elevated px-3 py-2">
+                                    <span class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Private chat</span>
+                                    <span class="shell-text text-sm font-medium">{{ $activeChat->name }}</span>
+                                </div>
                             </div>
                             </div>
                         </header>
@@ -248,9 +236,9 @@
                                     data-conversation-stream
                                     class="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-4"
                                 >
-                                    @foreach ($conversationSeedMessages as $message)
+                                    @forelse ($messages as $message)
                                         @php
-                                            $isOutgoing = $message['direction'] === 'outgoing';
+                                            $isOutgoing = $message['role'] === 'Human' && $message['speaker'] === $viewerName;
                                             $messageRoleTone = match ($message['role']) {
                                                 'Human' => 'shell-text-faint',
                                                 'Agent' => 'text-[color:var(--shell-accent)]',
@@ -262,7 +250,7 @@
                                         <article class="flex {{ $isOutgoing ? 'justify-end' : 'justify-start' }}">
                                             <div class="flex max-w-[78%] flex-col gap-2 {{ $isOutgoing ? 'items-end' : 'items-start' }}">
                                                 <div class="flex items-center gap-2 px-1">
-                                                    <span class="shell-text text-sm font-semibold">{{ $message['sender'] }}</span>
+                                                    <span class="shell-text text-sm font-semibold">{{ $message['speaker'] }}</span>
                                                     <span class="font-mono text-[10px] uppercase tracking-[0.12em] {{ $messageRoleTone }}">{{ $message['role'] }}</span>
                                                     <span class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">{{ $message['meta'] }}</span>
                                                 </div>
@@ -272,61 +260,33 @@
                                                 </div>
                                             </div>
                                         </article>
-                                    @endforeach
+                                    @empty
+                                        <div class="shell-elevated rounded-[26px] px-5 py-5">
+                                            <p class="shell-text text-sm font-medium">{{ $activeChat->name }}</p>
+                                            <p class="shell-text-soft mt-2 text-sm leading-6">No messages yet. Start the conversation from this private chat and it will stay scoped to the {{ $activeWorkspace['label'] }} workspace.</p>
+                                        </div>
+                                    @endforelse
                                 </div>
 
-                                <div class="shell-surface mt-2 rounded-[26px] px-4 py-3">
-                                    <div data-message-attachments class="hidden flex-wrap gap-2 pb-3"></div>
-
-                                    <div
-                                        data-voice-indicator
-                                        class="shell-accent-soft shell-text hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-medium"
-                                    >
-                                        <x-mdi-microphone class="h-4 w-4" />
-                                        <span>Voice mode selected</span>
-                                    </div>
+                                <form method="POST" action="{{ route('chats.messages.store', $activeChat) }}" class="shell-surface mt-2 rounded-[26px] px-4 py-3">
+                                    @csrf
 
                                     <textarea
+                                        name="message_body"
                                         data-message-input
                                         rows="1"
                                         class="shell-text min-h-[56px] w-full resize-none bg-transparent pt-1 text-[15px] leading-7 outline-none placeholder:text-[color:var(--shell-text-faint)]"
-                                        placeholder="Message {{ $activeWorkspace['label'] }}"
-                                        aria-label="Message {{ $activeWorkspace['label'] }}"
-                                    ></textarea>
+                                        placeholder="Message {{ $activeChat->name }}"
+                                        aria-label="Message {{ $activeChat->name }}"
+                                    >{{ old('message_body') }}</textarea>
 
-                                    <div class="mt-3 flex items-center justify-between gap-3">
-                                        <div class="flex items-center gap-2">
-                                            <input
-                                                type="file"
-                                                data-message-file-input
-                                                class="hidden"
-                                                multiple
-                                                aria-hidden="true"
-                                            />
-                                            <button
-                                                type="button"
-                                                data-attach-file
-                                                class="shell-elevated shell-hover-surface inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors"
-                                                aria-label="Attach file"
-                                                title="Attach file"
-                                            >
-                                                <x-mdi-paperclip class="h-4 w-4" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                data-voice-toggle
-                                                class="shell-elevated shell-hover-surface inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors"
-                                                aria-label="Toggle voice mode"
-                                                title="Toggle voice mode"
-                                                aria-pressed="false"
-                                            >
-                                                <x-mdi-microphone class="h-4 w-4" />
-                                            </button>
-                                        </div>
+                                    @error('message_body')
+                                        <p class="mt-2 text-sm text-[color:var(--shell-accent)]">{{ $message }}</p>
+                                    @enderror
 
+                                    <div class="mt-3 flex items-center justify-end gap-3">
                                         <button
-                                            type="button"
-                                            data-send-message
+                                            type="submit"
                                             class="shell-accent-chip inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--shell-accent-hover)]"
                                             aria-label="Send message"
                                             title="Send message"
@@ -334,7 +294,7 @@
                                             <x-mdi-send class="h-4 w-4" />
                                         </button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </section>
@@ -806,62 +766,48 @@
             </form>
         </x-desktop.modal>
 
-        <x-desktop.modal id="chat-creator-modal" title="Start conversation" description="Select one or more contacts to open a conversation. This is demo-only for now.">
-            <form method="dialog" class="space-y-4">
-                <div data-contact-selector class="space-y-3">
-                    <div class="space-y-2">
-                        <label for="chat-contact-search" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Contacts</label>
-                        <input
-                            id="chat-contact-search"
-                            type="text"
-                            data-contact-search
-                            class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
-                            placeholder="Search people, agents, and models"
-                        />
-                    </div>
+        <x-desktop.modal id="chat-creator-modal" title="Create chat" description="Start a private direct or group chat inside this workspace.">
+            <form method="POST" action="{{ route('chats.store') }}" class="space-y-4">
+                @csrf
 
-                    <div class="space-y-2">
-                        <p class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Selected</p>
-                        <div data-contact-selected class="flex min-h-14 flex-wrap gap-2 rounded-[18px] px-3 py-3 shell-input">
-                            <p data-contact-empty class="shell-text-subtle text-sm">No contacts selected yet.</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <p class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Available contacts</p>
-                        <div data-contact-options class="max-h-64 space-y-2 overflow-y-auto pr-1">
-                            @foreach ($chatContacts as $contact)
-                                <button
-                                    type="button"
-                                    data-contact-option
-                                    data-contact-value="{{ $contact['value'] }}"
-                                    data-contact-label="{{ $contact['label'] }}"
-                                    class="shell-input flex w-full items-center gap-3 rounded-[18px] px-3 py-3 text-left transition-colors hover:bg-[var(--shell-elevated)]"
-                                >
-                                    <span @class([
-                                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-mono text-sm uppercase',
-                                        'shell-human-chip' => $contact['tone'] === 'human',
-                                        'shell-bot-chip' => $contact['tone'] === 'bot',
-                                    ])>
-                                        {{ $contact['prefix'] }}
-                                    </span>
-                                    <span class="min-w-0 flex-1">
-                                        <span class="shell-text block truncate text-sm font-medium">{{ $contact['label'] }}</span>
-                                        <span class="shell-text-faint block text-xs">{{ $contact['subtitle'] }}</span>
-                                    </span>
-                                    <span class="shell-text-info-strong text-xs font-medium">Add</span>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
+                <div class="space-y-2">
+                    <label for="chat-name" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Chat name</label>
+                    <input
+                        id="chat-name"
+                        name="chat_name"
+                        type="text"
+                        value="{{ old('chat_name') }}"
+                        class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                        placeholder="Design review"
+                    />
+                    @error('chat_name')
+                        <p class="text-sm text-[color:var(--shell-accent)]">{{ $message }}</p>
+                    @enderror
                 </div>
+
+                <div class="space-y-2">
+                    <label for="chat-kind" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Chat type</label>
+                    <select
+                        id="chat-kind"
+                        name="chat_kind"
+                        class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none"
+                    >
+                        <option value="direct" @selected(old('chat_kind') === 'direct')>Direct</option>
+                        <option value="group" @selected(old('chat_kind', 'group') === 'group')>Group</option>
+                    </select>
+                    @error('chat_kind')
+                        <p class="text-sm text-[color:var(--shell-accent)]">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <p class="shell-text-soft text-sm leading-6">Chats stay private to this workspace and are kept out of the shared workspace graph.</p>
 
                 <div class="flex items-center justify-end gap-3 pt-1">
                     <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
                         Cancel
                     </button>
                     <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
-                        Start conversation
+                        Create chat
                     </button>
                 </div>
             </form>
@@ -885,12 +831,6 @@
                 const searchBackdrop = shell.querySelector('[data-search-backdrop]');
                 const conversationStream = shell.querySelector('[data-conversation-stream]');
                 const messageInput = shell.querySelector('[data-message-input]');
-                const sendMessageButton = shell.querySelector('[data-send-message]');
-                const attachFileButton = shell.querySelector('[data-attach-file]');
-                const messageFileInput = shell.querySelector('[data-message-file-input]');
-                const messageAttachments = shell.querySelector('[data-message-attachments]');
-                const voiceToggleButton = shell.querySelector('[data-voice-toggle]');
-                const voiceIndicator = shell.querySelector('[data-voice-indicator]');
                 const profileMenu = shell.querySelector('[data-profile-menu]');
                 const themeButtons = shell.querySelectorAll('[data-theme-option]');
                 const collapseButtons = shell.querySelectorAll('[data-sidebar-toggle]');
@@ -903,31 +843,22 @@
                 const dialogButtons = document.querySelectorAll('[data-dialog-target]');
                 const dialogCloseButtons = document.querySelectorAll('[data-dialog-close]');
                 const navSectionButtons = shell.querySelectorAll('[data-nav-section-toggle]');
-                const contactSelector = document.querySelector('[data-contact-selector]');
                 const storageKey = 'katra.desktop.sidebar.preference';
                 const rightRailStorageKey = 'katra.desktop.right-rail.preference';
                 const rightRailPinStorageKey = 'katra.desktop.right-rail.pin';
                 const rightRailWidthStorageKey = 'katra.desktop.right-rail.width';
-                const conversationStorageKey = @json('katra.desktop.conversation.' . $activeWorkspace['slug']);
                 const themeStorageKey = 'katra.desktop.theme.preference';
                 const autoCollapseWidth = 1480;
                 const rightRailAutoCollapseWidth = 1280;
                 const rightRailMinWidth = 280;
                 const rightRailMaxWidth = 560;
                 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-                const conversationSeedMessages = @json($conversationSeedMessages ?? []);
-                const conversationResponders = @json($conversationResponders ?? []);
-                const conversationMockReplies = @json($conversationMockReplies ?? []);
 
                 let sidebarPreference = window.localStorage.getItem(storageKey);
                 let rightRailPreference = window.localStorage.getItem(rightRailStorageKey);
                 let rightRailPinned = window.localStorage.getItem(rightRailPinStorageKey) === 'true';
                 let rightRailWidth = Number.parseInt(window.localStorage.getItem(rightRailWidthStorageKey) ?? '320', 10);
                 let themePreference = window.localStorage.getItem(themeStorageKey) ?? 'system';
-                let conversationMessages = [];
-                let pendingAttachments = [];
-                let voiceModeEnabled = false;
-                let pendingResponseTimer = null;
 
                 if (Number.isNaN(rightRailWidth)) {
                     rightRailWidth = 320;
@@ -951,140 +882,6 @@
                     });
                 };
 
-                const conversationTimeFormatter = new Intl.DateTimeFormat([], {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                });
-
-                const escapeHtml = (value) => String(value)
-                    .replaceAll('&', '&amp;')
-                    .replaceAll('<', '&lt;')
-                    .replaceAll('>', '&gt;')
-                    .replaceAll('"', '&quot;')
-                    .replaceAll("'", '&#039;');
-
-                const conversationStorageAvailable = () => typeof window.sessionStorage !== 'undefined';
-
-                const readConversationState = () => {
-                    if (! conversationStorageAvailable()) {
-                        return [...conversationSeedMessages];
-                    }
-
-                    const stored = window.sessionStorage.getItem(conversationStorageKey);
-
-                    if (! stored) {
-                        return [...conversationSeedMessages];
-                    }
-
-                    try {
-                        const decoded = JSON.parse(stored);
-
-                        return Array.isArray(decoded) ? decoded : [...conversationSeedMessages];
-                    } catch (error) {
-                        return [...conversationSeedMessages];
-                    }
-                };
-
-                const persistConversationState = () => {
-                    if (! conversationStorageAvailable()) {
-                        return;
-                    }
-
-                    window.sessionStorage.setItem(conversationStorageKey, JSON.stringify(conversationMessages));
-                };
-
-                const timestampLabel = () => conversationTimeFormatter.format(new Date());
-
-                const participantTone = (role) => {
-                    if (role === 'Human') {
-                        return 'shell-human-chip';
-                    }
-
-                    return 'shell-bot-chip';
-                };
-
-                const participantPrefix = (sender, role) => {
-                    if (role === 'Human') {
-                        return sender.slice(0, 1).toUpperCase();
-                    }
-
-                    return '@';
-                };
-
-                const roleTone = (role) => {
-                    if (role === 'Agent') {
-                        return 'text-[color:var(--shell-accent)]';
-                    }
-
-                    if (role === 'Model' || role === 'Worker') {
-                        return 'shell-text-info-strong';
-                    }
-
-                    return 'shell-text-faint';
-                };
-
-                const attachmentMarkup = (attachments = []) => {
-                    if (! Array.isArray(attachments) || attachments.length === 0) {
-                        return '';
-                    }
-
-                    return `
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            ${attachments.map((attachment) => `
-                                <span class="shell-elevated inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm">
-                                    <span class="shell-text">${escapeHtml(attachment.name)}</span>
-                                    <span class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Mock</span>
-                                </span>
-                            `).join('')}
-                        </div>
-                    `;
-                };
-
-                const buildConversationMessage = (message) => {
-                    const outgoing = message.direction === 'outgoing';
-                    const bubbleTone = outgoing ? 'shell-accent-soft' : 'shell-elevated';
-                    const align = outgoing ? 'justify-end' : 'justify-start';
-                    const itemAlign = outgoing ? 'items-end' : 'items-start';
-                    const avatarTone = participantTone(message.role);
-                    const statusTone = roleTone(message.role);
-                    const bodyMarkup = message.typing
-                        ? `
-                            <div class="shell-text-soft flex items-center gap-2 text-sm leading-7">
-                                <span class="inline-flex items-center gap-1">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--shell-text-soft)]"></span>
-                                    <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--shell-text-soft)]"></span>
-                                    <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--shell-text-soft)]"></span>
-                                </span>
-                                <span>Thinking</span>
-                            </div>
-                        `
-                        : message.body
-                            ? `<p class="shell-text text-[15px] leading-7 whitespace-pre-wrap">${escapeHtml(message.body)}</p>`
-                            : '';
-
-                    return `
-                        <article class="flex ${align}">
-                            <div class="flex max-w-[82%] flex-col gap-2 ${itemAlign}">
-                                <div class="flex items-center gap-2 px-1">
-                                    ${outgoing ? '' : `
-                                        <span class="${avatarTone} flex h-7 w-7 items-center justify-center rounded-full font-mono text-xs uppercase">
-                                            ${escapeHtml(participantPrefix(message.sender, message.role))}
-                                        </span>
-                                    `}
-                                    <span class="shell-text text-sm font-semibold">${escapeHtml(message.sender)}</span>
-                                    <span class="font-mono text-[10px] uppercase tracking-[0.12em] ${statusTone}">${escapeHtml(message.role)}</span>
-                                    <span class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">${escapeHtml(message.meta ?? '')}</span>
-                                </div>
-
-                                <div class="${bubbleTone} w-full rounded-[26px] px-4 py-3">
-                                    ${bodyMarkup}
-                                    ${attachmentMarkup(message.attachments)}
-                                </div>
-                            </div>
-                        </article>
-                    `;
-                };
-
                 const scrollConversationToBottom = () => {
                     if (! conversationStream) {
                         return;
@@ -1095,15 +892,6 @@
                     });
                 };
 
-                const renderConversation = () => {
-                    if (! conversationStream) {
-                        return;
-                    }
-
-                    conversationStream.innerHTML = conversationMessages.map(buildConversationMessage).join('');
-                    scrollConversationToBottom();
-                };
-
                 const syncComposerHeight = () => {
                     if (! messageInput) {
                         return;
@@ -1111,129 +899,6 @@
 
                     messageInput.style.height = '0px';
                     messageInput.style.height = `${Math.min(messageInput.scrollHeight, 160)}px`;
-                };
-
-                const renderPendingAttachments = () => {
-                    if (! messageAttachments) {
-                        return;
-                    }
-
-                    if (pendingAttachments.length === 0) {
-                        messageAttachments.classList.add('hidden');
-                        messageAttachments.innerHTML = '';
-
-                        return;
-                    }
-
-                    messageAttachments.classList.remove('hidden');
-                    messageAttachments.innerHTML = pendingAttachments.map((attachment) => `
-                        <button
-                            type="button"
-                            class="shell-elevated inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors hover:bg-[var(--shell-surface)]"
-                            data-remove-attachment="${escapeHtml(attachment.id)}"
-                        >
-                            <span class="shell-text">${escapeHtml(attachment.name)}</span>
-                            <span class="shell-text-faint text-xs" aria-hidden="true">×</span>
-                        </button>
-                    `).join('');
-                };
-
-                const applyVoiceState = () => {
-                    if (! voiceToggleButton) {
-                        return;
-                    }
-
-                    voiceToggleButton.classList.toggle('shell-accent-chip', voiceModeEnabled);
-                    voiceToggleButton.classList.toggle('shell-elevated', ! voiceModeEnabled);
-                    voiceToggleButton.setAttribute('aria-pressed', voiceModeEnabled ? 'true' : 'false');
-
-                    if (voiceIndicator) {
-                        voiceIndicator.classList.toggle('hidden', ! voiceModeEnabled);
-                        voiceIndicator.classList.toggle('flex', voiceModeEnabled);
-                    }
-                };
-
-                const nextAgentReply = () => {
-                    const responder = conversationResponders[Math.floor(Math.random() * conversationResponders.length)] ?? {
-                        label: 'Katra Agent',
-                        role: 'Agent',
-                    };
-                    const body = conversationMockReplies[Math.floor(Math.random() * conversationMockReplies.length)];
-
-                    return {
-                        id: `reply-${Date.now()}`,
-                        sender: responder.label,
-                        role: responder.role === 'Worker' ? 'Agent' : responder.role,
-                        meta: timestampLabel(),
-                        body,
-                        direction: 'incoming',
-                        attachments: [],
-                    };
-                };
-
-                const queueMockResponse = () => {
-                    if (pendingResponseTimer) {
-                        window.clearTimeout(pendingResponseTimer);
-                    }
-
-                    const typingMessage = {
-                        id: `typing-${Date.now()}`,
-                        sender: conversationResponders[0]?.label ?? 'Katra Agent',
-                        role: 'Agent',
-                        meta: 'Thinking',
-                        body: '',
-                        direction: 'incoming',
-                        attachments: [],
-                        typing: true,
-                    };
-
-                    conversationMessages.push(typingMessage);
-                    renderConversation();
-                    persistConversationState();
-
-                    pendingResponseTimer = window.setTimeout(() => {
-                        conversationMessages = conversationMessages.filter((message) => ! message.typing);
-                        conversationMessages.push(nextAgentReply());
-                        renderConversation();
-                        persistConversationState();
-                    }, 850);
-                };
-
-                const submitConversationMessage = () => {
-                    if (! messageInput) {
-                        return;
-                    }
-
-                    const body = messageInput.value.trim();
-
-                    if (body === '' && pendingAttachments.length === 0 && ! voiceModeEnabled) {
-                        return;
-                    }
-
-                    const attachments = pendingAttachments.map((attachment) => ({
-                        name: attachment.name,
-                    }));
-
-                    const outgoingMessage = {
-                        id: `message-${Date.now()}`,
-                        sender: 'You',
-                        role: 'Human',
-                        meta: timestampLabel(),
-                        body: body === '' && voiceModeEnabled ? 'Voice mode selected for this reply.' : body,
-                        direction: 'outgoing',
-                        attachments,
-                    };
-
-                    conversationMessages.push(outgoingMessage);
-                    messageInput.value = '';
-                    pendingAttachments = [];
-                    voiceModeEnabled = false;
-                    renderPendingAttachments();
-                    applyVoiceState();
-                    syncComposerHeight();
-                    renderConversation();
-                    persistConversationState();
-                    queueMockResponse();
                 };
 
                 const openSearchOverlay = () => {
@@ -1581,97 +1246,6 @@
                     });
                 });
 
-                if (contactSelector) {
-                    const searchInput = contactSelector.querySelector('[data-contact-search]');
-                    const selectedContainer = contactSelector.querySelector('[data-contact-selected]');
-                    const emptyState = contactSelector.querySelector('[data-contact-empty]');
-                    const optionButtons = Array.from(contactSelector.querySelectorAll('[data-contact-option]'));
-                    const selectedContacts = new Map();
-
-                    const renderSelectedContacts = () => {
-                        if (! selectedContainer) {
-                            return;
-                        }
-
-                        selectedContainer.querySelectorAll('[data-contact-chip]').forEach((chip) => chip.remove());
-
-                        if (selectedContacts.size === 0) {
-                            emptyState?.classList.remove('hidden');
-
-                            return;
-                        }
-
-                        emptyState?.classList.add('hidden');
-
-                        selectedContacts.forEach((contact) => {
-                            const chip = document.createElement('button');
-                            chip.type = 'button';
-                            chip.dataset.contactChip = contact.value;
-                            chip.className = 'shell-accent-soft inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium';
-                            chip.innerHTML = `
-                                <span>${contact.label}</span>
-                                <span aria-hidden="true" class="shell-text-faint text-xs">×</span>
-                            `;
-
-                            chip.addEventListener('click', () => {
-                                selectedContacts.delete(contact.value);
-                                renderSelectedContacts();
-                                renderContactOptions(searchInput?.value ?? '');
-                            });
-
-                            selectedContainer.appendChild(chip);
-                        });
-                    };
-
-                    const renderContactOptions = (query = '') => {
-                        const normalizedQuery = query.trim().toLowerCase();
-
-                        optionButtons.forEach((button) => {
-                            const value = button.dataset.contactValue ?? '';
-                            const label = (button.dataset.contactLabel ?? '').toLowerCase();
-                            const matchesQuery = normalizedQuery === '' || label.includes(normalizedQuery);
-                            const selected = selectedContacts.has(value);
-
-                            button.classList.toggle('hidden', ! matchesQuery);
-                            button.classList.toggle('opacity-60', selected);
-                            button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-
-                            const action = button.querySelector('.shell-text-info-strong');
-
-                            if (action) {
-                                action.textContent = selected ? 'Selected' : 'Add';
-                            }
-                        });
-                    };
-
-                    optionButtons.forEach((button) => {
-                        button.addEventListener('click', () => {
-                            const value = button.dataset.contactValue ?? '';
-                            const label = button.dataset.contactLabel ?? '';
-
-                            if (! value || ! label) {
-                                return;
-                            }
-
-                            if (selectedContacts.has(value)) {
-                                selectedContacts.delete(value);
-                            } else {
-                                selectedContacts.set(value, { value, label });
-                            }
-
-                            renderSelectedContacts();
-                            renderContactOptions(searchInput?.value ?? '');
-                        });
-                    });
-
-                    searchInput?.addEventListener('input', (event) => {
-                        renderContactOptions(event.target.value ?? '');
-                    });
-
-                    renderSelectedContacts();
-                    renderContactOptions();
-                }
-
                 shell.querySelectorAll('[data-node-tabs]').forEach((nodeTabs) => {
                     const buttons = Array.from(nodeTabs.querySelectorAll('[data-node-tab-button]'));
                     const panels = Array.from(nodeTabs.querySelectorAll('[data-node-tab-panel]'));
@@ -1709,73 +1283,11 @@
                     });
                 });
 
-                conversationMessages = readConversationState();
-                persistConversationState();
-                renderConversation();
-                renderPendingAttachments();
-                applyVoiceState();
+                scrollConversationToBottom();
                 syncComposerHeight();
 
                 messageInput?.addEventListener('input', () => {
                     syncComposerHeight();
-                });
-
-                messageInput?.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' && ! event.shiftKey) {
-                        event.preventDefault();
-                        submitConversationMessage();
-                    }
-                });
-
-                sendMessageButton?.addEventListener('click', () => {
-                    submitConversationMessage();
-                });
-
-                attachFileButton?.addEventListener('click', () => {
-                    messageFileInput?.click();
-                });
-
-                messageFileInput?.addEventListener('change', (event) => {
-                    const target = event.target;
-
-                    if (! (target instanceof HTMLInputElement) || ! target.files) {
-                        return;
-                    }
-
-                    pendingAttachments = [
-                        ...pendingAttachments,
-                        ...Array.from(target.files).map((file, index) => ({
-                            id: `${Date.now()}-${index}-${file.name}`,
-                            name: file.name,
-                        })),
-                    ];
-
-                    renderPendingAttachments();
-                    target.value = '';
-                });
-
-                messageAttachments?.addEventListener('click', (event) => {
-                    const target = event.target;
-
-                    if (! (target instanceof HTMLElement)) {
-                        return;
-                    }
-
-                    const removeButton = target.closest('[data-remove-attachment]');
-
-                    if (! removeButton) {
-                        return;
-                    }
-
-                    const attachmentId = removeButton.getAttribute('data-remove-attachment');
-
-                    pendingAttachments = pendingAttachments.filter((attachment) => attachment.id !== attachmentId);
-                    renderPendingAttachments();
-                });
-
-                voiceToggleButton?.addEventListener('click', () => {
-                    voiceModeEnabled = ! voiceModeEnabled;
-                    applyVoiceState();
                 });
 
                 themeButtons.forEach((button) => {
