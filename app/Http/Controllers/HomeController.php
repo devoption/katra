@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Features\Desktop\MvpShell;
 use App\Models\InstanceConnection;
+use App\Models\SurrealWorkspace;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Surreal\SurrealRuntimeManager;
@@ -18,6 +19,8 @@ use Throwable;
 
 class HomeController extends Controller
 {
+    private const FAVORITES_ENABLED = false;
+
     /**
      * @return array{
      *     slug: string,
@@ -35,19 +38,20 @@ class HomeController extends Controller
      *     messages: array<int, array{speaker: string, role: string, body: string, meta: string, tone: string}>
      * }
      */
-    private function activeWorkspaceState(InstanceConnection $activeConnection, bool $localReady): array
+    private function activeWorkspaceState(InstanceConnection $activeConnection, Workspace $workspace, bool $localReady): array
     {
         if ($activeConnection->kind === InstanceConnection::KIND_SERVER) {
             return [
-                'slug' => 'remote-instance',
-                'label' => $activeConnection->name,
-                'meta' => $this->connectionMeta($activeConnection),
-                'prefix' => $this->connectionPrefix($activeConnection),
-                'summary' => sprintf(
-                    'A connected server workspace for shared orchestration, worker presence, and linked team context on %s.',
+                'slug' => $workspace->slug,
+                'label' => $workspace->name,
+                'meta' => $activeConnection->name,
+                'prefix' => strtoupper(substr($workspace->name, 0, 1)),
+                'summary' => $workspace->summary ?: sprintf(
+                    '%s is the active workspace on %s for shared orchestration, worker presence, and linked team context.',
+                    $workspace->name,
                     $activeConnection->name,
                 ),
-                'room' => '# relay-ops',
+                'room' => '# general',
                 'roomStatus' => 'remote',
                 'participants' => [
                     ['label' => 'You', 'meta' => 'Human'],
@@ -106,14 +110,14 @@ class HomeController extends Controller
         }
 
         return [
-            'slug' => 'current-instance',
-            'label' => $activeConnection->name,
-            'meta' => $this->connectionMeta($activeConnection),
-            'prefix' => $this->connectionPrefix($activeConnection),
-            'summary' => $localReady
-                ? 'The embedded Surreal runtime is available and the primary workspace is ready.'
-                : 'A primary workspace on this instance for conversations, tasks, artifacts, and decisions.',
-            'room' => '# design-room',
+            'slug' => $workspace->slug,
+            'label' => $workspace->name,
+            'meta' => $activeConnection->name,
+            'prefix' => strtoupper(substr($workspace->name, 0, 1)),
+            'summary' => $workspace->summary ?: ($localReady
+                ? sprintf('The embedded Surreal runtime is available and %s is ready.', $workspace->name)
+                : sprintf('%s is a workspace on this instance for conversations, tasks, artifacts, and decisions.', $workspace->name)),
+            'room' => '# general',
             'roomStatus' => $localReady ? 'ready' : 'draft',
             'participants' => [
                 ['label' => 'You', 'meta' => 'Human'],
@@ -232,8 +236,26 @@ class HomeController extends Controller
     }
 
     /**
+     * @param  EloquentCollection<int, Workspace>  $workspaces
+     * @return array<int, array{id: int, label: string, prefix: string, active: bool, tone: string}>
+     */
+    private function workspaceLinks(EloquentCollection $workspaces, Workspace $activeWorkspace): array
+    {
+        return $workspaces
+            ->map(fn (Workspace $workspace): array => [
+                'id' => (int) $workspace->getKey(),
+                'label' => $workspace->name,
+                'prefix' => strtoupper(substr($workspace->name, 0, 1)),
+                'active' => (int) $workspace->getKey() === (int) $activeWorkspace->getKey(),
+                'tone' => 'room',
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * @param  array{
-     *     room: string,
+     *     label: string,
      *     participants: array<int, array{label: string, meta: string}>
      * }  $workspace
      * @return array<int, array{label: string, active?: bool, prefix: string, tone: string}>
@@ -241,7 +263,7 @@ class HomeController extends Controller
     private function favoriteLinks(array $workspace, string $viewerName): array
     {
         $favorites = [
-            ['label' => $workspace['room'], 'active' => true, 'prefix' => '#', 'tone' => 'room'],
+            ['label' => $workspace['label'], 'active' => true, 'prefix' => $workspace['prefix'], 'tone' => 'room'],
             ['label' => $viewerName, 'prefix' => substr($viewerName, 0, 1), 'tone' => 'human'],
         ];
 
@@ -465,7 +487,7 @@ class HomeController extends Controller
 
         try {
             if ($runtimeManager->ensureReady()) {
-                Workspace::desktopPreview();
+                SurrealWorkspace::desktopPreview();
                 $localReady = true;
             }
         } catch (Throwable $exception) {
@@ -488,12 +510,16 @@ class HomeController extends Controller
         }
 
         $connections = $connectionManager->connectionsFor($request->user());
-        $activeWorkspace = $this->activeWorkspaceState($activeConnection, $localReady);
+        $workspaces = $connectionManager->workspacesFor($activeConnection);
+        $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
+        $activeWorkspace = $this->activeWorkspaceState($activeConnection, $activeWorkspaceModel, $localReady);
 
         return view('welcome', [
             'mvpShellEnabled' => $mvpShellEnabled,
             'activeConnection' => $activeConnection,
             'connectionLinks' => $this->connectionLinks($connections, $activeConnection),
+            'favoritesEnabled' => self::FAVORITES_ENABLED,
+            'workspaceLinks' => $this->workspaceLinks($workspaces, $activeWorkspaceModel),
             'activeWorkspace' => $activeWorkspace,
             'favoriteLinks' => $this->favoriteLinks($activeWorkspace, $viewerName),
             'roomLinks' => $this->roomLinks($activeConnection, $activeWorkspace['room']),

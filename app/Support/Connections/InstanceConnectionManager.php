@@ -4,12 +4,16 @@ namespace App\Support\Connections;
 
 use App\Models\InstanceConnection;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class InstanceConnectionManager
 {
     private const ACTIVE_CONNECTION_SESSION_KEY = 'instance_connection.active_id';
+
+    private const DEFAULT_WORKSPACE_NAME = 'General';
 
     /**
      * @return Collection<int, InstanceConnection>
@@ -126,6 +130,72 @@ class InstanceConnectionManager
     }
 
     /**
+     * @return Collection<int, Workspace>
+     */
+    public function workspacesFor(InstanceConnection $connection): Collection
+    {
+        return $connection->workspaces()
+            ->orderBy('name')
+            ->get()
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, Workspace>|null  $workspaces
+     */
+    public function activeWorkspaceFor(InstanceConnection $connection, ?Collection $workspaces = null): Workspace
+    {
+        $workspaces ??= $this->workspacesFor($connection);
+        $activeWorkspace = $workspaces->firstWhere('id', $connection->active_workspace_id);
+
+        if (! $activeWorkspace instanceof Workspace) {
+            $activeWorkspace = $workspaces->first() ?? $this->createWorkspace($connection, [
+                'name' => self::DEFAULT_WORKSPACE_NAME,
+            ]);
+        }
+
+        if ((int) $connection->active_workspace_id !== (int) $activeWorkspace->getKey()) {
+            $connection->forceFill([
+                'active_workspace_id' => $activeWorkspace->getKey(),
+            ])->save();
+        }
+
+        return $activeWorkspace;
+    }
+
+    /**
+     * @param  array{name: string}  $attributes
+     */
+    public function createWorkspace(InstanceConnection $connection, array $attributes): Workspace
+    {
+        $workspaceName = trim($attributes['name']);
+        $workspace = $connection->workspaces()->create([
+            'name' => $workspaceName,
+            'slug' => $this->nextWorkspaceSlug($connection, $workspaceName),
+            'summary' => $this->workspaceSummary($connection, $workspaceName),
+        ]);
+
+        $connection->forceFill([
+            'active_workspace_id' => $workspace->getKey(),
+        ])->save();
+
+        return $workspace;
+    }
+
+    public function activateWorkspace(Workspace $workspace, Session $session): void
+    {
+        $connection = $workspace->instanceConnection;
+
+        $this->activate($connection, $session);
+
+        if ((int) $connection->active_workspace_id !== (int) $workspace->getKey()) {
+            $connection->forceFill([
+                'active_workspace_id' => $workspace->getKey(),
+            ])->save();
+        }
+    }
+
+    /**
      * @param  array<string, mixed>  $sessionContext
      */
     public function rememberServerAuthentication(User $user, InstanceConnection $connection, array $sessionContext, Session $session): void
@@ -194,5 +264,36 @@ class InstanceConnectionManager
     private function applicationConnectionName(): string
     {
         return (string) config('app.name', 'Katra');
+    }
+
+    private function nextWorkspaceSlug(InstanceConnection $connection, string $workspaceName): string
+    {
+        $baseSlug = Str::slug($workspaceName);
+        $baseSlug = $baseSlug !== '' ? $baseSlug : 'workspace';
+        $slug = $baseSlug;
+        $suffix = 2;
+
+        while ($connection->workspaces()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
+    }
+
+    private function workspaceSummary(InstanceConnection $connection, string $workspaceName): string
+    {
+        if ($connection->kind === InstanceConnection::KIND_SERVER) {
+            return sprintf(
+                '%s is a shared workspace on %s for rooms, chats, and linked context.',
+                $workspaceName,
+                $connection->name,
+            );
+        }
+
+        return sprintf(
+            '%s is a workspace on this Katra instance for conversations, tasks, and linked work.',
+            $workspaceName,
+        );
     }
 }

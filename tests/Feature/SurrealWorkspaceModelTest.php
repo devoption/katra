@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Workspace;
+use App\Models\SurrealWorkspace;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
@@ -43,16 +43,16 @@ test('the surreal workspace model completes a basic crud flow', function () {
         app()->forgetInstance(SurrealRuntimeManager::class);
         app()->forgetInstance(SurrealDocumentStore::class);
 
-        $workspace = Workspace::create([
+        $workspace = SurrealWorkspace::create([
             'name' => 'Download Preview Workspace',
             'summary' => 'Proves that Katra can persist through the first Surreal-backed model layer.',
             'status' => 'draft',
         ]);
 
-        expect($workspace->id)->toStartWith('workspaces:')
+        expect($workspace->id)->toStartWith('workspace_previews:')
             ->and($workspace->exists)->toBeTrue();
 
-        $fetchedWorkspace = Workspace::find($workspace->id);
+        $fetchedWorkspace = SurrealWorkspace::find($workspace->id);
 
         expect($fetchedWorkspace)->not->toBeNull()
             ->and($fetchedWorkspace?->name)->toBe('Download Preview Workspace')
@@ -62,21 +62,21 @@ test('the surreal workspace model completes a basic crud flow', function () {
         $workspace->summary = 'Updated through the Surreal-backed save flow.';
         $workspace->save();
 
-        $updatedWorkspace = Workspace::find($workspace->id);
+        $updatedWorkspace = SurrealWorkspace::find($workspace->id);
 
         expect($updatedWorkspace)->not->toBeNull()
             ->and($updatedWorkspace?->status)->toBe('active')
             ->and($updatedWorkspace?->summary)->toBe('Updated through the Surreal-backed save flow.');
 
-        expect(Workspace::all())->toHaveCount(1);
+        expect(SurrealWorkspace::all())->toHaveCount(1);
 
-        $collection = Workspace::find([$workspace->id]);
+        $collection = SurrealWorkspace::find([$workspace->id]);
 
         expect($collection)->toHaveCount(1)
             ->and($collection->first()?->id)->toBe($workspace->id);
 
         expect($workspace->delete())->toBeTrue()
-            ->and(Workspace::find($workspace->id))->toBeNull();
+            ->and(SurrealWorkspace::find($workspace->id))->toBeNull();
     } finally {
         if (isset($server['process'])) {
             $server['process']->stop(1);
@@ -119,16 +119,16 @@ test('the desktop preview workspace can be created through the surreal document 
         app()->forgetInstance(SurrealRuntimeManager::class);
         app()->forgetInstance(SurrealDocumentStore::class);
 
-        $workspace = Workspace::desktopPreview();
+        $workspace = SurrealWorkspace::desktopPreview();
 
-        expect($workspace->id)->toBe('workspaces:desktop-preview')
+        expect($workspace->id)->toBe('workspace_previews:desktop-preview')
             ->and($workspace->name)->toBe('Desktop Preview Workspace')
             ->and($workspace->status)->toBe('active');
 
-        $fetchedWorkspace = Workspace::find('desktop-preview');
+        $fetchedWorkspace = SurrealWorkspace::find('desktop-preview');
 
         expect($fetchedWorkspace)->not->toBeNull()
-            ->and($fetchedWorkspace?->id)->toBe('workspaces:desktop-preview')
+            ->and($fetchedWorkspace?->id)->toBe('workspace_previews:desktop-preview')
             ->and($fetchedWorkspace?->summary)->toContain('Surreal-backed workspace record');
     } finally {
         if (isset($server['process'])) {

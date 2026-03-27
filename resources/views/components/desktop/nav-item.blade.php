@@ -5,6 +5,8 @@
     'active' => false,
     'muted' => false,
     'href' => null,
+    'action' => null,
+    'method' => 'POST',
     'tone' => 'room',
 ])
 
@@ -30,6 +32,8 @@
         $muted => 'shell-surface shell-text-faint',
         default => 'shell-surface shell-text-soft',
     };
+
+    $actionMethod = strtoupper((string) $method);
 @endphp
 
 @if ($href)
@@ -42,6 +46,23 @@
             <span class="rounded-full px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] {{ $metaClasses }}">{{ $meta }}</span>
         @endif
     </a>
+@elseif ($action)
+    <form method="POST" action="{{ $action }}">
+        @csrf
+        @if ($actionMethod !== 'POST')
+            @method($actionMethod)
+        @endif
+
+        <button type="submit" {{ $attributes->class(['shell-hover-elevated flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors', $containerClasses]) }}>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs uppercase {{ $prefixClasses }}">{{ $prefix }}</span>
+            <span class="flex-1">
+                <span class="block text-sm font-medium">{{ $label }}</span>
+            </span>
+            @if ($meta)
+                <span class="rounded-full px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] {{ $metaClasses }}">{{ $meta }}</span>
+            @endif
+        </button>
+    </form>
 @else
     <div {{ $attributes->class(['flex items-center gap-3 rounded-2xl px-3 py-2', $containerClasses]) }}>
         <span class="flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs uppercase {{ $prefixClasses }}">{{ $prefix }}</span>

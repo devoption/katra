@@ -2,26 +2,25 @@
 
 namespace App\Models;
 
+use Database\Factories\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['id', 'name', 'summary', 'status'])]
-class Workspace extends SurrealModel
+#[Fillable(['instance_connection_id', 'name', 'slug', 'summary'])]
+class Workspace extends Model
 {
-    protected $table = 'workspaces';
+    /** @use HasFactory<WorkspaceFactory> */
+    use HasFactory;
 
-    public static function desktopPreview(): self
+    protected $table = 'connection_workspaces';
+
+    /**
+     * @return BelongsTo<InstanceConnection, $this>
+     */
+    public function instanceConnection(): BelongsTo
     {
-        $workspace = static::find('desktop-preview');
-
-        if ($workspace !== null) {
-            return $workspace;
-        }
-
-        return static::create([
-            'id' => 'desktop-preview',
-            'name' => 'Desktop Preview Workspace',
-            'summary' => 'A Surreal-backed workspace record created to prove the first Katra persistence layer.',
-            'status' => 'active',
-        ]);
+        return $this->belongsTo(InstanceConnection::class);
     }
 }
