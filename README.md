@@ -67,6 +67,15 @@ composer native:dev
 
 That path installs dependencies, prepares the Laravel app, bootstraps NativePHP, and starts the local desktop development loop.
 
+### Frontend Foundation
+
+Katra's base UI foundation now includes Tailwind CSS v4 and Livewire 4.
+
+- Use `npm install` if you only need the frontend toolchain without running the full `composer setup` bootstrap.
+- Use `npm run dev` while shaping Blade, Tailwind, and Livewire UI work in the browser.
+- Use `npm run build` to verify the production asset bundle.
+- Visit `/foundation-preview` to confirm the branded Livewire + Tailwind foundation is rendering successfully.
+
 ### Authentication
 
 Katra now uses Laravel Fortify for the first authentication foundation.

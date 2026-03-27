@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InstanceConnectionController;
+use App\Livewire\FoundationPreview;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/foundation-preview', FoundationPreview::class)->name('foundation.preview');
 
 Route::get('/connect-server', [InstanceConnectionController::class, 'showServerConnect'])->name('server.connect');
 Route::post('/connect-server', [InstanceConnectionController::class, 'prepareServerLogin'])->name('server.connect.prepare');
