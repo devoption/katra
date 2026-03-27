@@ -50,6 +50,25 @@ test('an authenticated user can create a workspace for the active connection', f
         ->and($connection->fresh()->active_workspace_id)->toBe($workspace?->getKey());
 });
 
+test('an authenticated user cannot create a workspace with only whitespace in the name', function () {
+    $user = User::factory()->create();
+    $connection = InstanceConnection::factory()->for($user)->currentInstance()->create([
+        'name' => 'Katra',
+        'base_url' => 'https://katra.test',
+    ]);
+
+    actingAs($user)->withSession([
+        'instance_connection.active_id' => $connection->getKey(),
+    ]);
+
+    post(route('workspaces.store'), [
+        'workspace_name' => '   ',
+    ])
+        ->assertSessionHasErrors('workspace_name');
+
+    expect($connection->workspaces()->count())->toBe(0);
+});
+
 test('an authenticated user can switch the active workspace for the active connection', function () {
     $user = User::factory()->create();
     $connection = InstanceConnection::factory()->for($user)->currentInstance()->create([

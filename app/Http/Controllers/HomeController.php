@@ -510,8 +510,8 @@ class HomeController extends Controller
         }
 
         $connections = $connectionManager->connectionsFor($request->user());
-        $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection);
         $workspaces = $connectionManager->workspacesFor($activeConnection);
+        $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
         $activeWorkspace = $this->activeWorkspaceState($activeConnection, $activeWorkspaceModel, $localReady);
 
         return view('welcome', [

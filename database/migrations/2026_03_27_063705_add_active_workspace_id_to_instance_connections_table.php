@@ -20,7 +20,7 @@ return new class extends Migration
                 $table->foreignId('active_workspace_id')
                     ->nullable()
                     ->after('base_url')
-                    ->constrained('workspaces')
+                    ->constrained('connection_workspaces')
                     ->nullOnDelete();
             }
         });

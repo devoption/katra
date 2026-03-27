@@ -140,9 +140,12 @@ class InstanceConnectionManager
             ->values();
     }
 
-    public function activeWorkspaceFor(InstanceConnection $connection): Workspace
+    /**
+     * @param  Collection<int, Workspace>|null  $workspaces
+     */
+    public function activeWorkspaceFor(InstanceConnection $connection, ?Collection $workspaces = null): Workspace
     {
-        $workspaces = $this->workspacesFor($connection);
+        $workspaces ??= $this->workspacesFor($connection);
         $activeWorkspace = $workspaces->firstWhere('id', $connection->active_workspace_id);
 
         if (! $activeWorkspace instanceof Workspace) {

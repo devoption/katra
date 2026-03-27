@@ -13,11 +13,7 @@ return new class extends Migration
     {
         $driver = Schema::getConnection()->getDriverName();
 
-        if ($driver === 'surreal' && Schema::hasTable('workspaces')) {
-            Schema::drop('workspaces');
-        }
-
-        Schema::create('workspaces', function (Blueprint $table) use ($driver) {
+        Schema::create('connection_workspaces', function (Blueprint $table) use ($driver) {
             $table->id();
             if ($driver === 'surreal') {
                 $table->unsignedBigInteger('instance_connection_id');
@@ -40,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workspaces');
+        Schema::dropIfExists('connection_workspaces');
     }
 };

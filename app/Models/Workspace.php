@@ -14,6 +14,8 @@ class Workspace extends Model
     /** @use HasFactory<WorkspaceFactory> */
     use HasFactory;
 
+    protected $table = 'connection_workspaces';
+
     /**
      * @return BelongsTo<InstanceConnection, $this>
      */

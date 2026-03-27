@@ -18,7 +18,7 @@ class StoreWorkspaceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'workspace_name' => ['required', 'string', 'max:255'],
+            'workspace_name' => ['required', 'string', 'max:255', 'regex:/\\S/'],
         ];
     }
 
@@ -29,6 +29,7 @@ class StoreWorkspaceRequest extends FormRequest
     {
         return [
             'workspace_name.required' => 'Enter a workspace name to create it on this connection.',
+            'workspace_name.regex' => 'Workspace names cannot be blank.',
         ];
     }
 }
