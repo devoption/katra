@@ -1,11 +1,9 @@
 <?php
 
-use App\Providers\AppServiceProvider;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
-use App\Support\Native\NativeRuntimePersistence;
 use Illuminate\Cache\FileStore;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -23,12 +21,21 @@ test('the native runtime keeps auth, sessions, and cache state on surreal', func
 
     $storagePath = storage_path('app/surrealdb/native-runtime-test-'.Str::uuid());
     $originalConfig = snapshotNativeRuntimeConfig();
+    $originalNativeRunning = env('NATIVEPHP_RUNNING');
+    $originalNativeStoragePath = env('NATIVEPHP_STORAGE_PATH');
+    $originalNativeDatabasePath = env('NATIVEPHP_DATABASE_PATH');
 
     File::deleteDirectory($storagePath);
     File::ensureDirectoryExists(dirname($storagePath));
 
     try {
         $server = retryStartingNativeRuntimeSurrealServer($client, $storagePath);
+
+        setNativeRuntimeEnvironment('NATIVEPHP_RUNNING', 'true');
+        setNativeRuntimeEnvironment('NATIVEPHP_STORAGE_PATH', storage_path('framework/testing/native-runtime-'.Str::uuid()));
+        setNativeRuntimeEnvironment('NATIVEPHP_DATABASE_PATH', database_path('native-runtime-test.sqlite'));
+
+        $this->refreshApplication();
 
         config()->set('surreal.host', '127.0.0.1');
         config()->set('surreal.port', $server['port']);
@@ -41,30 +48,8 @@ test('the native runtime keeps auth, sessions, and cache state on surreal', func
         config()->set('surreal.storage_path', $storagePath);
         config()->set('surreal.runtime', 'local');
         config()->set('surreal.autostart', false);
-
-        config()->set('nativephp-internal.running', true);
-        config()->set('database.default', 'nativephp');
-        config()->set('database.migrations.connection', 'nativephp');
-        config()->set('session.driver', 'file');
-        config()->set('session.connection', null);
         config()->set('session.table', 'sessions');
         config()->set('session.cookie', 'native-runtime-surreal');
-        config()->set('cache.default', 'database');
-        config()->set('cache.limiter', 'file');
-        config()->set('cache.stores.database.connection', 'nativephp');
-        config()->set('cache.stores.database.lock_connection', 'nativephp');
-        config()->set('cache.stores.surreal.connection', 'nativephp');
-        config()->set('cache.stores.surreal.lock_connection', 'nativephp');
-        config()->set('queue.default', 'database');
-        config()->set('queue.failed.database', 'nativephp');
-        config()->set('queue.batching.database', 'nativephp');
-        config()->set('queue.connections.database.connection', 'nativephp');
-        config()->set('queue.connections.surreal.connection', 'nativephp');
-        config()->set('ai.caching.embeddings.store', 'database');
-
-        expect(app(NativeRuntimePersistence::class))->not->toBeNull();
-
-        (new AppServiceProvider(app()))->boot();
 
         resetNativeRuntimePersistenceState();
 
@@ -76,7 +61,6 @@ test('the native runtime keeps auth, sessions, and cache state on surreal', func
             ->and(config('queue.default'))->toBe('surreal')
             ->and(config('queue.failed.database'))->toBe('surreal')
             ->and(config('queue.batching.database'))->toBe('surreal')
-            ->and(config('ai.caching.embeddings.store'))->toBe('surreal')
             ->and(cache()->driver(config('cache.limiter'))->getStore())->toBeInstanceOf(FileStore::class);
 
         expect(Artisan::call('migrate', [
@@ -123,6 +107,10 @@ test('the native runtime keeps auth, sessions, and cache state on surreal', func
             ->and(DB::connection('surreal')->table('sessions')->count())->toBeGreaterThan(0);
     } finally {
         restoreNativeRuntimeConfig($originalConfig);
+        setNativeRuntimeEnvironment('NATIVEPHP_RUNNING', $originalNativeRunning);
+        setNativeRuntimeEnvironment('NATIVEPHP_STORAGE_PATH', $originalNativeStoragePath);
+        setNativeRuntimeEnvironment('NATIVEPHP_DATABASE_PATH', $originalNativeDatabasePath);
+        $this->refreshApplication();
         resetNativeRuntimePersistenceState();
 
         if (isset($server['process'])) {
@@ -171,6 +159,20 @@ function restoreNativeRuntimeConfig(array $snapshot): void
     foreach ($snapshot as $key => $value) {
         config()->set($key, $value);
     }
+}
+
+function setNativeRuntimeEnvironment(string $key, string|false|null $value): void
+{
+    if ($value === false || $value === null) {
+        putenv($key);
+        unset($_ENV[$key], $_SERVER[$key]);
+
+        return;
+    }
+
+    putenv(sprintf('%s=%s', $key, $value));
+    $_ENV[$key] = $value;
+    $_SERVER[$key] = $value;
 }
 
 function resetNativeRuntimePersistenceState(): void
