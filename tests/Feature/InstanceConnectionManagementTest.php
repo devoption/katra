@@ -2,6 +2,7 @@
 
 use App\Models\InstanceConnection;
 use App\Models\User;
+use App\Models\Workspace;
 use App\Support\Connections\InstanceConnectionManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -248,6 +249,14 @@ test('the shell uses the currently active connection profile for the session', f
             ],
         ],
     ]);
+    $workspace = Workspace::factory()->for($connection)->create([
+        'name' => 'Relay Launch',
+        'slug' => 'relay-launch',
+    ]);
+
+    $connection->forceFill([
+        'active_workspace_id' => $workspace->getKey(),
+    ])->save();
 
     actingAs($user)->withSession([
         'instance_connection.active_id' => $connection->getKey(),
@@ -256,7 +265,8 @@ test('the shell uses the currently active connection profile for the session', f
     get(route('home'))
         ->assertSuccessful()
         ->assertSee('Relay Cloud')
-        ->assertSee('# relay-ops')
+        ->assertSee('Relay Launch')
+        ->assertSee('# general')
         ->assertSee('Ops Agent')
         ->assertSee('Relay Ops')
         ->assertSee('ops@relay.devoption.test');

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InstanceConnectionController;
+use App\Http\Controllers\WorkspaceController;
 use App\Livewire\FoundationPreview;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +21,6 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/connections/{instanceConnection}/activate', [InstanceConnectionController::class, 'activate'])->name('connections.activate');
     Route::get('/connections/{instanceConnection}/connect', [InstanceConnectionController::class, 'connect'])->name('connections.connect');
     Route::post('/connections/{instanceConnection}/connect', [InstanceConnectionController::class, 'authenticate'])->name('connections.authenticate');
+    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+    Route::post('/workspaces/{workspace}/activate', [WorkspaceController::class, 'activate'])->name('workspaces.activate');
 });

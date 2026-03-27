@@ -2,6 +2,7 @@
 
 use App\Models\InstanceConnection;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -34,6 +35,25 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
     configureDesktopShell();
 
     $user = desktopShellUser();
+    $currentConnection = InstanceConnection::factory()->for($user)->currentInstance()->create([
+        'name' => 'Katra',
+        'base_url' => 'https://katra.test',
+        'last_authenticated_at' => now(),
+        'last_used_at' => now(),
+    ]);
+    $activeWorkspace = Workspace::factory()->for($currentConnection)->create([
+        'name' => 'Product Atlas',
+        'slug' => 'product-atlas',
+        'summary' => 'Product Atlas is a workspace on this instance for conversations, tasks, and linked work.',
+    ]);
+    Workspace::factory()->for($currentConnection)->create([
+        'name' => 'General',
+        'slug' => 'general',
+    ]);
+
+    $currentConnection->forceFill([
+        'active_workspace_id' => $activeWorkspace->getKey(),
+    ])->save();
 
     InstanceConnection::factory()->for($user)->create([
         'name' => 'Relay Cloud',
@@ -48,14 +68,17 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
     get('/')
         ->assertSuccessful()
         ->assertSee('Katra')
-        ->assertSee('Favorites')
+        ->assertSee('Workspaces')
         ->assertSee('Rooms')
         ->assertSee('Chats')
+        ->assertSee('Create workspace')
         ->assertSee('Create room')
         ->assertSee('Create chat')
+        ->assertSee('Product Atlas')
+        ->assertSee('General')
         ->assertSee('Planner Agent')
         ->assertSee('Research Model')
-        ->assertSee('# design-room')
+        ->assertSee('# general')
         ->assertSee('Connections')
         ->assertSee('Add a server')
         ->assertSee('Connection name')
@@ -68,6 +91,7 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertSee('Expand sidebar')
         ->assertSee('Search conversations, people, and nodes')
         ->assertSee('People and agents')
+        ->assertSee('Workspace')
         ->assertSee('Open context panel')
         ->assertSee('Close context panel')
         ->assertSee('Pin context panel')
@@ -84,9 +108,9 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertSee('Attach file')
         ->assertSee('Toggle voice mode')
         ->assertSee('Send message')
-        ->assertSee('Message # design-room')
+        ->assertSee('Message Product Atlas')
         ->assertSee('Voice mode selected')
-        ->assertSee('Tighten the room layout, spacing, and navigation so the shell feels like an app instead of a staged page.')
+        ->assertSee('Product Atlas is a workspace on this instance for conversations, tasks, and linked work.')
         ->assertSee('Derek Bourgeois')
         ->assertSee('derek@katra.io')
         ->assertSee('Profile settings')
@@ -96,9 +120,6 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertSee('Dark')
         ->assertSee('System')
         ->assertSee('Log out')
-        ->assertDontSee('Create workspace')
-        ->assertDontSee('Workspace name')
-        ->assertDontSee('Workspaces')
         ->assertDontSee('desktop mvp preview')
         ->assertDontSee('composer native:dev')
         ->assertDontSee('Surreal Foundation')
@@ -110,6 +131,7 @@ test('the desktop shell exposes the connection-aware workspace shell', function 
         ->assertDontSee('First note')
         ->assertDontSee('Views')
         ->assertDontSee('Workspace navigation pilot')
+        ->assertDontSee('Favorites')
         ->assertDontSee('Message input will live here.');
 });
 
@@ -133,8 +155,8 @@ test('the desktop shell falls back to default feature flags before the Pennant t
     get('/')
         ->assertSuccessful()
         ->assertSee('Katra')
-        ->assertSee('# design-room')
-        ->assertDontSee('Workspace navigation');
+        ->assertSee('General')
+        ->assertSee('Workspaces');
 });
 
 test('the desktop shell can render a saved server connection as the active connection', function () {
@@ -154,6 +176,15 @@ test('the desktop shell can render a saved server connection as the active conne
             ],
         ],
     ]);
+    $workspace = Workspace::factory()->for($connection)->create([
+        'name' => 'Relay Launch',
+        'slug' => 'relay-launch',
+        'summary' => 'Relay Launch is the active workspace on Relay Cloud for shared orchestration, worker presence, and linked team context.',
+    ]);
+
+    $connection->forceFill([
+        'active_workspace_id' => $workspace->getKey(),
+    ])->save();
 
     actingAs($user)
         ->withSession(['instance_connection.active_id' => $connection->getKey()]);
@@ -162,7 +193,8 @@ test('the desktop shell can render a saved server connection as the active conne
         ->assertSuccessful()
         ->assertSee('Relay Cloud')
         ->assertSee('Connections')
-        ->assertSee('# relay-ops')
+        ->assertSee('Relay Launch')
+        ->assertSee('# general')
         ->assertSee('Ops Agent')
         ->assertSee('Routing Agent')
         ->assertSee('Relay Operator')

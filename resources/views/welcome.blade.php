@@ -28,16 +28,16 @@
                 @php
                     $searchResults = [
                         [
-                            'label' => 'Conversations',
+                            'label' => 'Workspaces',
                             'items' => [
-                                ['title' => '# design-room', 'meta' => 'Room', 'summary' => 'Current active room in '.$activeWorkspace['label'].'.'],
-                                ['title' => '# shell-studies', 'meta' => 'Room', 'summary' => 'Design-focused room for layout and navigation work.'],
+                                ['title' => $activeWorkspace['label'], 'meta' => 'Workspace', 'summary' => 'Current active workspace on '.$activeConnection->name.'.'],
+                                ['title' => 'General', 'meta' => 'Workspace', 'summary' => 'Default workspace for the current connection.'],
                             ],
                         ],
                         [
                             'label' => 'People and agents',
                             'items' => [
-                                ['title' => 'Derek Bourgeois', 'meta' => 'Human', 'summary' => 'Direct conversation and workspace owner context.'],
+                                ['title' => $viewerName, 'meta' => 'Human', 'summary' => 'Direct conversation and workspace owner context.'],
                                 ['title' => 'Planner Agent', 'meta' => 'Worker', 'summary' => 'Planning and structuring support for the active room.'],
                             ],
                         ],
@@ -103,11 +103,25 @@
 
                         <div class="mt-4 min-h-0 flex-1 overflow-y-auto">
                             <div class="space-y-4 pr-1">
-                                <x-desktop.nav-section label="Favorites" collapsible open>
-                                    @foreach ($favoriteLinks as $item)
-                                        <x-desktop.nav-item :label="$item['label']" :prefix="$item['prefix']" :tone="$item['tone']" :active="$item['active'] ?? false" :muted="$item['muted'] ?? false" />
+                                <x-desktop.nav-section label="Workspaces" collapsible open action-label="Create workspace" action-dialog-id="workspace-creator-modal">
+                                    @foreach ($workspaceLinks as $item)
+                                        <x-desktop.nav-item
+                                            :label="$item['label']"
+                                            :prefix="$item['prefix']"
+                                            :tone="$item['tone']"
+                                            :active="$item['active']"
+                                            :action="$item['active'] ? null : route('workspaces.activate', $item['id'])"
+                                        />
                                     @endforeach
                                 </x-desktop.nav-section>
+
+                                @if ($favoritesEnabled)
+                                    <x-desktop.nav-section label="Favorites" collapsible open>
+                                        @foreach ($favoriteLinks as $item)
+                                            <x-desktop.nav-item :label="$item['label']" :prefix="$item['prefix']" :tone="$item['tone']" :active="$item['active'] ?? false" :muted="$item['muted'] ?? false" />
+                                        @endforeach
+                                    </x-desktop.nav-section>
+                                @endif
 
                                 <x-desktop.nav-section label="Rooms" collapsible open action-label="Create room" action-dialog-id="room-creator-modal">
                                     @foreach ($roomLinks as $item)
@@ -219,10 +233,10 @@
 
                             <div class="flex items-start justify-between gap-4">
                                 <div>
-                                <p class="shell-text-info font-mono text-[10px] uppercase tracking-[0.12em]">Conversation</p>
-                                <h1 class="shell-text mt-1.5 text-2xl font-semibold tracking-[-0.03em]">{{ $activeWorkspace['room'] }}</h1>
+                                <p class="shell-text-info font-mono text-[10px] uppercase tracking-[0.12em]">Workspace</p>
+                                <h1 class="shell-text mt-1.5 text-2xl font-semibold tracking-[-0.03em]">{{ $activeWorkspace['label'] }}</h1>
                                 <p class="shell-text-soft mt-2 max-w-2xl text-sm leading-6">
-                                    Shared room for people, models, and agents working inside {{ $activeWorkspace['label'] }}.
+                                    {{ $activeWorkspace['summary'] }}
                                 </p>
                             </div>
                             </div>
@@ -276,8 +290,8 @@
                                         data-message-input
                                         rows="1"
                                         class="shell-text min-h-[56px] w-full resize-none bg-transparent pt-1 text-[15px] leading-7 outline-none placeholder:text-[color:var(--shell-text-faint)]"
-                                        placeholder="Message {{ $activeWorkspace['room'] }}"
-                                        aria-label="Message {{ $activeWorkspace['room'] }}"
+                                        placeholder="Message {{ $activeWorkspace['label'] }}"
+                                        aria-label="Message {{ $activeWorkspace['label'] }}"
                                     ></textarea>
 
                                     <div class="mt-3 flex items-center justify-between gap-3">
@@ -649,6 +663,44 @@
                     </div>
                 </form>
             </div>
+        </x-desktop.modal>
+
+        <x-desktop.modal id="workspace-creator-modal" title="Create workspace" description="Create a workspace for the current connection.">
+            <form method="POST" action="{{ route('workspaces.store') }}" class="space-y-4">
+                @csrf
+
+                <div class="space-y-2">
+                    <label for="workspace-name" class="shell-text-faint font-mono text-[10px] uppercase tracking-[0.12em]">Workspace name</label>
+                    <input
+                        id="workspace-name"
+                        name="workspace_name"
+                        type="text"
+                        value="{{ old('workspace_name') }}"
+                        class="shell-input shell-text w-full rounded-[18px] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--shell-text-faint)]"
+                        placeholder="Project Atlas"
+                        required
+                    />
+                </div>
+
+                <p class="shell-text-faint text-sm leading-6">
+                    Workspaces keep each connection organized by project.
+                </p>
+
+                @if ($errors->has('workspace_name'))
+                    <div class="shell-danger-button rounded-[18px] px-4 py-3 text-sm">
+                        <p>{{ $errors->first('workspace_name') }}</p>
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-end gap-3 pt-1">
+                    <button type="button" data-dialog-close class="shell-icon-button rounded-full px-4 py-2 text-sm font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="shell-accent-chip rounded-full px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--shell-accent-hover)]">
+                        Create workspace
+                    </button>
+                </div>
+            </form>
         </x-desktop.modal>
 
         @foreach ($connectionLinks as $item)

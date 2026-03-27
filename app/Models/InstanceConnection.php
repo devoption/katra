@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'user_id',
     'name',
     'kind',
     'base_url',
+    'active_workspace_id',
     'session_context',
     'last_authenticated_at',
     'last_used_at',
@@ -45,6 +47,22 @@ class InstanceConnection extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Workspace, $this>
+     */
+    public function activeWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'active_workspace_id');
+    }
+
+    /**
+     * @return HasMany<Workspace, $this>
+     */
+    public function workspaces(): HasMany
+    {
+        return $this->hasMany(Workspace::class);
     }
 
     protected function summary(): Attribute
