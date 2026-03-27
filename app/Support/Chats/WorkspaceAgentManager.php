@@ -4,6 +4,7 @@ namespace App\Support\Chats;
 
 use App\Models\Workspace;
 use App\Models\WorkspaceAgent;
+use App\Models\WorkspaceChatParticipant;
 use Illuminate\Database\Eloquent\Collection;
 
 class WorkspaceAgentManager
@@ -57,14 +58,28 @@ class WorkspaceAgentManager
                     $workspaceAgent->save();
                 }
 
-                $duplicateAgentIds = $existingAgents
+                $duplicateAgents = $existingAgents
                     ->get($definition['agent_key'])
                     ?->slice(1)
+                    ->values() ?? collect();
+
+                $duplicateAgentIds = $duplicateAgents
                     ->map(fn (WorkspaceAgent $duplicateAgent): int => (int) $duplicateAgent->getKey())
-                    ->all() ?? [];
+                    ->all();
 
                 if ($duplicateAgentIds !== []) {
-                    $workspace->agents()->whereKey($duplicateAgentIds)->delete();
+                    WorkspaceChatParticipant::query()
+                        ->whereIn('workspace_agent_id', $duplicateAgentIds)
+                        ->get()
+                        ->each(function (WorkspaceChatParticipant $participant) use ($workspaceAgent): void {
+                            $participant->forceFill([
+                                'workspace_agent_id' => $workspaceAgent->getKey(),
+                                'display_name' => $workspaceAgent->name,
+                            ])->save();
+                        });
+
+                    $duplicateAgents
+                        ->each(fn (WorkspaceAgent $duplicateAgent): bool => $duplicateAgent->delete());
                 }
 
                 continue;

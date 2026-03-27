@@ -10,6 +10,8 @@ use App\Support\Connections\InstanceConnectionManager;
 use App\Support\Connections\ViewerIdentityResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class ChatController extends Controller
 {
@@ -23,6 +25,16 @@ class ChatController extends Controller
         $expectedToken = $request->session()->get('chat.create_token');
 
         if (! is_string($expectedToken) || ! hash_equals($expectedToken, $submittedToken)) {
+            return to_route('home');
+        }
+
+        $submissionTokenCacheKey = sprintf(
+            'workspace-chat-create:%d:%s',
+            (int) $request->user()->getKey(),
+            sha1($submittedToken),
+        );
+
+        if (! Cache::add($submissionTokenCacheKey, true, now()->addMinutes(10))) {
             return to_route('home');
         }
 
@@ -40,11 +52,17 @@ class ChatController extends Controller
         $activeWorkspace = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
         $viewerIdentity = $viewerIdentityResolver->resolve($request->user(), $activeConnection);
 
-        $chatManager->createChat($activeWorkspace, $request->user(), $viewerIdentity, [
-            'name' => $request->validated('chat_name'),
-            'kind' => $request->validated('chat_kind'),
-            'workspace_agent_id' => $request->integer('workspace_agent_id') ?: null,
-        ]);
+        try {
+            $chatManager->createChat($activeWorkspace, $request->user(), $viewerIdentity, [
+                'name' => $request->validated('chat_name'),
+                'kind' => $request->validated('chat_kind'),
+                'workspace_agent_id' => $request->integer('workspace_agent_id') ?: null,
+            ]);
+        } catch (ValidationException $exception) {
+            Cache::forget($submissionTokenCacheKey);
+
+            throw $exception;
+        }
 
         if (hash_equals((string) $request->session()->get('chat.create_token'), $submittedToken)) {
             $request->session()->forget('chat.create_token');

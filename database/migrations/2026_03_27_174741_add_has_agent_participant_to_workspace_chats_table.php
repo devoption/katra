@@ -27,9 +27,9 @@ return new class extends Migration
                     ->map(fn (mixed $chatId): int => (int) $chatId)
                     ->all();
 
-                foreach ($chatIds as $chatId) {
+                if ($chatIds !== []) {
                     DB::table('workspace_chats')
-                        ->where('id', $chatId)
+                        ->whereIn('id', $chatIds)
                         ->update(['has_agent_participant' => true]);
                 }
             });
