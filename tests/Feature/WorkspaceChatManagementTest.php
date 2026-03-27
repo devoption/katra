@@ -202,6 +202,9 @@ test('a failed agent chat submission can be corrected and resubmitted with the s
     $otherWorkspace = Workspace::factory()->for($connection)->create();
     $token = (string) Str::uuid();
     $foreignAgent = WorkspaceAgent::factory()->workspaceGuide()->for($otherWorkspace)->create();
+    $connection->forceFill([
+        'active_workspace_id' => $workspace->getKey(),
+    ])->save();
 
     actingAs($user)->withSession([
         'instance_connection.active_id' => $connection->getKey(),
