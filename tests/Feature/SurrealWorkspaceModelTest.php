@@ -1,12 +1,16 @@
 <?php
 
 use App\Models\SurrealWorkspace;
+use App\Models\Workspace;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
@@ -131,6 +135,112 @@ test('the desktop preview workspace can be created through the surreal document 
             ->and($fetchedWorkspace?->id)->toBe('workspace_previews:desktop-preview')
             ->and($fetchedWorkspace?->summary)->toContain('Surreal-backed workspace record');
     } finally {
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
+        File::deleteDirectory($storagePath);
+    }
+});
+
+test('the workspace repair migration syncs the surreal sequence after backfill', function () {
+    $client = app(SurrealCliClient::class);
+
+    if (! $client->isAvailable()) {
+        $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
+    }
+
+    $storagePath = storage_path('app/surrealdb/workspace-repair-test-'.Str::uuid());
+    $originalDefaultConnection = config('database.default');
+
+    File::deleteDirectory($storagePath);
+    File::ensureDirectoryExists(dirname($storagePath));
+
+    try {
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('database.default', 'surreal');
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_repair_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        DB::purge('surreal');
+
+        $schema = Schema::connection('surreal');
+        $connection = DB::connection('surreal');
+
+        $schema->create('connection_workspaces', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('workspaces', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $connection->table('workspaces')->insert([
+            [
+                'id' => 1,
+                'instance_connection_id' => 42,
+                'name' => 'Alpha',
+                'slug' => 'alpha',
+                'summary' => 'Legacy alpha workspace.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 2,
+                'instance_connection_id' => 42,
+                'name' => 'Beta',
+                'slug' => 'beta',
+                'summary' => 'Legacy beta workspace.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $migration = require database_path('migrations/2026_03_27_135040_repair_connection_workspaces_table.php');
+        $migration->up();
+
+        $workspace = Workspace::create([
+            'instance_connection_id' => 42,
+            'name' => 'Gamma',
+            'slug' => 'gamma',
+            'summary' => 'New workspace after repair.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $workspaceIds = collect($connection->table('connection_workspaces')->orderBy('id')->get(['id']))
+            ->map(fn (object $workspace): int => (int) ($workspace->id ?? 0))
+            ->all();
+
+        expect((int) $workspace->getKey())->toBe(3)
+            ->and($workspaceIds)->toBe([1, 2, 3]);
+    } finally {
+        config()->set('database.default', $originalDefaultConnection);
+
+        DB::purge('surreal');
+
         if (isset($server['process'])) {
             $server['process']->stop(1);
         }
