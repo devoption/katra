@@ -76,10 +76,14 @@ return new class extends Migration
             ->all();
 
         if ($workspacePayload === []) {
+            $this->syncSurrealSequence($driver);
+
             return;
         }
 
         DB::table('connection_workspaces')->insert($workspacePayload);
+
+        $this->syncSurrealSequence($driver);
     }
 
     /**
@@ -88,5 +92,25 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('connection_workspaces');
+    }
+
+    private function syncSurrealSequence(string $driver): void
+    {
+        if ($driver !== 'surreal') {
+            return;
+        }
+
+        $maxId = collect(DB::table('connection_workspaces')->get(['id']))
+            ->map(fn (object $workspace): int => (int) ($workspace->id ?? 0))
+            ->max();
+
+        if (! is_int($maxId) || $maxId <= 0) {
+            return;
+        }
+
+        DB::statement(sprintf(
+            'UPSERT ONLY __katra_sequences:connection_workspaces SET value = %d;',
+            $maxId,
+        ));
     }
 };
