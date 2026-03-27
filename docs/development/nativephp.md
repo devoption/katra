@@ -108,6 +108,15 @@ The initial shell is intentionally small and focused:
 - the window uses Katra-focused defaults for title and size
 - the root page acts as a lightweight desktop landing screen for smoke testing
 
+## Desktop Persistence Model
+
+Katra now treats SurrealDB as the durable local application store inside the NativePHP runtime.
+
+- NativePHP still brings its own internal SQLite wiring, but Katra overrides the packaged runtime defaults in `config/nativephp.php` so Laravel's main database connection, session driver, cache store, and queue connection all point at SurrealDB.
+- Desktop auth data now lives in SurrealDB too, which means `users`, `password_reset_tokens`, `sessions`, and the main cache tables can be inspected together through Surreal tooling.
+- The limiter store remains file-backed by default because Fortify throttling and similar middleware still behave best without SQL-style transactional expectations.
+- If you need to customize the packaged app persistence targets later, start with the `nativephp.persistence` block in `config/nativephp.php` before reaching for NativePHP's internal SQLite connection.
+
 ## Troubleshooting
 
 - If the desktop shell does not reflect frontend changes, restart `composer native:dev` or ensure Vite is running.

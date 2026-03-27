@@ -162,6 +162,18 @@ return [
     ],
 
     /**
+     * The packaged desktop runtime keeps Laravel's durable application state
+     * on SurrealDB instead of NativePHP's internal SQLite connection.
+     */
+    'persistence' => [
+        'database_connection' => env('NATIVEPHP_DATABASE_CONNECTION', 'surreal'),
+        'session_driver' => env('NATIVEPHP_SESSION_DRIVER', 'surreal'),
+        'cache_store' => env('NATIVEPHP_CACHE_STORE', 'surreal'),
+        'queue_connection' => env('NATIVEPHP_QUEUE_CONNECTION', 'surreal'),
+        'limiter_store' => env('NATIVEPHP_CACHE_LIMITER', env('CACHE_LIMITER', 'file')),
+    ],
+
+    /**
      * Define your own scripts to run before and after the build process.
      */
     'prebuild' => [
