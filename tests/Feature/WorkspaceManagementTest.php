@@ -193,36 +193,38 @@ test('the repair migration backfills connection workspaces for existing installs
         'base_url' => 'https://katra.test',
     ]);
 
-    DB::statement('PRAGMA foreign_keys = OFF');
+    Schema::disableForeignKeyConstraints();
 
-    Schema::dropIfExists('connection_workspaces');
-    Schema::dropIfExists('workspaces');
+    try {
+        Schema::dropIfExists('connection_workspaces');
+        Schema::dropIfExists('workspaces');
 
-    Schema::create('workspaces', function ($table): void {
-        $table->id();
-        $table->unsignedBigInteger('instance_connection_id');
-        $table->string('name');
-        $table->string('slug');
-        $table->text('summary')->nullable();
-        $table->timestamps();
-    });
+        Schema::create('workspaces', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
 
-    DB::table('workspaces')->insert([
-        'id' => 7,
-        'instance_connection_id' => $connection->getKey(),
-        'name' => 'Product Atlas',
-        'slug' => 'product-atlas',
-        'summary' => 'Legacy workspace row.',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+        DB::table('workspaces')->insert([
+            'id' => 7,
+            'instance_connection_id' => $connection->getKey(),
+            'name' => 'Product Atlas',
+            'slug' => 'product-atlas',
+            'summary' => 'Legacy workspace row.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-    $migration = require database_path('migrations/2026_03_27_135040_repair_connection_workspaces_table.php');
-    $migration->up();
+        $migration = require database_path('migrations/2026_03_27_135040_repair_connection_workspaces_table.php');
+        $migration->up();
 
-    expect(Schema::hasTable('connection_workspaces'))->toBeTrue()
-        ->and(DB::table('connection_workspaces')->where('id', 7)->value('name'))->toBe('Product Atlas')
-        ->and(DB::table('connection_workspaces')->where('id', 7)->value('instance_connection_id'))->toBe($connection->getKey());
-
-    DB::statement('PRAGMA foreign_keys = ON');
+        expect(Schema::hasTable('connection_workspaces'))->toBeTrue()
+            ->and(DB::table('connection_workspaces')->where('id', 7)->value('name'))->toBe('Product Atlas')
+            ->and(DB::table('connection_workspaces')->where('id', 7)->value('instance_connection_id'))->toBe($connection->getKey());
+    } finally {
+        Schema::enableForeignKeyConstraints();
+    }
 });

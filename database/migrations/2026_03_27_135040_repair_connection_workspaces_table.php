@@ -55,14 +55,30 @@ return new class extends Migration
             return;
         }
 
-        $existingIds = collect(DB::table('connection_workspaces')->get())
+        $existingWorkspaces = collect(DB::table('connection_workspaces')->get([
+            'id',
+            'instance_connection_id',
+            'slug',
+        ]));
+
+        $existingIds = $existingWorkspaces
             ->map(fn (object $workspace): int|string|null => $workspace->id ?? null)
-            ->filter()
-            ->values()
+            ->filter(fn (int|string|null $id): bool => $id !== null && $id !== '')
+            ->mapWithKeys(fn (int|string $id): array => [(string) $id => true])
+            ->all();
+        $existingWorkspaceKeys = $existingWorkspaces
+            ->map(fn (object $workspace): string => sprintf(
+                '%s:%s',
+                (string) ($workspace->instance_connection_id ?? ''),
+                (string) ($workspace->slug ?? ''),
+            ))
+            ->filter(fn (string $key): bool => $key !== ':')
+            ->mapWithKeys(fn (string $key): array => [$key => true])
             ->all();
 
         $workspacePayload = $legacyWorkspaces
-            ->reject(fn (object $workspace): bool => in_array($workspace->id, $existingIds, true))
+            ->reject(fn (object $workspace): bool => isset($existingIds[(string) $workspace->id])
+                || isset($existingWorkspaceKeys[sprintf('%s:%s', (string) $workspace->instance_connection_id, (string) $workspace->slug)]))
             ->map(fn (object $workspace): array => [
                 'id' => $workspace->id,
                 'instance_connection_id' => $workspace->instance_connection_id,
@@ -91,7 +107,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('connection_workspaces');
+        // No-op: this repair/data migration should not drop the `connection_workspaces` table.
     }
 
     private function syncSurrealSequence(string $driver): void
