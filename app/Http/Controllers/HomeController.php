@@ -310,7 +310,7 @@ class HomeController extends Controller
 
     /**
      * @param  EloquentCollection<int, WorkspaceChat>  $chats
-     * @return array<int, array{label: string, active?: bool, prefix: string, tone: string}>
+     * @return array<int, array{label: string, active?: bool, prefix: string, tone: string, action?: string|null}>
      */
     private function chatLinks(EloquentCollection $chats, WorkspaceChat $activeChat): array
     {
@@ -345,7 +345,10 @@ class HomeController extends Controller
      */
     private function chatMessages(WorkspaceChat $chat): array
     {
-        return $chat->messages
+        return $chat->messages()
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
             ->map(function (WorkspaceChatMessage $message): array {
                 $role = match ($message->sender_type) {
                     WorkspaceChatMessage::SENDER_AGENT => 'Agent',
