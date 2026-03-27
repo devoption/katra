@@ -4,14 +4,20 @@ namespace App\Support\Chats;
 
 use App\Models\User;
 use App\Models\Workspace;
+use App\Models\WorkspaceAgent;
 use App\Models\WorkspaceChat;
 use App\Models\WorkspaceChatMessage;
 use App\Models\WorkspaceChatParticipant;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class WorkspaceChatManager
 {
+    public function __construct(
+        private WorkspaceAgentManager $workspaceAgentManager,
+    ) {}
+
     /**
      * @return Collection<int, WorkspaceChat>
      */
@@ -55,7 +61,7 @@ class WorkspaceChatManager
 
     /**
      * @param  array{name: string, email: string, initials: string}  $viewerIdentity
-     * @param  array{name: string, kind: string}  $attributes
+     * @param  array{name: string, kind: string, workspace_agent_id?: int|null}  $attributes
      */
     public function createChat(
         Workspace $workspace,
@@ -64,19 +70,31 @@ class WorkspaceChatManager
         array $attributes,
     ): WorkspaceChat {
         $chatName = trim($attributes['name']);
+
+        if ($chatName === '') {
+            throw ValidationException::withMessages([
+                'chat_name' => 'Chat names cannot be blank.',
+            ]);
+        }
+
         $chatKind = $attributes['kind'] === WorkspaceChat::KIND_DIRECT
             ? WorkspaceChat::KIND_DIRECT
             : WorkspaceChat::KIND_GROUP;
+        $workspaceAgent = $this->workspaceAgentFor($workspace, $attributes['workspace_agent_id'] ?? null);
 
         $chat = $workspace->chats()->create([
             'name' => $chatName,
             'slug' => $this->nextChatSlug($workspace, $chatName),
             'kind' => $chatKind,
             'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
-            'summary' => $this->chatSummary($workspace, $chatName, $chatKind),
+            'summary' => $this->chatSummary($workspace, $chatName, $chatKind, $workspaceAgent),
         ]);
 
         $chat->participants()->create($this->defaultParticipant($viewer, $viewerIdentity));
+
+        if ($workspaceAgent instanceof WorkspaceAgent) {
+            $chat->participants()->create($this->agentParticipant($workspaceAgent));
+        }
 
         $workspace->forceFill([
             'active_chat_id' => $chat->getKey(),
@@ -127,9 +145,24 @@ class WorkspaceChatManager
     {
         return [
             'user_id' => $viewer->getKey(),
+            'workspace_agent_id' => null,
             'participant_type' => WorkspaceChatParticipant::TYPE_HUMAN,
             'participant_key' => $this->participantKey($viewer, $viewerIdentity),
             'display_name' => $viewerIdentity['name'],
+        ];
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function agentParticipant(WorkspaceAgent $workspaceAgent): array
+    {
+        return [
+            'user_id' => null,
+            'workspace_agent_id' => $workspaceAgent->getKey(),
+            'participant_type' => WorkspaceChatParticipant::TYPE_AGENT,
+            'participant_key' => 'agent:'.$workspaceAgent->agent_key,
+            'display_name' => $workspaceAgent->name,
         ];
     }
 
@@ -162,12 +195,34 @@ class WorkspaceChatManager
         return $slug;
     }
 
-    private function chatSummary(Workspace $workspace, string $chatName, string $chatKind): string
-    {
+    private function chatSummary(
+        Workspace $workspace,
+        string $chatName,
+        string $chatKind,
+        ?WorkspaceAgent $workspaceAgent = null,
+    ): string {
         if ($chatKind === WorkspaceChat::KIND_DIRECT) {
+            if ($workspaceAgent instanceof WorkspaceAgent) {
+                return sprintf(
+                    '%s is a private direct chat with %s inside the %s workspace.',
+                    $chatName,
+                    $workspaceAgent->name,
+                    $workspace->name,
+                );
+            }
+
             return sprintf(
                 '%s is a private direct chat inside the %s workspace.',
                 $chatName,
+                $workspace->name,
+            );
+        }
+
+        if ($workspaceAgent instanceof WorkspaceAgent) {
+            return sprintf(
+                '%s is a private group chat with %s inside the %s workspace.',
+                $chatName,
+                $workspaceAgent->name,
                 $workspace->name,
             );
         }
@@ -177,5 +232,18 @@ class WorkspaceChatManager
             $chatName,
             $workspace->name,
         );
+    }
+
+    private function workspaceAgentFor(Workspace $workspace, ?int $workspaceAgentId): ?WorkspaceAgent
+    {
+        $workspaceAgent = $this->workspaceAgentManager->agentForWorkspace($workspace, $workspaceAgentId);
+
+        if ($workspaceAgentId !== null && ! $workspaceAgent instanceof WorkspaceAgent) {
+            throw ValidationException::withMessages([
+                'workspace_agent_id' => 'Choose a valid agent for this workspace.',
+            ]);
+        }
+
+        return $workspaceAgent;
     }
 }

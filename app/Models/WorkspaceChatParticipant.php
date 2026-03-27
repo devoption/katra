@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['chat_id', 'user_id', 'participant_type', 'participant_key', 'display_name'])]
+#[Fillable(['chat_id', 'user_id', 'workspace_agent_id', 'participant_type', 'participant_key', 'display_name'])]
 class WorkspaceChatParticipant extends Model
 {
     public const TYPE_HUMAN = 'human';
@@ -32,5 +32,13 @@ class WorkspaceChatParticipant extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<WorkspaceAgent, $this>
+     */
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(WorkspaceAgent::class, 'workspace_agent_id');
     }
 }

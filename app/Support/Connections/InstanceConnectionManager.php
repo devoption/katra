@@ -5,6 +5,7 @@ namespace App\Support\Connections;
 use App\Models\InstanceConnection;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\Chats\WorkspaceAgentManager;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
@@ -14,6 +15,10 @@ class InstanceConnectionManager
     private const ACTIVE_CONNECTION_SESSION_KEY = 'instance_connection.active_id';
 
     private const DEFAULT_WORKSPACE_NAME = 'General';
+
+    public function __construct(
+        private WorkspaceAgentManager $workspaceAgentManager,
+    ) {}
 
     /**
      * @return Collection<int, InstanceConnection>
@@ -160,6 +165,8 @@ class InstanceConnectionManager
             ])->save();
         }
 
+        $this->workspaceAgentManager->ensureDefaults($activeWorkspace);
+
         return $activeWorkspace;
     }
 
@@ -174,6 +181,8 @@ class InstanceConnectionManager
             'slug' => $this->nextWorkspaceSlug($connection, $workspaceName),
             'summary' => $this->workspaceSummary($connection, $workspaceName),
         ]);
+
+        $this->workspaceAgentManager->ensureDefaults($workspace);
 
         $connection->forceFill([
             'active_workspace_id' => $workspace->getKey(),

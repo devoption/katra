@@ -2,11 +2,13 @@
 
 use App\Models\SurrealWorkspace;
 use App\Models\Workspace;
+use App\Models\WorkspaceAgent;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealDocumentStore;
 use App\Services\Surreal\SurrealHttpClient;
 use App\Services\Surreal\SurrealRuntimeManager;
+use App\Support\Chats\WorkspaceAgentManager;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -236,6 +238,95 @@ test('the workspace repair migration syncs the surreal sequence after backfill',
 
         expect((int) $workspace->getKey())->toBe(3)
             ->and($workspaceIds)->toBe([1, 2, 3]);
+    } finally {
+        config()->set('database.default', $originalDefaultConnection);
+
+        DB::purge('surreal');
+
+        if (isset($server['process'])) {
+            $server['process']->stop(1);
+        }
+
+        File::deleteDirectory($storagePath);
+    }
+});
+
+test('workspace agent repair drops the legacy key field before seeding defaults', function () {
+    $client = app(SurrealCliClient::class);
+
+    if (! $client->isAvailable()) {
+        $this->markTestSkipped('The `surreal` CLI is not available in this environment.');
+    }
+
+    $storagePath = storage_path('app/surrealdb/workspace-agents-repair-test-'.Str::uuid());
+    $originalDefaultConnection = config('database.default');
+
+    File::deleteDirectory($storagePath);
+    File::ensureDirectoryExists(dirname($storagePath));
+
+    try {
+        $server = retryStartingWorkspaceServer($client, $storagePath);
+        $port = $server['port'];
+        $endpoint = $server['endpoint'];
+
+        config()->set('database.default', 'surreal');
+        config()->set('surreal.host', '127.0.0.1');
+        config()->set('surreal.port', $port);
+        config()->set('surreal.endpoint', $endpoint);
+        config()->set('surreal.username', 'root');
+        config()->set('surreal.password', 'root');
+        config()->set('surreal.namespace', 'katra');
+        config()->set('surreal.database', 'workspace_agents_repair_test');
+        config()->set('surreal.storage_engine', 'surrealkv');
+        config()->set('surreal.storage_path', $storagePath);
+        config()->set('surreal.runtime', 'local');
+        config()->set('surreal.autostart', false);
+
+        DB::purge('surreal');
+
+        $schema = Schema::connection('surreal');
+
+        $schema->create('connection_workspaces', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('instance_connection_id');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('workspace_agents', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('workspace_id');
+            $table->string('key');
+            $table->string('name');
+            $table->string('agent_class');
+            $table->text('summary')->nullable();
+            $table->timestamps();
+        });
+
+        $workspace = Workspace::create([
+            'instance_connection_id' => 42,
+            'name' => 'Atlas',
+            'slug' => 'atlas',
+            'summary' => 'Workspace ready for agent repair testing.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $renameMigration = require database_path('migrations/2026_03_27_155657_repair_workspace_agents_agent_key_column.php');
+        $renameMigration->up();
+
+        $dropLegacyMigration = require database_path('migrations/2026_03_27_160806_drop_legacy_key_column_from_workspace_agents_table.php');
+        $dropLegacyMigration->up();
+
+        $agents = app(WorkspaceAgentManager::class)->agentsFor($workspace->fresh());
+
+        expect($schema->hasColumn('workspace_agents', 'agent_key'))->toBeTrue()
+            ->and($schema->hasColumn('workspace_agents', 'key'))->toBeFalse()
+            ->and($agents)->toHaveCount(1)
+            ->and($agents->first()?->agent_key)->toBe(WorkspaceAgent::KEY_WORKSPACE_GUIDE)
+            ->and($agents->first()?->name)->toBe('Workspace Guide');
     } finally {
         config()->set('database.default', $originalDefaultConnection);
 
