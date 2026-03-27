@@ -11,7 +11,6 @@ use App\Models\WorkspaceChat;
 use App\Models\WorkspaceChatMessage;
 use App\Models\WorkspaceChatParticipant;
 use App\Services\Surreal\SurrealRuntimeManager;
-use App\Support\Chats\WorkspaceAgentManager;
 use App\Support\Chats\WorkspaceChatManager;
 use App\Support\Connections\InstanceConnectionManager;
 use App\Support\Connections\ViewerIdentityResolver;
@@ -495,7 +494,6 @@ class HomeController extends Controller
         SurrealRuntimeManager $runtimeManager,
         InstanceConnectionManager $connectionManager,
         ViewerIdentityResolver $viewerIdentityResolver,
-        WorkspaceAgentManager $workspaceAgentManager,
         WorkspaceChatManager $chatManager,
     ): View|RedirectResponse {
         $localReady = false;

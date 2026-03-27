@@ -23,19 +23,23 @@ return new class extends Migration
         });
 
         $connection = DB::connection();
-        $workspaceAgents = $connection->table('workspace_agents')->get();
 
-        foreach ($workspaceAgents as $workspaceAgent) {
-            $agentKey = $workspaceAgent->key ?? null;
+        $connection->table('workspace_agents')
+            ->select(['id', 'key'])
+            ->orderBy('id')
+            ->chunkById(100, function ($workspaceAgents) use ($connection): void {
+                foreach ($workspaceAgents as $workspaceAgent) {
+                    $agentKey = $workspaceAgent->key ?? null;
 
-            if (! is_string($agentKey) || trim($agentKey) === '') {
-                continue;
-            }
+                    if (! is_string($agentKey) || trim($agentKey) === '') {
+                        continue;
+                    }
 
-            $connection->table('workspace_agents')
-                ->where('id', $workspaceAgent->id)
-                ->update(['agent_key' => $agentKey]);
-        }
+                    $connection->table('workspace_agents')
+                        ->where('id', $workspaceAgent->id)
+                        ->update(['agent_key' => $agentKey]);
+                }
+            });
 
         if ($driver !== 'surreal') {
             Schema::table('workspace_agents', function (Blueprint $table): void {

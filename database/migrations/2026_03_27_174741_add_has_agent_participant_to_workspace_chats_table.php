@@ -16,19 +16,23 @@ return new class extends Migration
             $table->boolean('has_agent_participant')->default(false)->after('summary');
         });
 
-        $chatIdsWithAgents = DB::table('workspace_chat_participants')
+        DB::table('workspace_chat_participants')
+            ->select('chat_id')
             ->where('participant_type', 'agent')
-            ->get(['chat_id'])
-            ->pluck('chat_id')
-            ->map(fn (mixed $chatId): int => (int) $chatId)
-            ->unique()
-            ->values();
+            ->distinct()
+            ->orderBy('chat_id')
+            ->chunk(100, function ($chatIdsWithAgents): void {
+                $chatIds = $chatIdsWithAgents
+                    ->pluck('chat_id')
+                    ->map(fn (mixed $chatId): int => (int) $chatId)
+                    ->all();
 
-        foreach ($chatIdsWithAgents as $chatId) {
-            DB::table('workspace_chats')
-                ->where('id', $chatId)
-                ->update(['has_agent_participant' => true]);
-        }
+                foreach ($chatIds as $chatId) {
+                    DB::table('workspace_chats')
+                        ->where('id', $chatId)
+                        ->update(['has_agent_participant' => true]);
+                }
+            });
     }
 
     /**

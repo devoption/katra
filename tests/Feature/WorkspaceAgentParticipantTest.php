@@ -34,6 +34,23 @@ test('new workspaces receive a default workspace guide agent', function () {
         ->and($reloadedAgents)->toHaveCount(1);
 });
 
+test('ensuring default workspace agents keeps a single workspace guide up to date', function () {
+    $user = User::factory()->create();
+    $connection = InstanceConnection::factory()->for($user)->currentInstance()->create();
+    $workspace = Workspace::factory()->for($connection)->create();
+
+    WorkspaceAgent::factory()->workspaceGuide()->for($workspace)->create([
+        'summary' => 'Outdated guide summary',
+    ]);
+
+    $agents = app(WorkspaceAgentManager::class)->ensureDefaults($workspace);
+
+    expect($agents)->toHaveCount(1)
+        ->and($workspace->fresh()->agents()->count())->toBe(1)
+        ->and($agents->first()?->agent_key)->toBe(WorkspaceAgent::KEY_WORKSPACE_GUIDE)
+        ->and($agents->first()?->summary)->toBe('Helps shape durable, graph-native collaboration inside this workspace.');
+});
+
 test('an authenticated user can create a private chat with a workspace agent participant', function () {
     $user = User::factory()->create([
         'first_name' => 'Derek',

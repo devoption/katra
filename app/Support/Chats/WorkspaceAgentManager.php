@@ -37,11 +37,14 @@ class WorkspaceAgentManager
     public function ensureDefaults(Workspace $workspace): Collection
     {
         $existingAgents = $workspace->agents()
+            ->orderBy('id')
             ->get()
-            ->keyBy('agent_key');
+            ->groupBy('agent_key');
 
         foreach (self::DEFAULT_AGENTS as $definition) {
-            $workspaceAgent = $existingAgents->get($definition['agent_key']);
+            $workspaceAgent = $existingAgents
+                ->get($definition['agent_key'])
+                ?->first();
 
             if ($workspaceAgent instanceof WorkspaceAgent) {
                 $workspaceAgent->forceFill([
@@ -52,6 +55,16 @@ class WorkspaceAgentManager
 
                 if ($workspaceAgent->isDirty()) {
                     $workspaceAgent->save();
+                }
+
+                $duplicateAgentIds = $existingAgents
+                    ->get($definition['agent_key'])
+                    ?->slice(1)
+                    ->map(fn (WorkspaceAgent $duplicateAgent): int => (int) $duplicateAgent->getKey())
+                    ->all() ?? [];
+
+                if ($duplicateAgentIds !== []) {
+                    $workspace->agents()->whereKey($duplicateAgentIds)->delete();
                 }
 
                 continue;
