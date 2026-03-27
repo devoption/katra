@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Features\Desktop\MvpShell;
 use App\Models\InstanceConnection;
 use App\Models\SurrealWorkspace;
-use App\Models\User;
 use App\Models\Workspace;
+use App\Models\WorkspaceChat;
+use App\Models\WorkspaceChatMessage;
+use App\Models\WorkspaceChatParticipant;
 use App\Services\Surreal\SurrealRuntimeManager;
+use App\Support\Chats\WorkspaceChatManager;
 use App\Support\Connections\InstanceConnectionManager;
+use App\Support\Connections\ViewerIdentityResolver;
 use App\Support\Features\DesktopUi;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
@@ -305,65 +309,60 @@ class HomeController extends Controller
     }
 
     /**
-     * @param  array<int, array{label: string, meta: string}>  $participants
+     * @param  EloquentCollection<int, WorkspaceChat>  $chats
      * @return array<int, array{label: string, active?: bool, prefix: string, tone: string}>
      */
-    private function chatLinks(array $participants, string $viewerName): array
+    private function chatLinks(EloquentCollection $chats, WorkspaceChat $activeChat): array
     {
-        $links = [
-            ['label' => $viewerName, 'prefix' => substr($viewerName, 0, 1), 'tone' => 'human'],
-        ];
-
-        foreach ($participants as $participant) {
-            if ($participant['meta'] === 'Human') {
-                continue;
-            }
-
-            $links[] = [
-                'label' => $participant['label'],
-                'prefix' => '@',
-                'tone' => 'bot',
-            ];
-        }
-
-        return array_slice($links, 0, 3);
+        return $chats
+            ->map(fn (WorkspaceChat $chat): array => [
+                'label' => $chat->name,
+                'active' => (int) $chat->getKey() === (int) $activeChat->getKey(),
+                'prefix' => $chat->kind === WorkspaceChat::KIND_DIRECT ? '@' : strtoupper(substr($chat->name, 0, 1)),
+                'tone' => $chat->kind === WorkspaceChat::KIND_DIRECT ? 'human' : 'room',
+                'action' => (int) $chat->getKey() === (int) $activeChat->getKey() ? null : route('chats.activate', $chat),
+            ])
+            ->values()
+            ->all();
     }
 
     /**
-     * @param  array<int, array{label: string, meta: string}>  $participants
-     * @return array<int, array{
-     *     label: string,
-     *     value: string,
-     *     prefix: string,
-     *     tone: string,
-     *     subtitle: string
-     * }>
+     * @return array<int, array{label: string, meta: string}>
      */
-    private function chatContacts(array $participants, string $viewerName): array
+    private function chatParticipants(WorkspaceChat $chat): array
     {
-        $contacts = [[
-            'label' => $viewerName,
-            'value' => str($viewerName)->slug()->value(),
-            'prefix' => substr($viewerName, 0, 1),
-            'tone' => 'human',
-            'subtitle' => 'Human',
-        ]];
+        return $chat->participants
+            ->map(fn (WorkspaceChatParticipant $participant): array => [
+                'label' => $participant->display_name,
+                'meta' => $participant->participant_type === WorkspaceChatParticipant::TYPE_AGENT ? 'Agent' : 'Human',
+            ])
+            ->values()
+            ->all();
+    }
 
-        foreach ($participants as $participant) {
-            if ($participant['meta'] === 'Human') {
-                continue;
-            }
+    /**
+     * @return array<int, array{speaker: string, role: string, body: string, meta: string, tone: string}>
+     */
+    private function chatMessages(WorkspaceChat $chat): array
+    {
+        return $chat->messages
+            ->map(function (WorkspaceChatMessage $message): array {
+                $role = match ($message->sender_type) {
+                    WorkspaceChatMessage::SENDER_AGENT => 'Agent',
+                    WorkspaceChatMessage::SENDER_SYSTEM => 'System',
+                    default => 'Human',
+                };
 
-            $contacts[] = [
-                'label' => $participant['label'],
-                'value' => str($participant['label'])->slug()->value(),
-                'prefix' => '@',
-                'tone' => 'bot',
-                'subtitle' => $participant['meta'],
-            ];
-        }
-
-        return $contacts;
+                return [
+                    'speaker' => $message->sender_name,
+                    'role' => $role,
+                    'body' => $message->body,
+                    'meta' => $message->created_at?->diffForHumans() ?? 'Just now',
+                    'tone' => $role === 'Human' ? 'plain' : 'accent',
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /**
@@ -480,6 +479,8 @@ class HomeController extends Controller
         Request $request,
         SurrealRuntimeManager $runtimeManager,
         InstanceConnectionManager $connectionManager,
+        ViewerIdentityResolver $viewerIdentityResolver,
+        WorkspaceChatManager $chatManager,
     ): View|RedirectResponse {
         $localReady = false;
         $desktopUiStates = DesktopUi::states();
@@ -502,7 +503,7 @@ class HomeController extends Controller
             $request->session(),
         );
 
-        $viewerIdentity = $this->viewerIdentity($request->user(), $activeConnection);
+        $viewerIdentity = $viewerIdentityResolver->resolve($request->user(), $activeConnection);
         $viewerName = $viewerIdentity['name'];
 
         if ($activeConnection->kind === InstanceConnection::KIND_SERVER && ! $activeConnection->is_authenticated) {
@@ -513,6 +514,10 @@ class HomeController extends Controller
         $workspaces = $connectionManager->workspacesFor($activeConnection);
         $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
         $activeWorkspace = $this->activeWorkspaceState($activeConnection, $activeWorkspaceModel, $localReady);
+        $activeChatModel = $chatManager->activeChatFor($activeWorkspaceModel, $request->user(), $viewerIdentity);
+        $chats = $chatManager->chatsFor($activeWorkspaceModel);
+        $participants = $this->chatParticipants($activeChatModel);
+        $messages = $this->chatMessages($activeChatModel);
 
         return view('welcome', [
             'mvpShellEnabled' => $mvpShellEnabled,
@@ -521,13 +526,13 @@ class HomeController extends Controller
             'favoritesEnabled' => self::FAVORITES_ENABLED,
             'workspaceLinks' => $this->workspaceLinks($workspaces, $activeWorkspaceModel),
             'activeWorkspace' => $activeWorkspace,
+            'activeChat' => $activeChatModel,
             'favoriteLinks' => $this->favoriteLinks($activeWorkspace, $viewerName),
             'roomLinks' => $this->roomLinks($activeConnection, $activeWorkspace['room']),
-            'chatLinks' => $this->chatLinks($activeWorkspace['participants'], $viewerName),
-            'chatContacts' => $this->chatContacts($activeWorkspace['participants'], $viewerName),
+            'chatLinks' => $this->chatLinks($chats, $activeChatModel),
             'conversationNodeTabs' => $this->conversationNodeTabs($activeWorkspace),
-            'messages' => $activeWorkspace['messages'],
-            'participants' => $activeWorkspace['participants'],
+            'messages' => $messages,
+            'participants' => $participants,
             'viewerName' => $viewerIdentity['name'],
             'viewerEmail' => $viewerIdentity['email'],
             'viewerInitials' => $viewerIdentity['initials'],
@@ -550,59 +555,5 @@ class HomeController extends Controller
     private function connectionPrefix(InstanceConnection $connection): string
     {
         return strtoupper(substr($connection->name, 0, 1));
-    }
-
-    /**
-     * @return array{name: string, email: string, initials: string}
-     */
-    private function viewerIdentity(?User $viewer, InstanceConnection $activeConnection): array
-    {
-        $remoteIdentity = $activeConnection->kind === InstanceConnection::KIND_SERVER
-            ? data_get($activeConnection->session_context, 'user')
-            : null;
-        $remoteEmail = $activeConnection->kind === InstanceConnection::KIND_SERVER
-            ? data_get($activeConnection->session_context, 'email')
-            : null;
-        $remoteName = data_get($remoteIdentity, 'name');
-
-        if ((! is_string($remoteName) || $remoteName === '') && is_string($remoteEmail) && $remoteEmail !== '') {
-            $remoteName = $this->nameFromEmail($remoteEmail);
-        }
-
-        $name = $remoteName
-            ?: $viewer?->name
-            ?: 'Derek Bourgeois';
-
-        $email = data_get($remoteIdentity, 'email')
-            ?: $remoteEmail
-            ?: $viewer?->email
-            ?: 'derek@katra.io';
-
-        $initials = collect(preg_split('/\s+/', trim($name)) ?: [])
-            ->filter()
-            ->take(2)
-            ->map(fn (string $segment): string => strtoupper(substr($segment, 0, 1)))
-            ->implode('');
-
-        return [
-            'name' => $name,
-            'email' => $email,
-            'initials' => $initials !== '' ? $initials : 'K',
-        ];
-    }
-
-    private function nameFromEmail(string $email): string
-    {
-        $localPart = (string) str($email)->before('@');
-        $segments = preg_split('/[._-]+/', $localPart) ?: [];
-        $segments = array_values(array_filter(array_map(
-            fn (string $segment): string => str($segment)->title()->value(),
-            $segments,
-        )));
-
-        $firstName = $segments[0] ?? 'Remote';
-        $lastName = count($segments) > 1 ? implode(' ', array_slice($segments, 1)) : 'User';
-
-        return trim($firstName.' '.$lastName);
     }
 }

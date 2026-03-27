@@ -3,6 +3,9 @@
 use App\Models\InstanceConnection;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Models\WorkspaceChat;
+use App\Models\WorkspaceChatMessage;
+use App\Models\WorkspaceChatParticipant;
 use App\Support\Connections\InstanceConnectionManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -253,9 +256,30 @@ test('the shell uses the currently active connection profile for the session', f
         'name' => 'Relay Launch',
         'slug' => 'relay-launch',
     ]);
+    $chat = WorkspaceChat::factory()->for($workspace, 'workspace')->create([
+        'name' => 'Ops Briefing',
+        'slug' => 'ops-briefing',
+        'kind' => WorkspaceChat::KIND_GROUP,
+        'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
+    ]);
+    WorkspaceChatParticipant::factory()->for($chat, 'chat')->create([
+        'user_id' => null,
+        'participant_type' => WorkspaceChatParticipant::TYPE_AGENT,
+        'participant_key' => 'agent:ops-agent',
+        'display_name' => 'Ops Agent',
+    ]);
+    WorkspaceChatMessage::factory()->for($chat, 'chat')->create([
+        'sender_type' => WorkspaceChatMessage::SENDER_AGENT,
+        'sender_key' => 'agent:ops-agent',
+        'sender_name' => 'Ops Agent',
+        'body' => 'Relay Cloud keeps private chats scoped to the active workspace.',
+    ]);
 
     $connection->forceFill([
         'active_workspace_id' => $workspace->getKey(),
+    ])->save();
+    $workspace->forceFill([
+        'active_chat_id' => $chat->getKey(),
     ])->save();
 
     actingAs($user)->withSession([
@@ -267,7 +291,9 @@ test('the shell uses the currently active connection profile for the session', f
         ->assertSee('Relay Cloud')
         ->assertSee('Relay Launch')
         ->assertSee('# general')
+        ->assertSee('Ops Briefing')
         ->assertSee('Ops Agent')
+        ->assertSee('Relay Cloud keeps private chats scoped to the active workspace.')
         ->assertSee('Relay Ops')
         ->assertSee('ops@relay.devoption.test');
 });
