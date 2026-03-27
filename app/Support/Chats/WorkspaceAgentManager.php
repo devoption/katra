@@ -25,7 +25,10 @@ class WorkspaceAgentManager
      */
     public function agentsFor(Workspace $workspace): Collection
     {
-        return $this->ensureDefaults($workspace);
+        return $workspace->agents()
+            ->orderBy('name')
+            ->get()
+            ->values();
     }
 
     /**
@@ -45,7 +48,11 @@ class WorkspaceAgentManager
                     'name' => $definition['name'],
                     'agent_class' => $definition['agent_class'],
                     'summary' => $definition['summary'],
-                ])->save();
+                ]);
+
+                if ($workspaceAgent->isDirty()) {
+                    $workspaceAgent->save();
+                }
 
                 continue;
             }

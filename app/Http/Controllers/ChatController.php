@@ -20,7 +20,7 @@ class ChatController extends Controller
         WorkspaceChatManager $chatManager,
     ): RedirectResponse {
         $submittedToken = (string) $request->validated('chat_submission_token');
-        $expectedToken = $request->session()->pull('chat.create_token');
+        $expectedToken = $request->session()->get('chat.create_token');
 
         if (! is_string($expectedToken) || ! hash_equals($expectedToken, $submittedToken)) {
             return to_route('home');
@@ -45,6 +45,10 @@ class ChatController extends Controller
             'kind' => $request->validated('chat_kind'),
             'workspace_agent_id' => $request->integer('workspace_agent_id') ?: null,
         ]);
+
+        if (hash_equals((string) $request->session()->get('chat.create_token'), $submittedToken)) {
+            $request->session()->forget('chat.create_token');
+        }
 
         return to_route('home');
     }

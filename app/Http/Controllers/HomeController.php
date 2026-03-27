@@ -319,9 +319,7 @@ class HomeController extends Controller
     {
         return $chats
             ->map(function (WorkspaceChat $chat) use ($activeChat): array {
-                $hasAgentParticipant = $chat->participants->contains(
-                    fn (WorkspaceChatParticipant $participant): bool => $participant->participant_type === WorkspaceChatParticipant::TYPE_AGENT,
-                );
+                $hasAgentParticipant = (bool) $chat->has_agent_participant;
 
                 return [
                     'label' => $chat->name,
@@ -531,7 +529,7 @@ class HomeController extends Controller
         $connections = $connectionManager->connectionsFor($request->user());
         $workspaces = $connectionManager->workspacesFor($activeConnection);
         $activeWorkspaceModel = $connectionManager->activeWorkspaceFor($activeConnection, $workspaces);
-        $availableAgents = $workspaceAgentManager->agentsFor($activeWorkspaceModel);
+        $availableAgents = $activeWorkspaceModel->agents;
         $activeWorkspace = $this->activeWorkspaceState($activeConnection, $activeWorkspaceModel, $localReady);
         $activeChatModel = $chatManager->activeChatFor($activeWorkspaceModel, $request->user(), $viewerIdentity);
         $chats = $chatManager->chatsFor($activeWorkspaceModel);

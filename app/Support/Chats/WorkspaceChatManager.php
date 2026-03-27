@@ -88,6 +88,7 @@ class WorkspaceChatManager
             'kind' => $chatKind,
             'visibility' => WorkspaceChat::VISIBILITY_PRIVATE,
             'summary' => $this->chatSummary($workspace, $chatName, $chatKind, $workspaceAgent),
+            'has_agent_participant' => $workspaceAgent instanceof WorkspaceAgent,
         ]);
 
         $chat->participants()->create($this->defaultParticipant($viewer, $viewerIdentity));

@@ -3,6 +3,7 @@
 use App\Models\InstanceConnection;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Models\WorkspaceAgent;
 use App\Models\WorkspaceChat;
 use App\Models\WorkspaceChatMessage;
 use App\Models\WorkspaceChatParticipant;
@@ -63,6 +64,7 @@ it('creates private workspace chats from the shell', function (string $kind) {
     expect($chat)->not()->toBeNull()
         ->and($chat?->kind)->toBe($kind)
         ->and($chat?->visibility)->toBe(WorkspaceChat::VISIBILITY_PRIVATE)
+        ->and($chat?->has_agent_participant)->toBeFalse()
         ->and($workspace->fresh()->active_chat_id)->toBe($chat?->getKey())
         ->and($chat?->participants()->count())->toBe(1);
 })->with([
@@ -189,4 +191,36 @@ test('duplicate chat submissions with the same token only create one chat', func
 
     expect($workspace->fresh()->chats()->count())->toBe(1)
         ->and($workspace->fresh()->chats()->first()?->name)->toBe('Design Review');
+});
+
+test('a failed agent chat submission can be corrected and resubmitted with the same token', function () {
+    $user = User::factory()->create();
+    $connection = InstanceConnection::factory()->for($user)->currentInstance()->create([
+        'base_url' => 'https://katra.test',
+    ]);
+    $workspace = Workspace::factory()->for($connection)->create();
+    $otherWorkspace = Workspace::factory()->for($connection)->create();
+    $token = (string) Str::uuid();
+    $foreignAgent = WorkspaceAgent::factory()->workspaceGuide()->for($otherWorkspace)->create();
+
+    actingAs($user)->withSession([
+        'instance_connection.active_id' => $connection->getKey(),
+        'chat.create_token' => $token,
+    ]);
+
+    post(route('chats.store'), [
+        'chat_name' => 'Workspace Guide',
+        'chat_kind' => WorkspaceChat::KIND_DIRECT,
+        'chat_submission_token' => $token,
+        'workspace_agent_id' => $foreignAgent->getKey(),
+    ])->assertSessionHasErrors('workspace_agent_id');
+
+    post(route('chats.store'), [
+        'chat_name' => 'Workspace Guide',
+        'chat_kind' => WorkspaceChat::KIND_DIRECT,
+        'chat_submission_token' => $token,
+    ])->assertRedirect(route('home'));
+
+    expect($workspace->fresh()->chats()->count())->toBe(1)
+        ->and($workspace->fresh()->chats()->first()?->name)->toBe('Workspace Guide');
 });

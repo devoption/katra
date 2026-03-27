@@ -47,7 +47,7 @@ test('an authenticated user can create a private chat with a workspace agent par
     $workspace = Workspace::factory()->for($connection)->create([
         'name' => 'Product Atlas',
     ]);
-    $workspaceGuide = app(WorkspaceAgentManager::class)->agentsFor($workspace)->first();
+    $workspaceGuide = app(WorkspaceAgentManager::class)->ensureDefaults($workspace)->first();
     $token = (string) Str::uuid();
 
     actingAs($user)->withSession([
@@ -66,6 +66,7 @@ test('an authenticated user can create a private chat with a workspace agent par
 
     expect($chat)->not()->toBeNull()
         ->and($chat?->summary)->toContain('Workspace Guide')
+        ->and($chat?->has_agent_participant)->toBeTrue()
         ->and($chat?->participants()->count())->toBe(2);
 
     $agentParticipant = $chat?->participants()
@@ -95,6 +96,7 @@ test('the shell renders agent-backed chats distinctly from human-only chats', fu
     $chat = WorkspaceChat::factory()->for($workspace, 'workspace')->direct()->create([
         'name' => 'Workspace Guide',
         'summary' => 'Workspace Guide is a private direct chat inside Product Atlas.',
+        'has_agent_participant' => true,
     ]);
 
     $workspace->forceFill([

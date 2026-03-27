@@ -320,7 +320,7 @@ test('workspace agent repair drops the legacy key field before seeding defaults'
         $dropLegacyMigration = require database_path('migrations/2026_03_27_160806_drop_legacy_key_column_from_workspace_agents_table.php');
         $dropLegacyMigration->up();
 
-        $agents = app(WorkspaceAgentManager::class)->agentsFor($workspace->fresh());
+        $agents = app(WorkspaceAgentManager::class)->ensureDefaults($workspace->fresh());
 
         expect($schema->hasColumn('workspace_agents', 'agent_key'))->toBeTrue()
             ->and($schema->hasColumn('workspace_agents', 'key'))->toBeFalse()
