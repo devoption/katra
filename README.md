@@ -91,6 +91,16 @@ php artisan migrate
 
 - If you are testing password reset locally and want to inspect the reset link without sending mail, use a local-safe mailer such as `MAIL_MAILER=log`.
 
+### Desktop Persistence Model
+
+The packaged NativePHP app now keeps Laravel's durable application state on SurrealDB instead of splitting auth state across SQLite and Surreal.
+
+- In desktop runtime, Katra overrides NativePHP's internal SQLite defaults and points the app's main database connection, sessions, cache store, and queue connection at SurrealDB.
+- Fortify users, password reset tokens, and sessions now live in the same local Surreal database as the rest of the desktop app state.
+- The main cache store also lives in SurrealDB during desktop runtime, while `CACHE_LIMITER=file` stays in place for Fortify throttling and other limiter middleware that still expect file-safe semantics.
+- The desktop-specific persistence defaults are declared in `config/nativephp.php` under `persistence`, so the Surreal-first runtime model is explicit instead of implicit.
+- For local inspection, Surrealist can now give you one coherent view of the packaged app's durable data in the configured Surreal namespace and database.
+
 ### Configure AI Providers
 
 The Laravel AI SDK is installed and its conversation storage migrations are part of the application now.
