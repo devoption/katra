@@ -5,6 +5,8 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Support\Connections\InstanceConnectionManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -182,4 +184,45 @@ test('an authenticated user cannot activate another users workspace', function (
 
     post(route('workspaces.activate', $workspace))
         ->assertNotFound();
+});
+
+test('the repair migration backfills connection workspaces for existing installs', function () {
+    $user = User::factory()->create();
+    $connection = InstanceConnection::factory()->for($user)->currentInstance()->create([
+        'name' => 'Katra',
+        'base_url' => 'https://katra.test',
+    ]);
+
+    DB::statement('PRAGMA foreign_keys = OFF');
+
+    Schema::dropIfExists('connection_workspaces');
+    Schema::dropIfExists('workspaces');
+
+    Schema::create('workspaces', function ($table): void {
+        $table->id();
+        $table->unsignedBigInteger('instance_connection_id');
+        $table->string('name');
+        $table->string('slug');
+        $table->text('summary')->nullable();
+        $table->timestamps();
+    });
+
+    DB::table('workspaces')->insert([
+        'id' => 7,
+        'instance_connection_id' => $connection->getKey(),
+        'name' => 'Product Atlas',
+        'slug' => 'product-atlas',
+        'summary' => 'Legacy workspace row.',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $migration = require database_path('migrations/2026_03_27_135040_repair_connection_workspaces_table.php');
+    $migration->up();
+
+    expect(Schema::hasTable('connection_workspaces'))->toBeTrue()
+        ->and(DB::table('connection_workspaces')->where('id', 7)->value('name'))->toBe('Product Atlas')
+        ->and(DB::table('connection_workspaces')->where('id', 7)->value('instance_connection_id'))->toBe($connection->getKey());
+
+    DB::statement('PRAGMA foreign_keys = ON');
 });
