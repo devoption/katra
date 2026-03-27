@@ -1,5 +1,6 @@
 <?php
 
+use App\Providers\AppServiceProvider;
 use App\Services\Surreal\SurrealCliClient;
 use App\Services\Surreal\SurrealConnection;
 use App\Services\Surreal\SurrealHttpClient;
@@ -61,7 +62,9 @@ test('the native runtime keeps auth, sessions, and cache state on surreal', func
         config()->set('queue.connections.surreal.connection', 'nativephp');
         config()->set('ai.caching.embeddings.store', 'database');
 
-        app(NativeRuntimePersistence::class)->configure();
+        expect(app(NativeRuntimePersistence::class))->not->toBeNull();
+
+        (new AppServiceProvider(app()))->boot();
 
         resetNativeRuntimePersistenceState();
 
